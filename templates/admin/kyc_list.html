@@ -1,0 +1,153 @@
+{% extends "dashboard_base.html" %}
+{% block title %}KYC Management – Admin{% endblock %}
+{% block page_title %}KYC Management{% endblock %}
+
+{% block body %}
+<div class="space-y-8">
+
+  <!-- Status Tabs -->
+  <div class="flex gap-2 p-1 bg-gray-100 rounded-xl w-fit">
+    <a href="{{ url_for('admin.kyc_list', status='pending') }}"
+       class="px-4 py-2 rounded-lg text-xs font-bold transition-all {{ 'bg-white shadow-sm text-primary' if current_status == 'pending' else 'text-gray-500 hover:text-gray-700' }}">
+      Pending
+    </a>
+    <a href="{{ url_for('admin.kyc_list', status='approved') }}"
+       class="px-4 py-2 rounded-lg text-xs font-bold transition-all {{ 'bg-white shadow-sm text-primary' if current_status == 'approved' else 'text-gray-500 hover:text-gray-700' }}">
+      Approved
+    </a>
+    <a href="{{ url_for('admin.kyc_list', status='rejected') }}"
+       class="px-4 py-2 rounded-lg text-xs font-bold transition-all {{ 'bg-white shadow-sm text-primary' if current_status == 'rejected' else 'text-gray-500 hover:text-gray-700' }}">
+      Rejected
+    </a>
+  </div>
+
+  <!-- KYC Table -->
+  <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="text-[11px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">
+            <th class="px-6 py-4">User</th>
+            <th class="px-6 py-4">Personal Details</th>
+            <th class="px-6 py-4">Bank Details</th>
+            <th class="px-6 py-4">Documents</th>
+            <th class="px-6 py-4">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for kyc in kyc_list %}
+          <tr class="hover:bg-gray-50/50 transition-colors">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                  {{ kyc.user.name[0] }}
+                </div>
+                <div>
+                  <div class="text-sm font-bold text-gray-900">{{ kyc.user.name }}</div>
+                  <div class="text-[10px] text-gray-400">{{ kyc.user.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-xs space-y-1">
+                <div class="flex gap-2">
+                  <span class="text-gray-400">PAN:</span>
+                  <span class="font-bold text-gray-700 uppercase">{{ kyc.pan_number }}</span>
+                </div>
+                <div class="flex gap-2">
+                  <span class="text-gray-400">Aadhaar:</span>
+                  <span class="font-bold text-gray-700">{{ kyc.aadhaar_number }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-xs space-y-1">
+                <div class="font-bold text-gray-700">{{ kyc.bank_name }}</div>
+                <div class="text-gray-500 font-mono">{{ kyc.account_number }}</div>
+                <div class="text-[10px] text-primary font-bold uppercase">{{ kyc.ifsc_code }}</div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex gap-2">
+                {% if kyc.id_proof_filename %}
+                <a href="/static/img/kyc_uploads/{{ kyc.id_proof_filename }}" target="_blank"
+                   class="w-10 h-10 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary transition-colors"
+                   title="View ID Proof">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+                {% endif %}
+                {% if kyc.bank_proof_filename %}
+                <a href="/static/img/kyc_uploads/{{ kyc.bank_proof_filename }}" target="_blank"
+                   class="w-10 h-10 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary transition-colors"
+                   title="View Bank Proof">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+                {% endif %}
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              {% if kyc.status == 'pending' %}
+              <div class="flex gap-2">
+                <form action="{{ url_for('admin.process_kyc', kyc_id=kyc.id) }}" method="POST" class="inline">
+                  <input type="hidden" name="action" value="approve">
+                  <button type="submit" class="px-3 py-1.5 bg-green-500 text-white text-[10px] font-black uppercase rounded-lg hover:bg-green-600 transition-colors">Approve</button>
+                </form>
+                <button onclick="toggleRejectModal('{{ kyc.id }}')" class="px-3 py-1.5 bg-red-500 text-white text-[10px] font-black uppercase rounded-lg hover:bg-red-600 transition-colors">Reject</button>
+              </div>
+              {% else %}
+                <span class="px-2 py-1 rounded-lg text-[10px] font-black uppercase {{ 'bg-green-100 text-green-700' if kyc.status == 'approved' else 'bg-red-100 text-red-700' }}">
+                  {{ kyc.status }}
+                </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not kyc_list %}
+          <tr>
+            <td colspan="5" class="px-6 py-20 text-center">
+              <svg class="w-16 h-16 text-gray-100 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">No KYC records found</p>
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Reject Modal -->
+<div id="reject-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in fade-in duration-200">
+    <div class="p-8">
+      <h3 class="text-xl font-black text-gray-900 mb-2">Reject KYC</h3>
+      <p class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-6">Please provide a reason</p>
+      
+      <form id="reject-form" method="POST">
+        <input type="hidden" name="action" value="reject">
+        <textarea name="note" required placeholder="Example: PAN card image is blurry, please re-upload."
+                  class="w-full h-32 px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50 text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition outline-none resize-none mb-6"></textarea>
+        
+        <div class="flex gap-3">
+          <button type="button" onclick="toggleRejectModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
+          <button type="submit" class="flex-1 py-3 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 transition-colors">Reject Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleRejectModal(kycId = null) {
+  const modal = document.getElementById('reject-modal');
+  const form = document.getElementById('reject-form');
+  if (kycId) {
+    form.action = '/admin/kyc/' + kycId + '/process';
+    modal.classList.remove('hidden');
+  } else {
+    modal.classList.add('hidden');
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+/* Highlight active sidebar link */
+.oc-link.active {
+  background: #e0edff;
+  color: #2563eb !important;
+}
+
+.oc-link:hover {
+  background: #f0f6ff;
+  color: #2563eb;
+}
+/* ── Dashboard / Student page styles ───────────────────────────── */
+
+/* Sidebar transition */
+aside {
+  transition: width 0.2s ease;
+}
+
+/* Table row hover */
+tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Stat card hover lift */
+.stat-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(43, 128, 240, 0.1);
+}
+
+/* Scrollbar for sidebar */
+aside nav::-webkit-scrollbar {
+  width: 4px;
+}
+aside nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+aside nav::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 4px;
+}

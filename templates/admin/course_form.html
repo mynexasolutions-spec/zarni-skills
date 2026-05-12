@@ -1,0 +1,126 @@
+{% extends "dashboard_base.html" %}
+{% block title %}{{ 'Edit' if course else 'New' }} Course – Zarni Skills Admin{% endblock %}
+{% block page_title %}{{ 'Edit Course' if course else 'New Course' }}{% endblock %}
+
+{% block body %}
+<div class="max-w-2xl mx-auto">
+  {% if course %}
+  <a href="{{ url_for('admin.course_chapters', course_id=course.id) }}"
+     class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary mb-5 transition">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Back to Chapters
+  </a>
+  {% endif %}
+
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+    <form method="POST" enctype="multipart/form-data" class="space-y-5">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <!-- Basic Info -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Course Title <span class="text-red-500">*</span></label>
+        <input name="title" type="text" required value="{{ course.title if course else '' }}"
+               class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+        <textarea name="description" rows="3"
+                  class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition resize-none">{{ course.description if course else '' }}</textarea>
+      </div>
+
+      <!-- Thumbnail Upload -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Thumbnail Image</label>
+        {% if course and course.thumbnail_display_url %}
+          <div class="mb-2">
+            <img src="{{ course.thumbnail_display_url }}" alt="Current thumbnail"
+                 class="h-28 w-auto rounded-lg object-cover border border-gray-200" />
+            <p class="text-xs text-gray-400 mt-1">Current thumbnail — upload a new file to replace it.</p>
+          </div>
+        {% endif %}
+        <input type="file" name="thumbnail_file" accept="image/*"
+               class="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition" />
+        <p class="text-xs text-gray-400 mt-1">JPG, PNG, WebP, GIF. Leave empty to keep current.</p>
+      </div>
+
+      <!-- Technical Details Section -->
+      <div class="border-t border-gray-100 pt-5">
+        <h3 class="text-sm font-semibold text-gray-700 mb-4">Course Details (shown as a table to students)</h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Duration</label>
+            <input name="course_duration" type="text" placeholder="e.g. 12 hours"
+                   value="{{ course.course_duration if course else '' }}"
+                   class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Level</label>
+            <select name="level"
+                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition bg-white">
+              <option value="">-- Select Level --</option>
+              {% for lvl in ['Beginner', 'Intermediate', 'Advanced', 'All Levels'] %}
+              <option value="{{ lvl }}" {{ 'selected' if course and course.level == lvl else '' }}>{{ lvl }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Language</label>
+            <input name="language" type="text" placeholder="e.g. Hindi, English"
+                   value="{{ course.language if course else '' }}"
+                   class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
+          </div>
+
+          <div class="flex items-center gap-2 mt-6">
+            <input type="checkbox" name="certificate" id="certificate" value="1"
+                   {{ 'checked' if course and course.certificate else '' }}
+                   class="rounded border-gray-300 text-primary focus:ring-primary" />
+            <label for="certificate" class="text-sm font-medium text-gray-700">Certificate on Completion</label>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Prerequisites</label>
+          <textarea name="prerequisites" rows="2" placeholder="e.g. Basic smartphone knowledge&#10;Internet access"
+                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition resize-none">{{ course.prerequisites if course else '' }}</textarea>
+          <p class="text-xs text-gray-400 mt-1">One item per line.</p>
+        </div>
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">What Students Will Learn</label>
+          <textarea name="what_you_learn" rows="4" placeholder="e.g. How to create viral content&#10;Instagram marketing strategies&#10;Affiliate marketing basics"
+                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition resize-none">{{ course.what_you_learn if course else '' }}</textarea>
+          <p class="text-xs text-gray-400 mt-1">One item per line. These appear as bullet points.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <input type="checkbox" name="is_active" id="is_active" value="1"
+               {{ 'checked' if (course is none or course.is_active) else '' }}
+               class="rounded border-gray-300 text-primary focus:ring-primary" />
+        <label for="is_active" class="text-sm font-medium text-gray-700">Active</label>
+      </div>
+
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">
+        <strong>Note:</strong> After saving, you'll be taken to the Chapters page where you can upload video content.
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="flex-1 py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition text-sm">
+          {{ 'Save & Manage Chapters' if course else 'Create & Add Chapters' }}
+        </button>
+        <a href="{{ url_for('admin.courses') }}"
+           class="flex-1 py-3 text-center bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition text-sm">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Dashboard – Zarni Skills{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block body %}
+
+<!-- ══════════════════════════════════════════════
+     SECTION 1: KPI BANNER
+══════════════════════════════════════════════ -->
+<section class="rounded-2xl overflow-hidden mb-8"
+         style="background: linear-gradient(135deg, #0a0f2e 0%, #0b1a3e 50%, #050c1a 100%);
+                border: 1px solid rgba(255,255,255,0.08);
+                box-shadow: 0 4px 32px rgba(0,0,0,0.3);">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;">
+
+    <!-- All Time Earnings -->
+    <div style="padding:28px 24px;border-right:1px solid rgba(255,255,255,0.08);">
+      <p style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">
+        All Time Earnings
+      </p>
+      <p style="font-size:1.75rem;font-weight:800;color:#4ade80;line-height:1.1;">
+        ₹ {{ '%.0f'|format(all_time_earnings) }}/-
+      </p>
+    </div>
+
+    <!-- All Time Paid -->
+    <div style="padding:28px 24px;border-right:1px solid rgba(255,255,255,0.08);">
+      <p style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">
+        All Time Paid
+      </p>
+      <p style="font-size:1.75rem;font-weight:800;color:#4ade80;line-height:1.1;">
+        ₹ {{ '%.0f'|format(all_time_paid) }}/-
+      </p>
+    </div>
+
+    <!-- Last 30 Days Earnings -->
+    <div style="padding:28px 24px;border-right:1px solid rgba(255,255,255,0.08);">
+      <p style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">
+        Last 30 Days Earnings
+      </p>
+      <p style="font-size:1.75rem;font-weight:800;color:#4ade80;line-height:1.1;">
+        ₹ {{ '%.0f'|format(last_30_earnings) }}/-
+      </p>
+    </div>
+
+    <!-- Last 7 Days Earnings -->
+    <div style="padding:28px 24px;">
+      <p style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">
+        Last 7 Days Earnings
+      </p>
+      <p style="font-size:1.75rem;font-weight:800;color:#4ade80;line-height:1.1;">
+        ₹ {{ '%.0f'|format(last_7_earnings) }}/-
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SECTION 2: EARNING GRAPH + TOP REFERRALS
+══════════════════════════════════════════════ -->
+<section style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+
+  <!-- Earning Graph -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #f3f4f6;">
+      <h2 style="font-weight:700;font-size:1rem;color:#111;">Earning Graph</h2>
+      <select style="font-size:.8rem;padding:6px 14px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;">
+        <option selected>Select</option>
+        <option>Last 7 Days</option>
+        <option>Last 30 Days</option>
+        <option>All Time</option>
+      </select>
+    </div>
+    <div style="height:180px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:.875rem;">
+      No data available
+    </div>
+  </div>
+
+  <!-- Top Referrals -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+    <div style="padding:18px 22px;border-bottom:1px solid #f3f4f6;">
+      <h2 style="font-weight:700;font-size:1rem;color:#111;">Top Referrals</h2>
+    </div>
+    <div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      {% set total_referrals = current_user.referrals.count() %}
+      {% if total_referrals == 0 %}
+        <p style="color:#9ca3af;font-size:.875rem;">No data available</p>
+      {% else %}
+        <p style="font-size:3rem;font-weight:800;color:#111;line-height:1;">{{ total_referrals }}</p>
+        <p style="color:#6b7280;font-size:.875rem;margin-top:4px;">total referrals</p>
+      {% endif %}
+    </div>
+  </div>
+
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SECTION 3: RECENT REFERRALS + LEADERBOARD
+══════════════════════════════════════════════ -->
+<section style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+
+  <!-- Your Recent Referrals -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+    <div style="padding:18px 22px;border-bottom:1px solid #f3f4f6;">
+      <h2 style="font-weight:700;font-size:1rem;color:#111;">Your Recent Referrals</h2>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;font-size:.875rem;border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <th style="text-align:left;font-weight:600;font-size:.75rem;color:#6b7280;padding:12px 20px;">S.No</th>
+            <th style="text-align:left;font-weight:600;font-size:.75rem;color:#6b7280;padding:12px 20px;">Name</th>
+            <th style="text-align:left;font-weight:600;font-size:.75rem;color:#6b7280;padding:12px 20px;">Registered On</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recent_referrals %}
+            <tr style="border-bottom:1px solid #f9fafb;">
+              <td style="padding:12px 20px;color:#374151;">{{ loop.index }}</td>
+              <td style="padding:12px 20px;font-weight:500;color:#111;">{{ r.name }}</td>
+              <td style="padding:12px 20px;color:#6b7280;">{{ r.created_at.strftime('%d-%m-%Y') }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="3" style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:.875rem;">No data available</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Leaderboard -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #f3f4f6;">
+      <h2 style="font-weight:700;font-size:1rem;color:#111;">Leaderboard</h2>
+      <span style="font-size:.875rem;font-weight:700;color:#374151;background:#f3f4f6;padding:4px 12px;border-radius:999px;">
+        Position #{{ leaderboard_position }}
+      </span>
+    </div>
+
+    <!-- Table header -->
+    <div style="display:grid;grid-template-columns:40px 1fr 1fr;align-items:center;padding:10px 20px;border-bottom:1px solid #f3f4f6;">
+      <span style="font-size:.7rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;">Image</span>
+      <span style="font-size:.7rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;">Name</span>
+      <span style="font-size:.7rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;text-align:right;">Earnings</span>
+    </div>
+
+    <div>
+      {% for row in leaderboard %}
+        <div style="display:grid;grid-template-columns:40px 1fr 1fr;align-items:center;padding:12px 20px;border-bottom:1px solid #f9fafb;
+                    {% if row.id == current_user.id %}background:#eff6ff;{% endif %}">
+          <div style="width:36px;height:36px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-weight:700;color:#2563eb;font-size:.9rem;">
+            {{ row.name[0].upper() }}
+          </div>
+          <p style="font-weight:500;color:#111;font-size:.875rem;
+                    {% if row.id == current_user.id %}color:#2563eb;font-weight:700;{% endif %}">
+            {{ row.name }}
+            {% if row.id == current_user.id %}<span style="font-size:.7rem;color:#2563eb;margin-left:6px;">(You)</span>{% endif %}
+          </p>
+          <p style="font-size:.875rem;color:#374151;text-align:right;font-weight:600;">
+            ₹ {{ '%.0f'|format(row.earnings) }}/-
+          </p>
+        </div>
+      {% else %}
+        <div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:.875rem;">No data available</div>
+      {% endfor %}
+    </div>
+  </div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,62 @@
+/* ======================================================
+   Custom styles complementing Tailwind
+   ====================================================== */
+
+/* Glass utility */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(43, 128, 240, 0.1);
+}
+
+/* Reveal on scroll — initial hidden state */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal-on-scroll.slide-left {
+  transform: translateX(-50px);
+}
+.reveal-on-scroll.slide-right {
+  transform: translateX(50px);
+}
+.reveal-on-scroll.active {
+  opacity: 1;
+  transform: none !important;
+}
+
+/* ---- Light hero background ---- */
+.hero-light-bg {
+  background: linear-gradient(160deg, #f0f9ff 0%, #e0f2fe 35%, #bae6fd 70%, #7dd3fc 100%);
+}
+
+/* Wave animations */
+.wave-back {
+  animation: waveBack 30s linear infinite;
+  transform-origin: left center;
+}
+.wave-front {
+  animation: waveFront 20s linear infinite;
+  transform-origin: left center;
+}
+@keyframes waveBack {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes waveFront {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection highlight */
+::selection {
+  background-color: rgba(43, 128, 240, 0.3);
+}

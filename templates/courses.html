@@ -1,0 +1,128 @@
+{% extends "public_base.html" %}
+
+{% block title %}Explore Courses - Zarni Skills{% endblock %}
+
+{% block content %}
+<!-- Page Banner -->
+<section class="relative h-[45vh] md:h-[60vh] flex items-center justify-center overflow-hidden -mt-24 mb-12">
+  <div class="absolute inset-0 z-0">
+    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop" 
+         alt="Courses Banner" class="w-full h-full object-cover">
+    <div class="absolute inset-0 bg-blue-950/70 backdrop-blur-[2px]"></div>
+  </div>
+  
+  <div class="relative z-10 text-center px-6 pt-20">
+    <h1 class="text-4xl md:text-6xl font-heading font-extrabold text-white mb-4 tracking-tight uppercase">
+      Explore Our <span class="text-primary-light">Master</span> Courses
+    </h1>
+    <p class="text-lg text-slate-300 max-w-2xl mx-auto">Master high-demand skills with our expert-led video courses.</p>
+  </div>
+</section>
+
+<!-- Search & Filter Bar -->
+<section class="py-6 bg-white border-b border-slate-100">
+  <div class="max-w-7xl mx-auto px-6">
+    <form action="{{ url_for('main.all_courses') }}" method="GET" class="flex flex-col lg:flex-row items-stretch gap-3">
+      
+      <!-- Search Box -->
+      <div class="relative flex-grow">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <input type="text" name="q" value="{{ query or '' }}"
+               class="block w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-primary focus:border-primary transition-all font-medium"
+               placeholder="Search skills...">
+      </div>
+
+      <!-- Package Dropdown -->
+      <div class="lg:w-64">
+        <select name="package_id" 
+                class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-primary focus:border-primary transition-all font-medium appearance-none cursor-pointer">
+          <option value="">All Packages</option>
+          {% for pkg in packages %}
+          <option value="{{ pkg.id }}" {% if selected_pkg_id == pkg.id %}selected{% endif %}>{{ pkg.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-2">
+        <button type="submit" 
+                class="flex-grow lg:flex-none bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-primary/20 uppercase tracking-wider">
+          Apply
+        </button>
+        {% if query or selected_pkg_id %}
+        <a href="{{ url_for('main.all_courses') }}" 
+           class="bg-slate-100 hover:bg-slate-200 text-slate-500 px-5 py-3 rounded-xl font-bold text-sm text-center transition-all uppercase tracking-wider">
+          Reset
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- Courses Grid -->
+<section class="py-20 bg-slate-50">
+  <div class="max-w-7xl mx-auto px-6">
+    {% if query %}
+    <div class="mb-10 flex items-center gap-2">
+      <p class="text-slate-500 font-medium">Search results for:</p>
+      <span class="bg-primary/10 text-primary px-4 py-1 rounded-full font-bold">"{{ query }}"</span>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {% for course in courses %}
+      <div class="group bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 border border-slate-100 hover:-translate-y-2 flex flex-col">
+        <!-- Thumbnail -->
+        <div class="aspect-video relative overflow-hidden">
+          <img src="{{ course.thumbnail_display_url }}" alt="{{ course.title }}"
+               class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+          <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-primary uppercase tracking-widest shadow-sm">
+            {{ course.level or 'All Levels' }}
+          </div>
+          {% if course.certificate %}
+          <div class="absolute bottom-4 right-4 bg-green-500 text-white p-1.5 rounded-lg shadow-lg">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 flex flex-col flex-grow">
+          <div class="flex items-center gap-3 mb-3">
+             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ course.language or 'Hindi' }}</span>
+             <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ course.course_duration or 'Lifetime' }}</span>
+          </div>
+          
+          <h3 class="text-lg font-heading font-extrabold text-slate-900 mb-4 tracking-tight line-clamp-2 uppercase group-hover:text-primary transition-colors">
+            {{ course.title }}
+          </h3>
+          
+          <div class="mt-auto">
+            <a href="{{ url_for('main.course_detail', course_id=course.id) }}" 
+               class="inline-flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest hover:gap-4 transition-all">
+              View Curriculum 
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if not courses %}
+    <div class="text-center py-20 bg-white rounded-3xl shadow-sm border border-slate-100">
+      <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      </div>
+      <h3 class="text-2xl font-bold text-slate-800 mb-2">No Courses Found</h3>
+      <p class="text-slate-500">We couldn't find any courses matching your search query. Try something else!</p>
+      <a href="{{ url_for('main.all_courses') }}" class="inline-block mt-8 bg-primary text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-primary/20">Browse All Courses</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

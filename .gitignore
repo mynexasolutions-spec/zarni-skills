@@ -1,0 +1,31 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Databases and Local storage
+zarni.db
+*.db
+*.sqlite3
+.env
+video_uploads/
+profile_uploads/
+compiled_templates/
+
+# Python
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo

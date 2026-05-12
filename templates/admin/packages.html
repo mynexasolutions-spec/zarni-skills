@@ -1,0 +1,66 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Packages – Zarni Skills Admin{% endblock %}
+{% block page_title %}Packages{% endblock %}
+
+{% block body %}
+<div class="flex justify-between items-center mb-6">
+  <p class="text-sm text-gray-500">{{ packages|length }} package(s)</p>
+  <a href="{{ url_for('admin.new_package') }}"
+     class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-dark transition">
+    + New Package
+  </a>
+</div>
+
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+        <tr>
+          <th class="px-5 py-3 text-left">Name</th>
+          <th class="px-5 py-3 text-right">Price</th>
+          <th class="px-5 py-3 text-center">L1 %</th>
+          <th class="px-5 py-3 text-center">L2 %</th>
+          <th class="px-5 py-3 text-right">Min L2 Income</th>
+          <th class="px-5 py-3 text-center">Courses</th>
+          <th class="px-5 py-3 text-center">Status</th>
+          <th class="px-5 py-3 text-left">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for pkg in packages %}
+        <tr class="{{ 'opacity-50' if not pkg.is_active else '' }}">
+          <td class="px-5 py-3 font-medium text-gray-800">{{ pkg.name }}</td>
+          <td class="px-5 py-3 text-right font-semibold">₹{{ '{:,.0f}'.format(pkg.price) }}</td>
+          <td class="px-5 py-3 text-center text-green-600 font-medium">{{ pkg.level1_commission_percent }}%</td>
+          <td class="px-5 py-3 text-center text-blue-600 font-medium">{{ pkg.level2_commission_percent }}%</td>
+          <td class="px-5 py-3 text-right text-gray-500">₹{{ '{:,.0f}'.format(pkg.min_income_for_level2) }}</td>
+          <td class="px-5 py-3 text-center text-gray-600">{{ pkg.courses|length }}</td>
+          <td class="px-5 py-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ 'bg-green-100 text-green-700' if pkg.is_active else 'bg-gray-100 text-gray-500' }}">
+              {{ 'Active' if pkg.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="px-5 py-3 flex gap-2">
+            <a href="{{ url_for('admin.edit_package', pkg_id=pkg.id) }}"
+               class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium">
+              Edit
+            </a>
+            {% if pkg.is_active %}
+            <form method="POST" action="{{ url_for('admin.delete_package', pkg_id=pkg.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button type="submit"
+                      class="px-3 py-1 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition font-medium">
+                Deactivate
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="px-5 py-8 text-center text-gray-400">No packages yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

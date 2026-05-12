@@ -1,0 +1,81 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Withdrawals – Zarni Skills Admin{% endblock %}
+{% block page_title %}Withdrawals{% endblock %}
+
+{% block body %}
+<!-- Filter tabs -->
+<div class="flex gap-2 mb-6 flex-wrap">
+  {% for tab in ['requested', 'approved', 'paid', 'rejected'] %}
+  <a href="{{ url_for('admin.withdrawals', status=tab) }}"
+     class="px-4 py-2 rounded-xl text-sm font-medium transition
+            {{ 'bg-primary text-white' if current_status == tab else 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50' }}">
+    {{ tab|capitalize }}
+  </a>
+  {% endfor %}
+</div>
+
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+        <tr>
+          <th class="px-5 py-3 text-left">Date</th>
+          <th class="px-5 py-3 text-left">Student</th>
+          <th class="px-5 py-3 text-left">UPI ID</th>
+          <th class="px-5 py-3 text-right">Amount</th>
+          <th class="px-5 py-3 text-left">Status</th>
+          {% if current_status == 'requested' %}<th class="px-5 py-3 text-left">Actions</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for wd in withdrawals %}
+        <tr>
+          <td class="px-5 py-3 text-gray-500">{{ wd.created_at.strftime('%d %b %Y') }}</td>
+          <td class="px-5 py-3 font-medium text-gray-800">{{ wd.requester.name }}</td>
+          <td class="px-5 py-3 font-mono text-gray-600 text-xs">{{ wd.upi_id }}</td>
+          <td class="px-5 py-3 text-right font-semibold">₹{{ '%.2f'|format(wd.amount) }}</td>
+          <td class="px-5 py-3">
+            {% if wd.status == 'requested' %}{% set sc = 'bg-yellow-100 text-yellow-700' %}
+            {% elif wd.status == 'approved' %}{% set sc = 'bg-blue-100 text-blue-700' %}
+            {% elif wd.status == 'paid' %}{% set sc = 'bg-green-100 text-green-700' %}
+            {% else %}{% set sc = 'bg-red-100 text-red-700' %}{% endif %}
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ sc }}">
+              {{ wd.status|capitalize }}
+            </span>
+          </td>
+          {% if current_status == 'requested' %}
+          <td class="px-5 py-3">
+            <div class="flex gap-2 items-center">
+              <form method="POST" action="{{ url_for('admin.process_withdrawal', wd_id=wd.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <input type="hidden" name="action" value="approve" />
+                <button type="submit"
+                        class="px-3 py-1 text-xs bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition font-medium">
+                  Approve
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('admin.process_withdrawal', wd_id=wd.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <input type="hidden" name="action" value="reject" />
+                <button type="submit"
+                        class="px-3 py-1 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition font-medium"
+                        onclick="return confirm('Reject this withdrawal?')">
+                  Reject
+                </button>
+              </form>
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="{{ 6 if current_status == 'requested' else 5 }}" class="px-5 py-8 text-center text-gray-400">
+            No {{ current_status }} withdrawals.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

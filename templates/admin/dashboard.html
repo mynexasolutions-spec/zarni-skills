@@ -1,0 +1,96 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Admin Dashboard – Zarni Skills{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block body %}
+<!-- Stat cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Students</p>
+    <p class="font-heading font-bold text-2xl text-gray-900">{{ stats.total_users }}</p>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Managers</p>
+    <p class="font-heading font-bold text-2xl text-purple-600">{{ stats.total_managers }}</p>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Team Members</p>
+    <p class="font-heading font-bold text-2xl text-orange-500">{{ stats.total_team_members }}</p>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Paid Orders</p>
+    <p class="font-heading font-bold text-2xl text-gray-900">{{ stats.total_orders }}</p>
+  </div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Revenue</p>
+    <p class="font-heading font-bold text-2xl text-green-600">₹{{ '{:,.0f}'.format(stats.total_revenue) }}</p>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Pending Commissions</p>
+    <p class="font-heading font-bold text-2xl text-yellow-600">{{ stats.pending_commissions }}</p>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Pending Withdrawals</p>
+    <p class="font-heading font-bold text-2xl text-red-500">{{ stats.pending_withdrawals }}</p>
+  </div>
+</div>
+
+<!-- Quick actions -->
+<div class="flex flex-wrap gap-3 mb-8">
+  <a href="{{ url_for('admin.commissions') }}"
+     class="px-4 py-2 bg-yellow-50 text-yellow-700 border border-yellow-200 font-medium rounded-xl text-sm hover:bg-yellow-100 transition">
+    Review Commissions
+  </a>
+  <a href="{{ url_for('admin.withdrawals') }}"
+     class="px-4 py-2 bg-red-50 text-red-700 border border-red-200 font-medium rounded-xl text-sm hover:bg-red-100 transition">
+    Process Withdrawals
+  </a>
+  <a href="{{ url_for('admin.new_package') }}"
+     class="px-4 py-2 bg-primary/10 text-primary border border-primary/20 font-medium rounded-xl text-sm hover:bg-primary/20 transition">
+    + New Package
+  </a>
+  <a href="{{ url_for('admin.new_course') }}"
+     class="px-4 py-2 bg-primary/10 text-primary border border-primary/20 font-medium rounded-xl text-sm hover:bg-primary/20 transition">
+    + New Course
+  </a>
+</div>
+
+<!-- Recent orders -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h2 class="font-semibold text-gray-800 text-sm">Recent Orders</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+        <tr>
+          <th class="px-5 py-3 text-left">Student</th>
+          <th class="px-5 py-3 text-left">Package</th>
+          <th class="px-5 py-3 text-right">Amount</th>
+          <th class="px-5 py-3 text-left">Date</th>
+          <th class="px-5 py-3 text-left">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for order in recent_orders %}
+        <tr>
+          <td class="px-5 py-3 font-medium text-gray-800">{{ order.buyer.name }}</td>
+          <td class="px-5 py-3 text-gray-600">{{ order.package.name }}</td>
+          <td class="px-5 py-3 text-right font-medium">₹{{ '{:,.2f}'.format(order.amount_paid) }}</td>
+          <td class="px-5 py-3 text-gray-500">{{ order.created_at.strftime('%d %b %Y') }}</td>
+          <td class="px-5 py-3">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ 'bg-green-100 text-green-700' if order.payment_status == 'paid' else 'bg-yellow-100 text-yellow-700' }}">
+              {{ order.payment_status|capitalize }}
+            </span>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="px-5 py-8 text-center text-gray-400">No orders yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,670 @@
+{% extends "public_base.html" %}
+
+{% block title %}Zarni Skills – Premium EdTech Platform{% endblock %}
+
+{% block extra_head %}
+<script>
+  // Merge index-specific config with global tailwind config
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { heading: ['Sora', 'sans-serif'], sans: ['DM Sans', 'sans-serif'] },
+        colors: {
+          primary: { dark: '#1a6fcf', DEFAULT: '#2b80f0', light: '#4da6ff', muted: '#8aaac8' },
+          dark: { DEFAULT: '#0d1b2a', muted: '#5a7a99' }
+        },
+        animation: {
+          'blob': 'blob 7s infinite',
+          'float': 'float 6s ease-in-out infinite',
+          'marquee': 'marquee 35s linear infinite',
+          'marquee2': 'marquee2 35s linear infinite',
+        },
+        keyframes: {
+          blob: {
+            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+          },
+          float: {
+            '0%, 100%': { transform: 'translateY(0)' },
+            '50%': { transform: 'translateY(-20px)' },
+          },
+          marquee: {
+            '0%': { transform: 'translateX(0%)' },
+            '100%': { transform: 'translateX(-50%)' },
+          },
+          marquee2: {
+            '0%': { transform: 'translateX(0%)' },
+            '100%': { transform: 'translateX(-50%)' },
+          },
+        }
+      },
+    },
+  };
+</script>
+{% endblock %}
+
+{% block content %}
+<!-- ============================================================
+     HERO
+============================================================ -->
+<section class="relative min-h-[auto] lg:min-h-screen -mt-24 pt-32 pb-16 lg:pt-40 lg:pb-36 overflow-hidden hero-light-bg flex items-center" id="hero-section">
+
+  <!-- Per-slide background images (blurred, faded) -->
+  <div class="hero-slide absolute inset-0 z-0 transition-opacity duration-700" style="opacity:1;
+    background-image: url('https://plus.unsplash.com/premium_photo-1683121718643-fb18d2668d53?q=80&w=1632&auto=format&fit=crop');
+    background-size: cover; background-position: center; filter: blur(2px) brightness(0.92);">
+  </div>
+  <div class="hero-slide absolute inset-0 z-0 transition-opacity duration-700" style="opacity:0;
+    background-image: url('https://images.unsplash.com/photo-1673515335586-f9f662c01482?q=80&w=1170&auto=format&fit=crop');
+    background-size: cover; background-position: center; filter: blur(2px) brightness(0.92);">
+  </div>
+  <div class="hero-slide absolute inset-0 z-0 transition-opacity duration-700" style="opacity:0;
+    background-image: url('https://images.unsplash.com/photo-1548393488-ae8f117cbc1c?q=80&w=715&auto=format&fit=crop');
+    background-size: cover; background-position: center; filter: blur(2px) brightness(0.92);">
+  </div>
+  <!-- Overlay to keep light sky-blue theme readable -->
+  <div class="absolute inset-0 z-[1] pointer-events-none" style="background: linear-gradient(135deg, rgba(240,249,255,0.82) 0%, rgba(224,242,254,0.78) 40%, rgba(186,230,253,0.65) 100%);"></div>
+
+  <!-- Soft radial glow blobs -->
+  <div class="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-sky-200/60 blur-[100px] rounded-full pointer-events-none z-[2]"></div>
+  <div class="absolute bottom-10 right-[-5%] w-[400px] h-[400px] bg-blue-300/30 blur-[100px] rounded-full pointer-events-none z-[2]"></div>
+
+  <!-- Subtle dot grid -->
+  <div class="absolute inset-0 z-[2] pointer-events-none opacity-[0.03]"
+    style="background-image: radial-gradient(circle at 1px 1px, #1e40af 1.5px, transparent 0); background-size: 36px 36px;"></div>
+
+  <!-- Bottom Wave blending into white sections -->
+  <div class="absolute bottom-0 left-0 w-full z-20 overflow-hidden leading-[0] h-[60px] md:h-[90px] pointer-events-none">
+    <svg viewBox="0 0 2400 120" preserveAspectRatio="none" class="absolute bottom-0 w-[200%] h-full wave-back">
+      <path d="M0,60 C300,100 600,20 900,60 C1200,100 1500,20 1800,60 C2100,100 2400,60 2400,60 L2400,120 L0,120 Z" fill="rgba(255,255,255,0.4)"/>
+    </svg>
+    <svg viewBox="0 0 2400 120" preserveAspectRatio="none" class="absolute bottom-0 w-[200%] h-full wave-front">
+      <path d="M0,80 C300,30 600,130 900,80 C1200,30 1500,130 1800,80 C2100,30 2400,80 2400,80 L2400,120 L0,120 Z" fill="#f0f9ff"/>
+    </svg>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-30 w-full items-center">
+    <!-- Left Content -->
+    <div class="flex flex-col justify-center text-left max-w-xl xl:max-w-2xl py-10 lg:py-0">
+
+      <!-- Badge -->
+      <div class="mb-4 md:mb-8 flex space-x-3 items-center hero-content" id="hero-badge">
+        <span id="slide-badge" class="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide shadow-md shadow-primary/25">40% OFF</span>
+        <span id="slide-badge-text" class="text-slate-500 text-xs font-bold uppercase tracking-widest">LEARN FROM TODAY</span>
+      </div>
+
+      <!-- Headline -->
+      <div class="min-h-0 md:min-h-[180px] flex items-start mb-4 md:mb-6">
+        <h1 id="slide-headline" class="text-4xl sm:text-5xl md:text-6xl font-heading font-extrabold text-slate-900 leading-[1.2] hero-content">
+          Zarni Skills Leads To A Brighter <span class="text-primary" id="slide-highlight">Future.</span>
+        </h1>
+      </div>
+
+      <!-- Description -->
+      <div class="min-h-0 md:min-h-[80px] mb-6 md:mb-10">
+        <p id="slide-desc" class="text-[17px] text-slate-500 leading-relaxed font-normal max-w-md hero-content">
+          The future belongs to those who learn more skills and combine them in creative ways.
+        </p>
+      </div>
+
+      <!-- Button -->
+      <div class="flex hero-content">
+        <button class="bg-primary hover:bg-primary-dark text-white px-8 py-3.5 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-3 hover:-translate-y-1 shadow-lg shadow-primary/30 group">
+          Get Started
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Circle Image -->
+    <div class="relative flex items-center justify-center lg:justify-end py-6 lg:py-10">
+      <div class="relative w-[300px] h-[300px] sm:w-[380px] sm:h-[380px] lg:w-[420px] lg:h-[420px] xl:w-[480px] xl:h-[480px]">
+        <div class="absolute inset-[-10%] rounded-full border border-primary/15 pointer-events-none z-10 animate-[pulse_4s_ease-in-out_infinite]"></div>
+        <div class="absolute inset-[-20%] rounded-full border border-primary/8 pointer-events-none z-10 hidden sm:block animate-[pulse_5s_ease-in-out_infinite]"></div>
+        <div class="relative w-full h-full rounded-full border-[6px] sm:border-[10px] border-white bg-sky-50 overflow-hidden shadow-[0_20px_60px_-10px_rgba(43,128,240,0.25)] z-20 mx-auto">
+          <img id="slide-circle-img"
+            src="https://plus.unsplash.com/premium_photo-1683121718643-fb18d2668d53?q=80&w=1632&auto=format&fit=crop"
+            alt="Learning Student"
+            class="w-full h-full object-cover transition-opacity duration-700"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide Dots -->
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-30">
+    <button class="hero-dot w-2.5 h-2.5 rounded-full bg-primary transition-all duration-300" data-slide="0"></button>
+    <button class="hero-dot w-2.5 h-2.5 rounded-full bg-primary/30 transition-all duration-300" data-slide="1"></button>
+    <button class="hero-dot w-2.5 h-2.5 rounded-full bg-primary/30 transition-all duration-300" data-slide="2"></button>
+  </div>
+</section>
+
+<!-- ============================================================
+     BEFORE / AFTER (The Transformation)
+ ============================================================ -->
+<section class="py-24 relative overflow-hidden bg-blue-950" id="process">
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-primary/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
+  <div class="max-w-6xl mx-auto px-6 relative z-10">
+    <div class="text-center mb-16 reveal-on-scroll">
+      <h2 class="text-3xl md:text-5xl font-heading font-extrabold tracking-tight text-white mb-4">The Transformation</h2>
+      <p class="text-lg text-slate-400 max-w-2xl mx-auto">See the difference our proven framework makes.</p>
+    </div>
+
+    <div class="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16">
+      <!-- Before Card -->
+      <div class="relative w-full max-w-sm reveal-on-scroll">
+        <span class="absolute -top-10 left-1/2 -translate-x-1/2 text-slate-400 font-heading font-bold text-sm tracking-widest uppercase">Before</span>
+        <div class="glass rounded-3xl p-8 shadow-xl shadow-blue-900/50 border border-white/10 bg-white/5 backdrop-blur-md">
+          <div class="absolute -top-4 -left-4 bg-white px-4 py-1.5 rounded-full shadow-lg border border-red-100 flex items-center gap-2 text-xs font-bold text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
+            Stagnant
+          </div>
+          <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-6 shadow-inner text-3xl">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </div>
+          <h3 class="text-xl font-heading font-bold text-white mb-1 uppercase tracking-tight">Alex Nguyen</h3>
+          <p class="text-sm text-slate-400 font-medium mb-4 uppercase tracking-widest">Marketing Manager</p>
+          <p class="text-sm text-slate-300 leading-relaxed mb-6 font-medium">No clear strategy. Winging it every week. Revenue stuck for 8 months straight.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
+              Revenue -14%
+            </span>
+            <span class="bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
+              Leads -30%
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow Connector -->
+      <div class="text-primary opacity-60 hidden lg:block reveal-on-scroll">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" class="animate-[pulse_2s_ease-in-out_infinite]"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </div>
+
+      <!-- After Card -->
+      <div class="relative w-full max-w-sm lg:scale-110 z-10 reveal-on-scroll">
+        <span class="absolute -top-10 left-1/2 -translate-x-1/2 text-primary font-heading font-bold text-sm tracking-widest uppercase">After</span>
+        <div class="bg-white rounded-3xl p-8 shadow-2xl shadow-primary/20 border-2 border-primary-light/30 relative">
+          <div class="absolute -top-4 -right-4 bg-white px-4 py-1.5 rounded-full shadow-md border border-green-100 flex items-center gap-2 text-xs font-bold text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+            Top Performer
+          </div>
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-300 to-green-500 flex items-center justify-center mb-6 shadow-inner text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </div>
+          <h3 class="text-xl font-heading font-bold text-dark mb-1 uppercase tracking-tight">Alex Nguyen</h3>
+          <p class="text-sm text-primary font-medium mb-4 uppercase tracking-widest">Growth Lead · Zarni Skills Grad</p>
+          <p class="text-sm text-slate-600 leading-relaxed mb-6 font-medium">Scaled from $50K to $200K MRR in 7 months after completing Zarni's Business Mastery course.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="bg-green-50 text-green-600 border border-green-200 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+              Revenue +300%
+            </span>
+            <span class="bg-green-50 text-green-600 border border-green-200 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+              2,400 New Leads
+            </span>
+            <span class="bg-blue-50 text-primary border border-blue-200 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+              Certified
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     BUILDING LEADERS
+============================================================ -->
+<section class="py-24 bg-white relative overflow-hidden" id="about">
+  <div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
+    <div class="max-w-xl reveal-on-scroll slide-left">
+      <h2 class="text-3xl md:text-5xl font-heading font-extrabold tracking-tight text-dark mb-6 leading-[1.2]">
+        Beyond Learning — We're <span class="text-primary-dark">Building</span><br><span class="text-primary">Leaders.</span>
+      </h2>
+      <p class="text-slate-600 text-lg leading-relaxed font-medium">
+        At Theskillszone, we empower individuals with the skills the future demands. Covering marketing, freelancing, automation, and beyond, our expert-designed courses ensure learning meets real-world application. Supported by toolkits and a collaborative community, we're creating professionals who don't just adapt to change—they lead it.
+      </p>
+    </div>
+    <div class="relative reveal-on-scroll slide-right">
+      <div class="absolute inset-0 bg-gradient-to-tr from-primary-light/40 to-transparent blur-3xl rounded-[3rem] -z-10 translate-y-8"></div>
+      <div class="rounded-[2.5rem] overflow-hidden shadow-2xl shadow-primary/10 border-4 border-white">
+        <img src="https://images.unsplash.com/photo-1600132806370-bf17e65e942f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+          alt="Student building leadership skills"
+          class="w-full h-auto object-cover hover:scale-105 transition-transform duration-700"/>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PACKAGES
+============================================================ -->
+<section class="py-24 bg-blue-950 relative overflow-hidden" id="courses">
+  <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/20 blur-[150px] rounded-full pointer-events-none"></div>
+  <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary-dark/20 blur-[120px] rounded-full pointer-events-none"></div>
+
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <div class="text-center mb-16 reveal-on-scroll">
+      <h2 class="text-3xl md:text-5xl font-heading font-extrabold tracking-tight text-white mb-4">
+        The <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-light to-primary">Zarni Skills</span> Packages
+      </h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">Choose the perfect path to accelerate your career.</p>
+    </div>
+
+    {% set blue_gradients = ['from-blue-400 to-blue-700', 'from-blue-500 to-blue-800', 'from-blue-600 to-blue-900', 'from-blue-700 to-slate-900'] %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
+
+      {% for pkg in packages %}
+      {% set grad = blue_gradients[loop.index0 % 4] %}
+      <div class="group relative reveal-on-scroll" style="transition-delay:{{ loop.index0 * 0.15 }}s">
+        <div class="bg-white rounded-[2rem] p-6 pb-8 h-full flex flex-col items-center text-center relative overflow-hidden transition-all duration-300 shadow-xl border border-primary/10 hover:shadow-primary/20 hover:border-primary/30 hover:-translate-y-2.5">
+
+          {% if loop.index == 2 %}
+          <div class="absolute top-4 right-4 bg-gradient-to-r from-primary-light to-primary-dark text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">HOT</div>
+          {% endif %}
+
+          <!-- Book-style cover -->
+          {% if pkg.thumbnail_display_url %}
+          <div class="relative w-[calc(100%+3rem)] -mx-6 -mt-6 mb-6 shadow-2xl overflow-hidden">
+            <img src="{{ pkg.thumbnail_display_url }}" alt="{{ pkg.name }}" class="w-full h-auto object-cover" />
+          </div>
+          {% else %}
+          <div class="relative w-40 mb-8 mt-4 shadow-2xl rounded-lg overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br {{ grad }} rounded-lg border border-white/20 shadow-2xl flex flex-col items-center justify-center p-4 z-20">
+              <p class="text-[10px] uppercase font-bold text-white/60 tracking-widest mb-2">Zarni Skills</p>
+              <h4 class="font-heading font-black text-white text-xl leading-tight text-center">
+                {% set words = pkg.name.split() %}
+                {% for w in words %}<span class="block">{{ w|upper }}</span>{% endfor %}
+              </h4>
+            </div>
+            <div class="absolute inset-y-0 -left-6 w-6 bg-gradient-to-b {{ grad }} brightness-75 rounded-l-lg border-l border-y border-white/10 skew-y-[15deg] origin-right z-10"></div>
+          </div>
+          {% endif %}
+
+          <h3 class="text-xl font-heading font-bold text-slate-900 mb-2">{{ pkg.name }}</h3>
+          <div class="flex items-center gap-1 mb-4 text-yellow-500">
+            {% for _ in range(5) %}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{% endfor %}
+            <span class="text-xs text-slate-400 ml-1">5.0/5 Ratings</span>
+          </div>
+
+          <!-- Short highlights from what_you_get -->
+          <div class="flex-grow w-full">
+            {% if pkg.what_you_get %}
+            <ul class="mb-5 space-y-2 text-left w-full">
+              {% for item in pkg.what_you_get.split('\n')[:4] %}
+              {% if item.strip() %}
+              <li class="flex items-start gap-2 text-xs text-slate-600">
+                <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>{{ item.strip() }}</span>
+              </li>
+              {% endif %}
+              {% endfor %}
+            </ul>
+            {% elif pkg.courses %}
+            <ul class="mb-5 space-y-2 text-left w-full">
+              {% for course in pkg.courses[:4] %}
+              <li class="flex items-start gap-2 text-xs text-slate-600">
+                <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>{{ course.title }}</span>
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+
+          <div class="flex items-center justify-center gap-3 mb-6 w-full">
+            <span class="text-base text-slate-400 line-through font-medium">₹{{ '{:,.0f}'.format(pkg.price * 2) }}/-</span>
+            <span class="text-3xl font-heading font-black text-primary">₹{{ '{:,.0f}'.format(pkg.price) }}/-</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 w-full">
+            <a href="{{ url_for('main.package_detail', pkg_id=pkg.id) }}"
+               class="bg-white hover:bg-slate-50 text-primary border border-primary py-3 rounded-xl font-bold text-xs transition-all duration-300 shadow-sm inline-block text-center uppercase tracking-wider">
+              View Details
+            </a>
+            <a href="{{ url_for('auth.register') }}"
+               class="bg-primary hover:bg-primary-dark text-white border border-primary py-3 rounded-xl font-bold text-xs transition-all duration-300 shadow-lg shadow-primary/20 inline-block text-center uppercase tracking-wider">
+              Enroll Now
+            </a>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <!-- Fallback static cards when no packages in DB -->
+      <div class="col-span-3 text-center py-16 text-slate-400">
+        <p class="text-lg">Packages coming soon.</p>
+      </div>
+      {% endfor %}
+
+    </div>
+  </div>
+<<!-- ============================================================
+     COURSES MARQUEE
+ ============================================================ -->
+<section class="py-24 bg-white relative overflow-hidden">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-16 reveal-on-scroll">
+      <h2 class="text-3xl md:text-5xl font-heading font-extrabold tracking-tight text-dark mb-4">
+        Courses that <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-dark to-primary">Shape</span> Your <span class="text-primary-dark">Future</span>
+      </h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">Explore our diverse range of courses tailored to your needs</p>
+      <div class="w-48 h-1 mx-auto mt-6 bg-gradient-to-r from-transparent via-primary-light to-transparent"></div>
+    </div>
+  </div>
+
+  <div class="relative max-w-7xl mx-auto px-6 group/slider">
+    <!-- Navigation Arrows (Desktop) -->
+    <button id="course-prev" class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 backdrop-blur-md rounded-full shadow-xl border border-slate-100 flex items-center justify-center text-primary opacity-0 group-hover/slider:opacity-100 transition-all hover:bg-primary hover:text-white -translate-x-6">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button id="course-next" class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 backdrop-blur-md rounded-full shadow-xl border border-slate-100 flex items-center justify-center text-primary opacity-0 group-hover/slider:opacity-100 transition-all hover:bg-primary hover:text-white translate-x-6">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <!-- Slider Container -->
+    <div id="course-slider" class="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar pb-8 px-4 -mx-4">
+      {% for course in courses %}
+      <div class="snap-center shrink-0">
+        <a href="{{ url_for('main.course_detail', course_id=course.id) }}" 
+           class="block w-[280px] md:w-[320px] border border-primary-light/30 rounded-[2rem] overflow-hidden group/card shadow-lg hover:shadow-2xl shadow-primary/10 hover:border-primary-light transition-all bg-white flex flex-col h-full transform hover:-translate-y-2 duration-300">
+          <div class="aspect-[4/3] bg-slate-100 overflow-hidden relative">
+            <img src="{{ course.thumbnail_display_url }}" alt="{{ course.title }}" class="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-700"/>
+            <div class="absolute inset-0 bg-gradient-to-t from-dark/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-all duration-300 shadow-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#2b80f0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+          <div class="py-6 px-5 text-center bg-white border-t border-primary/5">
+            <h3 class="font-heading font-black text-dark text-sm sm:text-base uppercase tracking-wider group-hover/card:text-primary transition-colors line-clamp-2 leading-tight">{{ course.title }}</h3>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+
+<!-- ============================================================
+     STATS BANNER
+============================================================ -->
+<section class="bg-blue-950 py-20 relative overflow-hidden">
+  <div class="text-center mb-16 relative z-10 reveal-on-scroll">
+    <h2 class="text-3xl md:text-5xl font-heading font-extrabold tracking-tight text-white mb-4">
+      India's Trusted Educational <span class="text-primary font-extrabold">Platform</span>
+    </h2>
+    <p class="text-sm text-slate-300 max-w-2xl mx-auto uppercase tracking-widest font-bold">With Zarni Skills, Begin your journey to success.</p>
+    <div class="w-64 h-px mx-auto mt-6 bg-gradient-to-r from-transparent via-primary/60 to-transparent"></div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-6 relative z-10 w-full">
+    <div class="absolute inset-x-0 w-[120%] -left-[10%] bg-gradient-to-r from-primary-dark/80 via-primary/80 to-primary-dark/80 h-full rounded-2xl blur-xl z-0 pointer-events-none"></div>
+    <div class="relative z-10 bg-gradient-to-r from-[#0d1b2a]/90 via-[#1a365d]/90 to-[#0d1b2a]/90 rounded-2xl border border-white/10 backdrop-blur-md">
+      <div class="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 divide-dashed">
+        <div class="py-12 flex flex-col items-center justify-center text-center px-4 reveal-on-scroll"><h3 class="text-4xl md:text-5xl font-heading font-extrabold text-white mb-2">15,000+</h3><p class="text-xs text-white/80 font-black tracking-widest uppercase">Enrolled Students</p></div>
+        <div class="py-12 flex flex-col items-center justify-center text-center px-4 reveal-on-scroll" style="transition-delay:.1s"><h3 class="text-4xl md:text-5xl font-heading font-extrabold text-white mb-2">20+</h3><p class="text-xs text-white/80 font-black tracking-widest uppercase">Video Courses</p></div>
+        <div class="py-12 flex flex-col items-center justify-center text-center px-4 reveal-on-scroll" style="transition-delay:.2s"><h3 class="text-4xl md:text-5xl font-heading font-extrabold text-white mb-2">100+</h3><p class="text-xs text-white/80 font-black tracking-widest uppercase">Expert Mentors</p></div>
+        <div class="py-12 flex flex-col items-center justify-center text-center px-4 reveal-on-scroll" style="transition-delay:.3s"><h3 class="text-4xl md:text-5xl font-heading font-extrabold text-white mb-2">200+</h3><p class="text-xs text-white/80 font-black tracking-widest uppercase">Award Achievers</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     TEAM
+============================================================ -->
+<section class="py-24 bg-[#f0f9ff] relative overflow-hidden" id="team">
+  <!-- Decorative Background Elements -->
+  <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+    <div class="absolute -top-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute top-1/2 -right-24 w-80 h-80 bg-blue-400/5 rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <div class="text-center mb-16 reveal-on-scroll">
+      <h2 class="text-3xl md:text-5xl font-heading font-extrabold tracking-tight text-dark mb-4 uppercase">
+        Our Expert <span class="text-primary-dark">Team</span>
+      </h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">Connect with experts ready to help you achieve your learning goals.</p>
+      <div class="w-48 h-1 mx-auto mt-6 bg-gradient-to-r from-transparent via-primary-light to-transparent"></div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+      {% set team = [
+        ("Suriya Yadav", "CEO & FOUNDER", "Suriya_Yadav _CEO_FOUNDER.webp"),
+        ("Karan Yadav", "COO & CO-FOUNDER", "Karan_Yadav_COO_CO_Founder.webp"),
+        ("Ajay Yadav", "Director", "Ajay_Yadav_Director.webp"),
+        ("Shailendra Yadav", "Manager", "Shailendra_Yadav_Manager.webp"),
+        ("Tarun Prajapati", "Distributor", "Tarun_Prajapati_Distributor.webp")
+      ] %}
+      {% for name, role, img_file in team %}
+      <div class="group reveal-on-scroll" style="transition-delay: {{ loop.index0 * 0.1 }}s">
+        <div class="bg-white rounded-[2rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100 h-full flex flex-col items-center hover:-translate-y-2.5 transition-transform duration-300">
+          <div class="w-full aspect-[4/5] rounded-3xl overflow-hidden mb-6 relative">
+            <img
+              src="{{ url_for('static', filename='img/team/' ~ img_file) }}"
+              alt="{{ name }}"
+              class="w-full h-full object-cover origin-top hover:scale-105 transition-transform duration-700 group-hover:brightness-110"/>
+          </div>
+          <h3 class="font-heading font-bold text-dark text-lg md:text-xl uppercase tracking-wide text-center group-hover:text-primary transition-colors">{{ name }}</h3>
+          <div class="mt-3 px-4 py-1.5 bg-primary/5 rounded-full border border-primary/10 group-hover:bg-primary group-hover:border-primary transition-all duration-300">
+            <p class="text-xs md:text-sm font-extrabold text-primary group-hover:text-white uppercase tracking-widest text-center">{{ role }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     TESTIMONIALS
+============================================================ -->
+<section class="py-24 bg-white relative overflow-hidden">
+  <div class="absolute inset-0 z-0 opacity-[0.03]" style="background-image: radial-gradient(#1e40af 1px, transparent 1px); background-size: 40px 40px;"></div>
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <div class="text-center mb-16 reveal-on-scroll">
+      <h2 class="text-3xl md:text-5xl font-heading font-extrabold tracking-tight text-dark mb-4 uppercase">
+        What Our <span class="text-primary-dark">Students</span> Say
+      </h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">Discover what our students have to say about their learning journey with us</p>
+      <div class="w-48 h-1 mx-auto mt-6 bg-gradient-to-r from-transparent via-primary-light to-transparent"></div>
+    </div>
+
+    <!-- Reviews Slider Container -->
+    <div class="relative group/review-slider">
+      <!-- Navigation Arrows (Desktop) -->
+      <button id="review-prev" class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 backdrop-blur-md rounded-full shadow-xl border border-slate-100 flex items-center justify-center text-primary opacity-0 group-hover/review-slider:opacity-100 transition-all hover:bg-primary hover:text-white -translate-x-6">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button id="review-next" class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 backdrop-blur-md rounded-full shadow-xl border border-slate-100 flex items-center justify-center text-primary opacity-0 group-hover/review-slider:opacity-100 transition-all hover:bg-primary hover:text-white translate-x-6">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <div id="review-slider" class="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar pb-8 px-4 -mx-4">
+        {% set reviews = [
+          ("TONI", "Affiliate Marketer", "Life-changing experience! The training was clear, actionable, and easy to follow even with zero experience. Highly recommended!", "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=100&auto=format&fit=crop"),
+          ("Maha Lakshmi", "Freelancer", "Course chala easy and simple. Online nundi extra income start chesanu. I highly suggest this to everyone!", "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&auto=format&fit=crop"),
+          ("Ravi Varma", "Student", "Transformative journey. Started with zero knowledge, now I enjoy steady online income. Perfect fit for beginners!", "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop"),
+          ("Anjali Sharma", "Digital Marketer", "The community support here is incredible. I've scaled my freelancing business to new heights within months.", "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=100&auto=format&fit=crop"),
+          ("Vikram Singh", "Entrepreneur", "Finally found a course that actually works. Actionable strategies that deliver real-world ROI. 10/10!", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop"),
+          ("Priya Das", "Content Creator", "From struggling to find a niche to becoming a top creator. Zarni Skills gave me the roadmap I needed.", "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=100&auto=format&fit=crop")
+        ] %}
+        {% for name, role, text, img in reviews %}
+        <div class="snap-center shrink-0">
+          <div class="bg-slate-50 rounded-3xl p-6 shadow-lg flex flex-col justify-between border border-primary/5 h-full w-[280px] md:w-[320px] transition-all hover:shadow-xl hover:border-primary/20">
+            <div>
+              <div class="flex text-yellow-500 mb-4 gap-0.5">
+                {% for _ in range(5) %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                {% endfor %}
+              </div>
+              <p class="text-slate-600 text-sm italic leading-relaxed mb-6 font-medium">"{{ text }}"</p>
+            </div>
+            <div class="flex items-center gap-3 border-t border-slate-200 pt-4">
+              <img src="{{ img }}" alt="{{ name }}" class="w-10 h-10 rounded-full border-2 border-primary object-cover"/>
+              <div>
+                <h4 class="font-heading font-bold text-slate-900 text-xs uppercase tracking-wider">{{ name }}</h4>
+                <p class="text-primary font-bold text-[10px] uppercase tracking-widest">{{ role }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+  </div>
+</section>
+
+<!-- ============================================================
+     FAQ
+============================================================ -->
+<section class="py-24 bg-slate-50 relative overflow-hidden">
+  <div class="max-w-4xl mx-auto px-6 relative z-10">
+    <div class="text-center mb-16 reveal-on-scroll">
+      <h2 class="text-3xl md:text-5xl font-heading font-extrabold tracking-tight text-dark mb-4 uppercase">
+        Frequently Asked <span class="text-primary-dark">Questions</span>
+      </h2>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">Explore our frequently asked questions to find answers to common queries.</p>
+      <div class="w-48 h-1 mx-auto mt-6 bg-gradient-to-r from-transparent via-primary-light to-transparent mb-12"></div>
+    </div>
+
+    <div class="space-y-4" id="faq-container">
+      {% set faqs = [
+        ("Can I contact support if I have questions or issues?", "Absolutely! Once you enroll in a course, you'll have lifetime access to the course materials. This means you can revisit the content, review the lessons, and access any future updates or additions to the course."),
+        ("Can I access the course materials after I complete the course?", "Yes, you have lifetime access to all course materials including videos, PDFs, and bonuses even after completion."),
+        ("Do You Offer Any Certifications?", "Yes, upon successfully completing a course and passing the final assessment, you will receive a verified certificate of completion."),
+        ("How can I join?", "Simply choose a package from the pricing section above, click 'Enroll Now', and complete the secure payment process to get instant access.")
+      ] %}
+      {% for q, a in faqs %}
+      <div class="faq-item border border-slate-200 rounded-lg overflow-hidden reveal-on-scroll" style="transition-delay: {{ loop.index0 * 0.1 }}s">
+        <button class="faq-btn w-full text-left px-6 py-4 flex justify-between items-center transition-colors {% if loop.first %}bg-primary text-white{% else %}bg-white text-slate-800 hover:bg-slate-50{% endif %}">
+          <span class="font-heading font-semibold text-[15px]">{{ q }}</span>
+          <svg class="faq-icon transition-transform duration-300 {% if loop.first %}rotate-180 text-white{% else %}text-slate-400{% endif %}" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer bg-white overflow-hidden transition-all duration-300 {% if loop.first %}max-h-96{% else %}max-h-0{% endif %}">
+          <p class="p-6 text-slate-600 font-medium leading-relaxed">{{ a }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Navbar Scroll Logic (Since extending base, some logic might differ)
+  // But let's add the hero specific stuff
+  
+  // Hero Slider
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots = document.querySelectorAll('.hero-dot');
+  
+  function showSlide(index) {
+    slides.forEach(s => s.style.opacity = 0);
+    dots.forEach(d => d.classList.replace('bg-primary', 'bg-primary/30'));
+    
+    slides[index].style.opacity = 1;
+    dots[index].classList.replace('bg-primary/30', 'bg-primary');
+    currentSlide = index;
+  }
+  
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      showSlide(parseInt(dot.dataset.slide));
+    });
+  });
+  
+  setInterval(() => {
+    let next = (currentSlide + 1) % slides.length;
+    showSlide(next);
+  }, 6000);
+
+  // FAQ Logic
+  document.querySelectorAll('.faq-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.parentElement;
+      const answer = item.querySelector('.faq-answer');
+      const icon = btn.querySelector('.faq-icon');
+      
+      const isOpen = answer.style.maxHeight && answer.style.maxHeight !== '0px';
+      
+      // Close others
+      document.querySelectorAll('.faq-answer').forEach(ans => ans.style.maxHeight = '0px');
+      document.querySelectorAll('.faq-btn').forEach(b => {
+        b.classList.remove('bg-primary', 'text-white');
+        b.classList.add('bg-white', 'text-slate-800');
+      });
+      document.querySelectorAll('.faq-icon').forEach(i => i.classList.remove('rotate-180', 'text-white'));
+      
+      if (!isOpen) {
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+        btn.classList.add('bg-primary', 'text-white');
+        btn.classList.remove('bg-white', 'text-slate-800');
+        icon.classList.add('rotate-180', 'text-white');
+      }
+    });
+  });
+
+  // Course Slider Navigation
+  const slider = document.getElementById('course-slider');
+  const prevBtn = document.getElementById('course-prev');
+  const nextBtn = document.getElementById('course-next');
+  
+  if (slider && prevBtn && nextBtn) {
+    const scrollAmount = 350;
+    
+    prevBtn.addEventListener('click', () => {
+      slider.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    });
+    
+    nextBtn.addEventListener('click', () => {
+      slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    });
+  }
+
+  // Review Slider Navigation
+  const rSlider = document.getElementById('review-slider');
+  const rPrevBtn = document.getElementById('review-prev');
+  const rNextBtn = document.getElementById('review-next');
+  
+  if (rSlider && rPrevBtn && rNextBtn) {
+    const rScrollAmount = 350;
+    
+    rPrevBtn.addEventListener('click', () => {
+      rSlider.scrollBy({ left: -rScrollAmount, behavior: 'smooth' });
+    });
+    
+    rNextBtn.addEventListener('click', () => {
+      rSlider.scrollBy({ left: rScrollAmount, behavior: 'smooth' });
+    });
+  }
+
+  // Reveal on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+</script>
+{% endblock %}

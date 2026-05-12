@@ -1,0 +1,68 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Referrals – Zarni Skills{% endblock %}
+{% block page_title %}My Referrals{% endblock %}
+
+{% block body %}
+<!-- Referral link banner -->
+<div class="bg-gradient-to-r from-primary/10 to-primary-light/10 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+  <div>
+    <p class="font-semibold text-gray-800 mb-0.5">Share your referral link</p>
+    <p class="text-sm text-gray-500">Earn commissions when your referrals purchase a package.</p>
+  </div>
+  <div class="flex gap-2 w-full sm:w-auto">
+    <input id="ref-link" type="text" readonly
+           value="{{ request.host_url }}auth/register?ref={{ current_user.referral_code }}"
+           class="flex-1 sm:w-72 text-sm px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 outline-none" />
+    <button onclick="copyRef()" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-dark transition whitespace-nowrap">
+      Copy
+    </button>
+  </div>
+</div>
+
+<!-- Referral table -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+    <h2 class="font-semibold text-gray-800 text-sm">People You Referred</h2>
+    <span class="text-xs text-gray-400">{{ referrals|length }} total</span>
+  </div>
+  {% if referrals %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+        <tr>
+          <th class="px-5 py-3 text-left">Name</th>
+          <th class="px-5 py-3 text-left">Email</th>
+          <th class="px-5 py-3 text-left">Joined</th>
+          <th class="px-5 py-3 text-left">Purchases</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for r in referrals %}
+        <tr>
+          <td class="px-5 py-3 font-medium text-gray-800">{{ r.name }}</td>
+          <td class="px-5 py-3 text-gray-500">{{ r.email }}</td>
+          <td class="px-5 py-3 text-gray-500">{{ r.created_at.strftime('%d %b %Y') }}</td>
+          <td class="px-5 py-3">{{ r.orders.filter_by(payment_status='paid').count() }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="px-5 py-12 text-sm text-gray-400 text-center">
+    No referrals yet. Share your link to start earning!
+  </p>
+  {% endif %}
+</div>
+
+<script>
+function copyRef() {
+  const el = document.getElementById('ref-link');
+  navigator.clipboard.writeText(el.value).then(() => {
+    const btn = el.nextElementSibling;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+</script>
+{% endblock %}

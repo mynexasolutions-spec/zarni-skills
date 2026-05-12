@@ -1,0 +1,264 @@
+{% extends "public_base.html" %}
+{% block title %}{{ course.title }} – Zarni Skills{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
+
+  <!-- Breadcrumb -->
+  <nav class="text-sm text-slate-500 mb-8 flex items-center gap-2 flex-wrap">
+    <a href="{{ url_for('main.index') }}" class="hover:text-primary transition-colors">Home</a>
+    <span>/</span>
+    {% if source_pkg %}
+    <a href="{{ url_for('main.package_detail', pkg_id=source_pkg.id) }}" class="hover:text-primary transition-colors">{{ source_pkg.name }}</a>
+    <span>/</span>
+    {% endif %}
+    <span class="text-slate-800 font-medium">{{ course.title }}</span>
+  </nav>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+    <!-- Left: Main content -->
+    <div class="lg:col-span-2 space-y-8">
+
+      <!-- Thumbnail hero -->
+      <div class="rounded-3xl overflow-hidden shadow-xl">
+        {% if course.thumbnail_display_url %}
+          <img src="{{ course.thumbnail_display_url }}" alt="{{ course.title }}" class="w-full h-64 md:h-80 object-cover" />
+        {% else %}
+          <div class="w-full h-64 md:h-72 bg-gradient-to-br from-primary/80 to-primary-dark flex items-center justify-center p-8">
+            <h1 class="font-heading font-black text-white text-3xl md:text-4xl text-center leading-tight">{{ course.title }}</h1>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Title + badges -->
+      <div>
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          {% if course.level %}
+          <span class="px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">{{ course.level }}</span>
+          {% endif %}
+          {% if course.certificate %}
+          <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 1l2.39 4.84 5.34.78-3.86 3.76.91 5.31L10 13.27l-4.78 2.42.91-5.31L2.27 6.62l5.34-.78L10 1z"/></svg>
+            Certificate
+          </span>
+          {% endif %}
+          {% if course.language %}
+          <span class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full">{{ course.language }}</span>
+          {% endif %}
+        </div>
+        <h1 class="text-3xl md:text-4xl font-heading font-extrabold text-slate-900 mb-4">{{ course.title }}</h1>
+        {% if course.description %}
+        <p class="text-slate-600 leading-relaxed text-base">{{ course.description }}</p>
+        {% endif %}
+      </div>
+
+      <!-- What You'll Learn -->
+      {% if course.what_you_learn %}
+      <div class="bg-blue-50 border border-blue-100 rounded-2xl p-6">
+        <h2 class="text-xl font-heading font-bold text-slate-900 mb-5 flex items-center gap-2">
+          <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          What You'll Learn
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {% for item in course.what_you_learn.split('\n') %}
+          {% if item.strip() %}
+          <div class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+            <span class="text-sm text-slate-700">{{ item.strip() }}</span>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Course details table -->
+      <div class="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
+        <div class="px-5 py-3 border-b border-slate-100 bg-slate-100/60">
+          <h2 class="font-heading font-semibold text-slate-800 text-sm uppercase tracking-wide">Course Details</h2>
+        </div>
+        <table class="w-full text-sm">
+          <tbody class="divide-y divide-slate-100">
+            {% if course.course_duration %}
+            <tr>
+              <td class="px-5 py-3 font-medium text-slate-500 w-2/5">Duration</td>
+              <td class="px-5 py-3 text-slate-800 font-medium">{{ course.course_duration }}</td>
+            </tr>
+            {% endif %}
+            {% if course.level %}
+            <tr class="bg-white">
+              <td class="px-5 py-3 font-medium text-slate-500">Skill Level</td>
+              <td class="px-5 py-3 text-slate-800 font-medium">{{ course.level }}</td>
+            </tr>
+            {% endif %}
+            {% if course.language %}
+            <tr>
+              <td class="px-5 py-3 font-medium text-slate-500">Language</td>
+              <td class="px-5 py-3 text-slate-800 font-medium">{{ course.language }}</td>
+            </tr>
+            {% endif %}
+            <tr class="bg-white">
+              <td class="px-5 py-3 font-medium text-slate-500">Total Chapters</td>
+              <td class="px-5 py-3 text-slate-800 font-medium">
+                {% set ch_count = course.chapters.filter_by(is_active=True).count() %}
+                {{ ch_count }} chapter{{ 's' if ch_count != 1 }}
+              </td>
+            </tr>
+            <tr>
+              <td class="px-5 py-3 font-medium text-slate-500">Certificate</td>
+              <td class="px-5 py-3">
+                {% if course.certificate %}
+                  <span class="text-green-700 font-semibold flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Yes, on completion
+                  </span>
+                {% else %}
+                  <span class="text-slate-400">Not included</span>
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Prerequisites -->
+      {% if course.prerequisites %}
+      <div>
+        <h2 class="text-xl font-heading font-bold text-slate-900 mb-4">Prerequisites</h2>
+        <ul class="space-y-2">
+          {% for item in course.prerequisites.split('\n') %}
+          {% if item.strip() %}
+          <li class="flex items-start gap-2.5 text-slate-600 text-sm">
+            <span class="text-primary font-bold mt-0.5">•</span>
+            {{ item.strip() }}
+          </li>
+          {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <!-- Chapter List -->
+      {% set chapters = course.chapters.filter_by(is_active=True).all() %}
+      {% if chapters %}
+      <div>
+        <h2 class="text-xl font-heading font-bold text-slate-900 mb-4">
+          Course Content
+          <span class="text-sm font-normal text-slate-400 ml-2">({{ chapters|length }} chapters)</span>
+        </h2>
+        <div class="border border-slate-200 rounded-2xl overflow-hidden divide-y divide-slate-100">
+          {% for ch in chapters %}
+          <div class="flex items-center gap-4 px-5 py-4 bg-white hover:bg-slate-50 transition-colors">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+              {{ ch.order or loop.index }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-slate-800 truncate">{{ ch.title }}</p>
+              {% if ch.description %}
+              <p class="text-xs text-slate-400 truncate mt-0.5">{{ ch.description }}</p>
+              {% endif %}
+            </div>
+            <div class="flex items-center gap-3 shrink-0 text-xs text-slate-400">
+              {% if ch.duration %}<span>{{ ch.duration }}</span>{% endif %}
+              <!-- Lock icon — only purchased students can watch -->
+              <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Available in packages -->
+      {% if packages %}
+      <div>
+        <h2 class="text-xl font-heading font-bold text-slate-900 mb-4">Available In</h2>
+        <div class="flex flex-wrap gap-3">
+          {% for p in packages %}
+          <a href="{{ url_for('main.package_detail', pkg_id=p.id) }}"
+             class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-primary/20 text-primary rounded-xl text-sm font-semibold hover:bg-primary/5 transition-colors">
+            {{ p.name }}
+            <span class="text-slate-400 font-normal">— ₹{{ '{:,.0f}'.format(p.price) }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: Sticky card -->
+    <div class="lg:col-span-1">
+      <div class="sticky top-28 bg-white rounded-3xl border border-slate-200 shadow-xl p-6 space-y-5">
+        <h3 class="font-heading font-bold text-slate-900 text-lg">Get Access</h3>
+
+        <p class="text-sm text-slate-500">This course is part of the following packages. Purchase one to unlock all chapters.</p>
+
+        {% if packages %}
+        <div class="space-y-3">
+          {% for p in packages %}
+          <div class="border border-slate-200 rounded-xl p-4">
+            <p class="font-semibold text-slate-800 text-sm mb-1">{{ p.name }}</p>
+            <p class="text-xl font-heading font-black text-primary mb-3">₹{{ '{:,.0f}'.format(p.price) }}/-</p>
+            {% if current_user.is_authenticated %}
+              <a href="{{ url_for('student.buy_package', package_id=p.id) }}"
+                 class="w-full block text-center py-2.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl text-sm transition-all">
+                Buy Package
+              </a>
+            {% else %}
+              <a href="{{ url_for('auth.register') }}"
+                 class="w-full block text-center py-2.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl text-sm transition-all">
+                Enroll Now
+              </a>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+          <p class="text-sm text-slate-400 mb-3">Not assigned to any package yet.</p>
+        </div>
+        {% endif %}
+
+        {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.login') }}"
+           class="w-full block text-center py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all text-sm">
+          Already enrolled? Login
+        </a>
+        {% endif %}
+
+        <!-- Quick details -->
+        <ul class="space-y-2 text-sm text-slate-600 pt-3 border-t border-slate-100">
+          {% if course.course_duration %}
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {{ course.course_duration }}
+          </li>
+          {% endif %}
+          {% if course.level %}
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            {{ course.level }}
+          </li>
+          {% endif %}
+          {% if course.certificate %}
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-yellow-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M10 1l2.39 4.84 5.34.78-3.86 3.76.91 5.31L10 13.27l-4.78 2.42.91-5.31L2.27 6.62l5.34-.78L10 1z"/></svg>
+            Certificate on completion
+          </li>
+          {% endif %}
+          {% set ch_count = course.chapters.filter_by(is_active=True).count() %}
+          <li class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {{ ch_count }} chapter{{ 's' if ch_count != 1 }}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

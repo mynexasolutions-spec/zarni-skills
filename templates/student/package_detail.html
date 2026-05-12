@@ -1,0 +1,137 @@
+{% extends "dashboard_base.html" %}
+{% block title %}{{ package.name }} – Zarni Skills{% endblock %}
+{% block page_title %}Package Detail{% endblock %}
+
+{% block body %}
+<div class="max-w-6xl mx-auto">
+  
+  <!-- Back Button -->
+  <a href="{{ url_for('student.my_packages') }}" class="inline-flex items-center gap-2 text-gray-500 hover:text-primary transition-colors mb-8 group">
+    <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    <span class="text-xs font-black uppercase tracking-widest">Back to Packages</span>
+  </a>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+    
+    <!-- Left Column: Content -->
+    <div class="lg:col-span-2 space-y-12">
+      
+      <!-- Hero Section -->
+      <div class="space-y-6">
+        <h1 class="text-4xl md:text-5xl font-black text-gray-900 leading-tight">{{ package.name }}</h1>
+        <div class="flex flex-wrap gap-4">
+          <span class="px-4 py-1.5 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest rounded-full">
+            {{ package.level or 'Premium' }}
+          </span>
+          <span class="px-4 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full">
+            {{ package.language or 'English' }}
+          </span>
+          <span class="px-4 py-1.5 bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest rounded-full">
+            {{ package.pkg_duration or 'Lifetime Access' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Included Courses -->
+      <div class="space-y-8">
+        <div class="flex items-center gap-4">
+          <div class="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-black text-gray-900">What's Inside</h2>
+            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-0.5">{{ package.courses|length }} Professional Courses</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% for course in package.courses %}
+          <div class="group flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 hover:border-primary/20 hover:shadow-xl hover:shadow-gray-100 transition-all duration-300">
+            <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0">
+              <img src="{{ course.thumbnail_url or 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3' }}" 
+                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+            </div>
+            <div class="flex-1 min-w-0">
+              <h4 class="text-sm font-bold text-gray-900 truncate group-hover:text-primary transition-colors">{{ course.title }}</h4>
+              <p class="text-[11px] text-gray-400 mt-0.5">{{ course.level or 'All Levels' }}</p>
+            </div>
+            <a href="{{ url_for('student.watch_course', course_id=course.id) }}" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Description & What You Learn -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div class="space-y-6">
+          <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">Description</h3>
+          <div class="prose prose-sm text-gray-600 font-medium leading-relaxed">
+            {{ package.description|replace('\n', '<br>')|safe }}
+          </div>
+        </div>
+        
+        {% if package.what_you_get %}
+        <div class="space-y-6">
+          <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">What You Get</h3>
+          <div class="bg-gray-50 rounded-3xl p-8 space-y-4">
+            {% for line in package.what_you_get.split('\n') %}
+              {% if line.strip() %}
+              <div class="flex gap-3 text-sm text-gray-600 font-medium">
+                <svg class="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>{{ line.strip() }}</span>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- Right Column: Sidebar Stats -->
+    <div class="space-y-8">
+      <div class="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm sticky top-24">
+        <div class="relative w-full aspect-square rounded-3xl overflow-hidden mb-8">
+          <img src="{{ package.thumbnail_display_url or 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3' }}" 
+               class="w-full h-full object-cover">
+        </div>
+
+        <div class="space-y-6">
+          <div class="flex justify-between items-center py-4 border-b border-gray-50">
+            <span class="text-xs font-bold text-gray-400 uppercase">Courses</span>
+            <span class="text-sm font-black text-gray-900">{{ package.courses|length }}</span>
+          </div>
+          <div class="flex justify-between items-center py-4 border-b border-gray-50">
+            <span class="text-xs font-bold text-gray-400 uppercase">Certificate</span>
+            <span class="text-sm font-black text-green-500">Yes</span>
+          </div>
+          <div class="flex justify-between items-center py-4 border-b border-gray-50">
+            <span class="text-xs font-bold text-gray-400 uppercase">Access</span>
+            <span class="text-sm font-black text-gray-900">Lifetime</span>
+          </div>
+        </div>
+
+        <div class="mt-10 p-6 bg-primary/5 rounded-2xl border border-primary/10">
+          <p class="text-[11px] text-primary font-black uppercase text-center mb-1">Affiliate Earning</p>
+          <div class="flex justify-around items-center">
+            <div class="text-center">
+              <span class="block text-xl font-black text-primary">{{ package.level1_commission_percent }}%</span>
+              <span class="text-[9px] text-primary/60 font-bold uppercase">Direct</span>
+            </div>
+            <div class="w-px h-8 bg-primary/10"></div>
+            <div class="text-center">
+              <span class="block text-xl font-black text-primary">{{ package.level2_commission_percent }}%</span>
+              <span class="text-[9px] text-primary/60 font-bold uppercase">Passive</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/dashboard.css') }}" />
+  <style>
+    /* ── Student layout flex wrapper ── */
+    #student-layout { display:flex; height:100vh; overflow:hidden; }
+    #offcanvas-sidebar {
+      width:0; flex-shrink:0; overflow:hidden; background:#fff;
+      border-right:1px solid #e5e7eb; transition:width .3s ease;
+      display:flex; flex-direction:column; z-index:50;
+    }
+    #offcanvas-sidebar.open { width:260px; min-width:260px; }
+    #sidebar-inner { width:260px; flex-shrink:0; overflow-y:auto; height:100%; display:flex; flex-direction:column; }
+    #student-main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+    #student-main > main { flex:1; overflow-y:auto; padding:24px; background:#f3f4f6; }
+    .sidebar-logo-area { height:64px; display:flex; align-items:center; padding:0 20px; border-bottom:1px solid #f3f4f6; gap:10px; flex-shrink:0; }
+    .oc-group-header { padding:8px 16px; font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#fff; background:#2563eb; margin-top:8px; }
+    .oc-link { display:flex; align-items:center; gap:10px; padding:9px 20px; font-size:.875rem; color:#374151; text-decoration:none; transition:background .15s; }
+    .oc-link:hover { background:#f3f4f6; color:#111; }
+    .oc-link.active { background:#eff6ff; color:#2b80f0; font-weight:600; }
+    .oc-link.logout-link:hover { background:#fef2f2; color:#dc2626; }
+    .oc-link svg { width:18px; height:18px; flex-shrink:0; stroke:currentColor; }
+    #profile-dropdown {
+      display:none; position:absolute; right:0; top:calc(100% + 8px);
+      min-width:200px; background:#fff; border:1px solid #e5e7eb;
+      border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.12); z-index:500; overflow:hidden;
+    }
+    #profile-dropdown.open { display:block; }
+    #profile-dropdown a { display:flex; align-items:center; gap:10px; padding:10px 16px; font-size:.875rem; color:#374151; text-decoration:none; transition:background .15s; }
+    #profile-dropdown a:hover { background:#f3f4f6; }
+    #profile-dropdown a.logout-link:hover { background:#fef2f2; color:#dc2626; }
+    #profile-dropdown .dropdown-divider { height:1px; background:#f3f4f6; margin:4px 0; }
+  </style>
+{% endblock %}
+
+{% block content %}
+{% set is_admin = (current_user.role == 'admin') %}
+{% set is_manager = (current_user.role == 'manager') %}
+{% set is_student_area = (current_user.role in ('student', 'manager', 'team_member')) %}
+
+{# ═══════════════ STUDENT / MANAGER layout chrome ═══════════════ #}
+{% if is_student_area %}
+<header class="h-16 bg-primary text-white flex items-center px-4 sm:px-6 relative w-full" style="flex-shrink:0;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <img src="{{ url_for('static', filename='img/zarni-logo.png') }}"
+         alt="Zarni Skills" style="height:36px;width:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.4);" />
+    <span style="font-weight:800;font-size:1.1rem;letter-spacing:-.3px;" class="hidden sm:block">Zarni Skills</span>
+  </div>
+  <div style="position:absolute;left:50%;transform:translateX(-50%);">
+    <h1 style="font-weight:700;font-size:1rem;white-space:nowrap;">
+      Welcome! {{ current_user.name }}
+      {% if current_user.role == 'manager' %}
+        <span style="font-size:.75rem;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:20px;margin-left:6px;">Manager</span>
+      {% elif current_user.role == 'team_member' %}
+        <span style="font-size:.75rem;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:20px;margin-left:6px;">Team</span>
+      {% endif %}
+    </h1>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:16px;font-size:.875rem;font-weight:500;">
+    <a href="{{ url_for('main.index') }}" style="color:#fff;text-decoration:none;" class="hidden sm:block">Home</a>
+    <a href="{{ url_for('student.dashboard') }}" style="color:#fff;text-decoration:none;" class="hidden sm:block">Dashboard</a>
+    <a href="{{ url_for('student.all_courses') }}" style="color:#fff;text-decoration:none;" class="hidden sm:block">Courses</a>
+    
+    <!-- Notification Bell -->
+    <div style="position:relative;" id="notification-wrapper">
+      <button id="notification-btn" class="relative p-2 rounded-full hover:bg-white/10 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        {% set unread_count = current_user.notifications.filter_by(is_read=False).count() %}
+        {% if unread_count > 0 %}
+        <span id="notif-badge" class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-primary">
+          {{ unread_count }}
+        </span>
+        {% endif %}
+      </button>
+      
+      <div id="notification-dropdown" class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 hidden overflow-hidden z-[1000] animate-in fade-in zoom-in duration-200">
+        <div class="px-5 py-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+          <span class="text-xs font-black text-gray-800 uppercase tracking-widest">Notifications</span>
+          <button onclick="markAllAsRead()" class="text-[10px] font-bold text-primary hover:underline">Mark all as read</button>
+        </div>
+        <div class="max-h-[400px] overflow-y-auto" id="notif-list">
+          {% set notifs = current_user.notifications.limit(10).all() %}
+          {% if notifs %}
+            {% for n in notifs %}
+            <div class="px-5 py-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 {{ 'bg-blue-50/30' if not n.is_read else '' }}">
+              <div class="flex gap-3">
+                <div class="mt-1">
+                  {% if n.type == 'commission' %}
+                  <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V6m0 12v-2m9-4a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                  {% elif n.type == 'referral' %}
+                  <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg></div>
+                  {% elif n.type == 'withdrawal' %}
+                  <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div>
+                  {% else %}
+                  <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                  {% endif %}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-bold text-gray-900 truncate">{{ n.title }}</div>
+                  <div class="text-[11px] text-gray-500 leading-relaxed mt-0.5">{{ n.message }}</div>
+                  <div class="text-[9px] text-gray-400 mt-1.5 font-medium">{{ n.created_at.strftime('%d %b, %H:%M') }}</div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="px-5 py-12 text-center">
+              <svg class="w-12 h-12 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">No notifications yet</p>
+            </div>
+          {% endif %}
+        </div>
+        <div class="p-3 bg-gray-50 text-center border-t border-gray-100">
+          <a href="#" class="text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-primary transition-colors">View All Notifications</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:relative;" id="profile-icon-wrapper">
+      <button id="profile-icon-btn" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        {{ current_user.name[0].upper() }}
+      </button>
+      <div id="profile-dropdown">
+        <a href="{{ url_for('student.profile') }}"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A4 4 0 0010 21h4a4 4 0 004.879-3.196M15 11a3 3 0 10-6 0 3 3 0 006 0z"/></svg>My Profile</a>
+        <a href="{{ url_for('student.my_courses') }}"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253"/></svg>My Courses</a>
+        {% if is_manager %}
+        <a href="{{ url_for('manager.dashboard') }}"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Manager Panel</a>
+        {% endif %}
+        <a href="{{ url_for('student.upgrade_panel') }}"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V6m0 12v-2m9-4a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Upgrade Panel</a>
+        <a href="{{ url_for('student.buy') }}"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>Buy Package</a>
+        <div class="dropdown-divider"></div>
+        <a href="{{ url_for('auth.logout') }}" class="logout-link"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Logout</a>
+      </div>
+    </div>
+    <a href="{{ url_for('student.dashboard') }}" id="open-sidebar-btn" style="background:none;border:none;cursor:pointer;padding:6px;color:#fff;display:flex;align-items:center;">
+      <svg id="sidebar-hamburger" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+      </svg>
+    </a>
+  </div>
+</header>
+
+<div id="student-layout" style="display:flex;">
+  <aside id="offcanvas-sidebar" class="open" style="margin-top:0;">
+    <div id="sidebar-inner">
+      <nav style="flex:1;padding-bottom:16px;">
+
+        {# ── Manager-specific section ── #}
+        {% if is_manager %}
+        <div class="oc-group-header">Manager Panel</div>
+        <a href="{{ url_for('manager.dashboard') }}" class="oc-link{% if request.endpoint == 'manager.dashboard' %} active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19V6l-2 2m2-2l2 2M15 19V10l-2 2m2-2l2 2M5 20h14"/></svg>Manager Dashboard
+        </a>
+        <a href="{{ url_for('manager.team') }}" class="oc-link{% if request.endpoint == 'manager.team' %} active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>My Team
+        </a>
+        <a href="{{ url_for('manager.commissions') }}" class="oc-link{% if request.endpoint == 'manager.commissions' %} active{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>My Commissions
+        </a>
+        {% endif %}
+
+        <div class="oc-group-header">My Dashboard</div>
+        <a href="{{ url_for('student.dashboard') }}" class="oc-link{% if request.endpoint == 'student.dashboard' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+        <a href="{{ url_for('student.wallet') }}" class="oc-link{% if request.endpoint == 'student.wallet' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>My Earning</a>
+        <a href="{{ url_for('student.leaderboard') }}" class="oc-link{% if request.endpoint == 'student.leaderboard' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19V6l-2 2m2-2l2 2M15 19V10l-2 2m2-2l2 2M5 20h14"/></svg>Leaderboard</a>
+        <a href="{{ url_for('student.achievements') }}" class="oc-link{% if request.endpoint == 'student.achievements' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>My Achievement</a>
+        <a href="{{ url_for('student.my_packages') }}" class="oc-link{% if request.endpoint in ('student.my_packages','student.package_detail') %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>My Packages</a>
+        <a href="{{ url_for('student.my_courses') }}" class="oc-link{% if request.endpoint in ('student.my_courses','student.watch_course') %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>My Courses</a>
+        <a href="{{ url_for('student.certificate') }}" class="oc-link{% if request.endpoint == 'student.certificate' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Certificate</a>
+
+        <div class="oc-group-header">Payout Details</div>
+        <a href="{{ url_for('student.wallet') }}" class="oc-link{% if request.endpoint == 'student.wallet' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Payout Details</a>
+        <a href="{{ url_for('student.edit_kyc') }}" class="oc-link{% if request.endpoint == 'student.edit_kyc' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>KYC</a>
+        <a href="{{ url_for('student.nominee_detail') }}" class="oc-link{% if request.endpoint == 'student.nominee_detail' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Nominee Details</a>
+
+        <div class="oc-group-header">Support System</div>
+        <a href="{{ url_for('student.mentorship') }}" class="oc-link{% if request.endpoint == 'student.mentorship' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-3-.46L3 21l1.46-4A7.89 7.89 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>Support</a>
+        <a href="{{ url_for('student.affiliate_training') }}" class="oc-link{% if request.endpoint == 'student.affiliate_training' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>Trainings</a>
+        <a href="{{ url_for('student.affiliate_tools') }}" class="oc-link{% if request.endpoint == 'student.affiliate_tools' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Tools</a>
+        <a href="{{ url_for('student.all_webinar') }}" class="oc-link{% if request.endpoint == 'student.all_webinar' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Community</a>
+
+        <div class="oc-group-header">Marketing</div>
+        <a href="{{ url_for('student.upgrade_panel') }}" class="oc-link{% if request.endpoint == 'student.upgrade_panel' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V6m0 12v-2m9-4a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Upgrade Panel</a>
+        <a href="{{ url_for('student.affiliate_offers') }}" class="oc-link{% if request.endpoint == 'student.affiliate_offers' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>Affiliate Offers</a>
+        <a href="{{ url_for('student.affiliate_panel') }}" class="oc-link{% if request.endpoint == 'student.affiliate_panel' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>Link Generator</a>
+        <a href="{{ url_for('student.referrals') }}" class="oc-link{% if request.endpoint == 'student.referrals' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>Your Referral</a>
+        <a href="{{ url_for('student.my_team') }}" class="oc-link{% if request.endpoint == 'student.my_team' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>My Team Network</a>
+        <div style="height:1px;background:#f3f4f6;margin:8px 0;"></div>
+        <a href="{{ url_for('student.buy') }}" class="oc-link{% if request.endpoint == 'student.buy' %} active{% endif %}"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>Buy Package</a>
+        <div style="height:1px;background:#f3f4f6;margin:8px 0;"></div>
+        <a href="{{ url_for('auth.logout') }}" class="oc-link logout-link" style="color:#ef4444;"><svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Logout</a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="student-main">
+    <main style="flex:1;overflow-y:auto;padding:24px;background:#f3f4f6;">
+
+{% else %}
+{# ═══════════════ ADMIN layout chrome ═══════════════ #}
+<div class="flex h-screen overflow-hidden bg-gray-50">
+  <aside class="flex-shrink-0 w-64 bg-white border-r border-gray-200 flex flex-col">
+    <div class="h-16 flex items-center px-6 border-b border-gray-100">
+      <a href="{{ url_for('main.index') }}" class="flex items-center gap-2.5">
+        <img src="{{ url_for('static', filename='img/zarni-logo.png') }}"
+             alt="Zarni Skills" class="w-8 h-8 rounded-full object-cover" />
+        <span class="font-heading font-bold text-gray-900 text-base">Zarni Skills</span>
+      </a>
+    </div>
+    <nav class="flex-1 overflow-y-auto py-4 px-3 text-sm">
+      {% set links = [
+        ('admin.dashboard',    'Dashboard',    'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'),
+        ('admin.users',        'Users',        'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z'),
+        ('admin.managers',     'Managers',     'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'),
+        ('admin.team_members', 'Team Members', 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'),
+        ('admin.packages',     'Packages',     'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'),
+        ('admin.courses',      'Courses',      'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'),
+        ('admin.commissions',  'Commissions',  'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z'),
+        ('admin.withdrawals',  'Withdrawals',  'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'),
+        ('admin.kyc_list',     'KYC Requests', 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'),
+        ('admin.settings',     'Settings',     'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'),
+      ] %}
+      <div class="space-y-1">
+        {% for endpoint, label, icon_d in links %}
+          {% set active = (request.endpoint == endpoint or
+                           (endpoint == 'admin.courses' and request.endpoint in ('admin.course_chapters','admin.new_chapter','admin.edit_chapter'))) %}
+          <a href="{{ url_for(endpoint) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors {{ 'bg-primary/10 text-primary' if active else 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ icon_d }}"/></svg>
+            {{ label }}
+          </a>
+        {% endfor %}
+      </div>
+    </nav>
+    <div class="p-3 border-t border-gray-100">
+      <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Logout
+      </a>
+    </div>
+  </aside>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6" style="flex-shrink:0;">
+      <h1 class="font-heading font-semibold text-gray-900 text-lg">{% block page_title %}{% endblock %}</h1>
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-gray-500 hidden sm:block">{{ current_user.name }}</span>
+        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">{{ current_user.name[0].upper() }}</div>
+      </div>
+    </header>
+    <main class="flex-1 overflow-y-auto p-6">
+{% endif %}
+
+{# ════════ SINGLE {% block body %} — shared by both branches ════════ #}
+{% block body %}{% endblock %}
+
+{# ═══ Close the layout chrome ═══ #}
+{% if is_student_area %}
+    </main>
+    </div><!-- /#student-main -->
+  </div><!-- /#student-layout -->
+
+  <script>
+    const profileBtn = document.getElementById('profile-icon-btn');
+    const profileDropdown = document.getElementById('profile-dropdown');
+    profileBtn.addEventListener('click', function(e) { e.stopPropagation(); profileDropdown.classList.toggle('open'); });
+
+    // Notification Logic
+    const notifBtn = document.getElementById('notification-btn');
+    const notifDropdown = document.getElementById('notification-dropdown');
+    
+    if (notifBtn) {
+      notifBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        notifDropdown.classList.toggle('hidden');
+        profileDropdown.classList.remove('open');
+      });
+    }
+
+    function markAllAsRead() {
+      fetch('{{ url_for("student.read_all_notifications") }}', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            const badge = document.getElementById('notif-badge');
+            if (badge) badge.remove();
+            // Optional: style all notifs as read
+            document.querySelectorAll('#notif-list > div').forEach(div => {
+              div.classList.remove('bg-blue-50/30');
+            });
+          }
+        });
+    }
+
+    document.addEventListener('click', function() {
+      profileDropdown.classList.remove('open');
+      if (notifDropdown) notifDropdown.classList.add('hidden');
+    });
+    
+    if (notifDropdown) {
+      notifDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+    }
+  </script>
+{% else %}
+    </main>
+    </div><!-- /.flex-1.admin-main -->
+  </div><!-- /.flex.admin-wrapper -->
+{% endif %}
+
+{% endblock %}

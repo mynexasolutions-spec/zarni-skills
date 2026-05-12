@@ -1,0 +1,103 @@
+{% extends "public_base.html" %}
+
+{% block title %}About Us - Zarni Skills{% endblock %}
+
+{% block content %}
+<!-- Page Banner -->
+<section class="relative h-[45vh] md:h-[60vh] flex items-center justify-center overflow-hidden -mt-24 mb-12">
+  <div class="absolute inset-0 z-0">
+    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop" 
+         alt="About Banner" class="w-full h-full object-cover">
+    <div class="absolute inset-0 bg-blue-950/70 backdrop-blur-[2px]"></div>
+  </div>
+  
+  <div class="relative z-10 text-center px-6 pt-20">
+    <h1 class="text-4xl md:text-6xl font-heading font-extrabold text-white mb-4 tracking-tight uppercase">
+      Empowering <span class="text-primary-light">The Next</span> Generation
+    </h1>
+    <p class="text-lg text-slate-300 max-w-2xl mx-auto uppercase tracking-widest font-bold">The Story Behind Zarni Skills</p>
+  </div>
+</section>
+
+<!-- Mission & Vision -->
+<section class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div class="reveal-on-scroll">
+        <h2 class="text-3xl md:text-5xl font-heading font-extrabold text-slate-900 mb-8 leading-tight">
+          Beyond Education — We're <span class="text-primary">Building Leaders.</span>
+        </h2>
+        <p class="text-slate-600 text-lg leading-relaxed mb-8 font-medium">
+          Zarni Skills was founded with a single mission: to bridge the gap between academic learning and real-world success. In a rapidly evolving digital economy, traditional degrees are no longer enough. We empower our students with high-income skills that are in demand right now.
+        </p>
+        <div class="grid grid-cols-2 gap-6">
+          <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+            <h4 class="font-heading font-black text-primary text-2xl mb-2">15K+</h4>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Active Learners</p>
+          </div>
+          <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+            <h4 class="font-heading font-black text-primary text-2xl mb-2">100+</h4>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Expert Mentors</p>
+          </div>
+        </div>
+      </div>
+      <div class="relative reveal-on-scroll">
+        <div class="absolute inset-0 bg-primary/10 blur-3xl rounded-full -z-10 translate-x-8"></div>
+        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop" 
+             alt="Team Work" class="rounded-[2.5rem] shadow-2xl border-4 border-white">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="py-24 bg-slate-50 relative overflow-hidden">
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-5xl font-heading font-extrabold text-slate-900 mb-4 uppercase">Why Zarni Skills?</h2>
+      <div class="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all duration-300">
+        <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 text-primary">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm0 0V20"/></svg>
+        </div>
+        <h3 class="text-xl font-heading font-bold text-slate-900 mb-4 uppercase tracking-tight">Expert Design</h3>
+        <p class="text-slate-500 font-medium leading-relaxed">Our courses are designed by industry veterans who have already achieved what they teach.</p>
+      </div>
+
+      <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all duration-300">
+        <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 text-primary">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h3 class="text-xl font-heading font-bold text-slate-900 mb-4 uppercase tracking-tight">Rapid Growth</h3>
+        <p class="text-slate-500 font-medium leading-relaxed">We focus on actionable strategies that deliver results in weeks, not years.</p>
+      </div>
+
+      <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all duration-300">
+        <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 text-primary">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </div>
+        <h3 class="text-xl font-heading font-bold text-slate-900 mb-4 uppercase tracking-tight">Community Led</h3>
+        <p class="text-slate-500 font-medium leading-relaxed">Join a network of thousands of like-minded individuals scaling their careers together.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+</script>
+{% endblock %}

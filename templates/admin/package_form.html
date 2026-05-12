@@ -1,0 +1,166 @@
+{% extends "dashboard_base.html" %}
+{% block title %}{{ 'Edit' if package else 'New' }} Package – Zarni Skills Admin{% endblock %}
+{% block page_title %}{{ 'Edit Package' if package else 'New Package' }}{% endblock %}
+
+{% block body %}
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+    <form method="POST" enctype="multipart/form-data" class="space-y-5">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <!-- Basic Info -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Package Name <span class="text-red-500">*</span></label>
+          <input name="name" type="text" required value="{{ package.name if package else '' }}"
+                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+          <textarea name="description" rows="3"
+                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition resize-none">{{ package.description if package else '' }}</textarea>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Price (₹) <span class="text-red-500">*</span></label>
+          <input name="price" type="number" min="0" step="0.01" required
+                 value="{{ package.price if package else '' }}"
+                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Min Income for L2 (₹)</label>
+          <input name="min_income" type="number" min="0" step="0.01"
+                 value="{{ package.min_income_for_level2 if package else '0' }}"
+                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
+        </div>
+      </div>
+
+      <!-- Commission Section -->
+      <div class="border border-yellow-200 bg-yellow-50 rounded-xl p-4">
+        <h3 class="text-sm font-semibold text-yellow-800 mb-3">Commission Settings</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+              Level 1 Commission (%)
+              <span class="text-xs text-gray-400 font-normal ml-1">— direct referrer</span>
+            </label>
+            <input name="level1_pct" type="number" min="0" max="100" step="0.01" required
+                   value="{{ package.level1_commission_percent if package else '10' }}"
+                   class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition bg-white" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+              Level 2 Commission (%)
+              <span class="text-xs text-gray-400 font-normal ml-1">— passive income</span>
+            </label>
+            <input name="level2_pct" type="number" min="0" max="100" step="0.01" required
+                   value="{{ package.level2_commission_percent if package else '5' }}"
+                   class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition bg-white" />
+          </div>
+        </div>
+        <p class="text-xs text-yellow-700 mt-2">L2 is awarded only when the L2 earner's total income exceeds the Min Income threshold set above.</p>
+      </div>
+
+      <!-- Thumbnail Upload -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Thumbnail Image</label>
+        {% if package and package.thumbnail_display_url %}
+          <div class="mb-2">
+            <img src="{{ package.thumbnail_display_url }}" alt="Current thumbnail"
+                 class="h-28 w-auto rounded-lg object-cover border border-gray-200" />
+            <p class="text-xs text-gray-400 mt-1">Current thumbnail — upload a new file to replace it.</p>
+          </div>
+        {% endif %}
+        <input type="file" name="thumbnail_file" accept="image/*"
+               class="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition" />
+        <p class="text-xs text-gray-400 mt-1">JPG, PNG, WebP, GIF.</p>
+      </div>
+
+      <!-- Technical Details -->
+      <div class="border-t border-gray-100 pt-5">
+        <h3 class="text-sm font-semibold text-gray-700 mb-4">Package Details (shown as a table to students)</h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Duration</label>
+            <input name="pkg_duration" type="text" placeholder="e.g. Lifetime Access"
+                   value="{{ package.pkg_duration if package else '' }}"
+                   class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Level</label>
+            <select name="level"
+                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition bg-white">
+              <option value="">-- Select --</option>
+              {% for lvl in ['Beginner', 'Intermediate', 'Advanced', 'All Levels'] %}
+              <option value="{{ lvl }}" {{ 'selected' if package and package.level == lvl else '' }}>{{ lvl }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Language</label>
+            <input name="language" type="text" placeholder="e.g. Hindi, English"
+                   value="{{ package.language if package else '' }}"
+                   class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">What You Get</label>
+          <textarea name="what_you_get" rows="4" placeholder="e.g. 3 Premium Courses&#10;Lifetime Access&#10;Certificate&#10;Community Access"
+                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition resize-none">{{ package.what_you_get if package else '' }}</textarea>
+          <p class="text-xs text-gray-400 mt-1">One item per line. Shown as checkmarks on the package page.</p>
+        </div>
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Requirements / Prerequisites</label>
+          <textarea name="requirements" rows="2" placeholder="e.g. Smartphone with internet&#10;Basic English understanding"
+                    class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition resize-none">{{ package.requirements if package else '' }}</textarea>
+          <p class="text-xs text-gray-400 mt-1">One item per line.</p>
+        </div>
+      </div>
+
+      <!-- Course selection -->
+      {% if courses %}
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Assign Courses</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-3">
+          {% for course in courses %}
+          {% set checked = package and course in package.courses %}
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" name="course_ids" value="{{ course.id }}"
+                   {{ 'checked' if checked else '' }}
+                   class="rounded border-gray-300 text-primary focus:ring-primary" />
+            {{ course.title }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="flex items-center gap-2">
+        <input type="checkbox" name="is_active" id="is_active" value="1"
+               {{ 'checked' if (package is none or package.is_active) else '' }}
+               class="rounded border-gray-300 text-primary focus:ring-primary" />
+        <label for="is_active" class="text-sm font-medium text-gray-700">Active (visible to students)</label>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="flex-1 py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition text-sm">
+          {{ 'Save Changes' if package else 'Create Package' }}
+        </button>
+        <a href="{{ url_for('admin.packages') }}"
+           class="flex-1 py-3 text-center bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition text-sm">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

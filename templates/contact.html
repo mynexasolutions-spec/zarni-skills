@@ -1,0 +1,115 @@
+{% extends "public_base.html" %}
+
+{% block title %}Contact Us - Zarni Skills{% endblock %}
+
+{% block content %}
+<!-- Page Banner -->
+<section class="relative h-[45vh] md:h-[60vh] flex items-center justify-center overflow-hidden -mt-24 mb-12">
+  <div class="absolute inset-0 z-0">
+    <img src="https://images.unsplash.com/photo-1534536281715-e28d76689b4d?q=80&w=2070&auto=format&fit=crop" 
+         alt="Contact Banner" class="w-full h-full object-cover">
+    <div class="absolute inset-0 bg-blue-950/70 backdrop-blur-[2px]"></div>
+  </div>
+  
+  <div class="relative z-10 text-center px-6 pt-20">
+    <h1 class="text-4xl md:text-6xl font-heading font-extrabold text-white mb-4 tracking-tight uppercase">
+      Get In <span class="text-primary-light">Touch</span> With Us
+    </h1>
+    <p class="text-lg text-slate-300 max-w-2xl mx-auto uppercase tracking-widest font-bold">We're here to help you scale your future</p>
+  </div>
+</section>
+
+<!-- Contact Section -->
+<section class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+      <!-- Contact Info -->
+      <div class="reveal-on-scroll">
+        <h2 class="text-3xl md:text-5xl font-heading font-extrabold text-slate-900 mb-8 leading-tight">
+          Have a Question? <span class="text-primary">Send us a Message.</span>
+        </h2>
+        <p class="text-slate-600 text-lg leading-relaxed mb-12 font-medium">
+          Whether you have a question about our packages, specific courses, or just want to say hello, our team is ready to assist you.
+        </p>
+
+        <div class="space-y-8">
+          <div class="flex items-start gap-6">
+            <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+              <h4 class="font-heading font-bold text-slate-900 text-lg uppercase tracking-tight">Email Us</h4>
+              <p class="text-slate-500 font-medium text-base">support@zarniskills.com</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-6">
+            <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div>
+              <h4 class="font-heading font-bold text-slate-900 text-lg uppercase tracking-tight">Visit Office</h4>
+              <p class="text-slate-500 font-medium text-base">123 Skills Tower, Digital Way,<br>India - 110001</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Form -->
+      <div class="reveal-on-scroll">
+        <div class="bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50">
+          <form action="#" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Full Name</label>
+                <input type="text" placeholder="John Doe" class="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-primary focus:border-primary transition-all font-medium">
+              </div>
+              <div>
+                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Email Address</label>
+                <input type="email" placeholder="john@example.com" class="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-primary focus:border-primary transition-all font-medium">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Subject</label>
+              <input type="text" placeholder="Inquiry about Pro Package" class="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-primary focus:border-primary transition-all font-medium">
+            </div>
+            <div>
+              <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Message</label>
+              <textarea rows="5" placeholder="How can we help you?" class="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-primary focus:border-primary transition-all font-medium"></textarea>
+            </div>
+            <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-primary/20 uppercase tracking-widest">
+              Send Message
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Simple Map Placeholder -->
+<section class="h-[400px] bg-slate-200 relative overflow-hidden">
+  <img src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=2066&auto=format&fit=crop" 
+       alt="Map Location" class="w-full h-full object-cover opacity-50 grayscale">
+  <div class="absolute inset-0 flex items-center justify-center">
+    <div class="bg-white p-4 rounded-full shadow-2xl border-2 border-primary animate-bounce">
+      <svg class="w-8 h-8 text-primary" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+</script>
+{% endblock %}

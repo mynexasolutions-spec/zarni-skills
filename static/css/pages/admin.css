@@ -1,0 +1,22 @@
+/* ── Admin page styles ──────────────────────────────────────────── */
+
+/* Inherits dashboard styles — add admin-specific overrides here */
+
+/* Badge colours for status pills */
+.badge-pending  { background: #fef9c3; color: #a16207; }
+.badge-approved { background: #dbeafe; color: #1d4ed8; }
+.badge-paid     { background: #dcfce7; color: #15803d; }
+.badge-rejected { background: #fee2e2; color: #b91c1c; }
+
+/* Table action buttons */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: background 0.15s;
+  cursor: pointer;
+  border: none;
+}
