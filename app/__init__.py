@@ -46,6 +46,17 @@ def create_app():
     def admin_redirect():
         return redirect(url_for('admin.dashboard'))
 
+    @app.context_processor
+    def inject_global_data():
+        from app.models import Package, Course
+        try:
+            packages = Package.query.filter_by(is_active=True).order_by(Package.price).all()
+            courses = Course.query.filter_by(is_active=True).all()
+        except Exception:
+            packages = []
+            courses = []
+        return dict(global_packages=packages, global_courses=courses)
+
     # Apply schema migrations for columns added after initial DB creation
     with app.app_context():
         db.create_all()  # Creates new tables (chapters, etc.)

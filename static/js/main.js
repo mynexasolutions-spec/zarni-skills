@@ -17,9 +17,24 @@ window.addEventListener('scroll', () => {
 });
 
 /* ---- Mobile menu toggle ---- */
-navToggle.addEventListener('click', () => {
-  window.location.href = '/student/dashboard';
-});
+if (navToggle) {
+  navToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const drawer = document.getElementById('mobile-menu-drawer');
+    const backdrop = document.getElementById('mobile-menu-backdrop');
+    if (drawer && backdrop) {
+      drawer.classList.remove('translate-x-full');
+      backdrop.classList.remove('opacity-0', 'pointer-events-none');
+      backdrop.classList.add('opacity-100', 'pointer-events-auto');
+      document.body.classList.add('overflow-hidden');
+    } else {
+      const menu = document.getElementById('mobile-menu');
+      if (menu) {
+        menu.classList.toggle('hidden');
+      }
+    }
+  });
+}
 
 /* ---- Hero Slider ---- */
 const slides = [
