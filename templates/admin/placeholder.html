@@ -1,0 +1,23 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ page_title }} – Admin – Zarni Skills{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block body %}
+<div class="max-w-3xl">
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center">
+    <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+    </div>
+    <h2 class="font-heading font-semibold text-gray-900 text-xl mb-2">{{ page_title }}</h2>
+    <p class="text-sm text-gray-500 max-w-md mx-auto">
+      {{ page_description or 'This section is not configured yet. Please check back later.' }}
+    </p>
+    <span class="inline-block mt-5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-100">
+      Coming soon
+    </span>
+  </div>
+</div>
+{% endblock %}

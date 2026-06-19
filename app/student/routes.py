@@ -98,8 +98,12 @@ def dashboard():
     )
 
 
-def _placeholder_page(title: str):
-    return render_template('student/placeholder.html', page_title=title)
+def _placeholder_page(title: str, description=None):
+    return render_template(
+        'student/placeholder.html',
+        page_title=title,
+        page_description=description,
+    )
 
 
 @student_bp.route('/certificate')
@@ -107,6 +111,36 @@ def _placeholder_page(title: str):
 def certificate():
     _student_required()
     return _placeholder_page('Certificate')
+
+
+@student_bp.route('/offers')
+@login_required
+def offers():
+    _student_required()
+    return _placeholder_page(
+        'Offers',
+        'Exclusive deals and member offers will appear here once configured.',
+    )
+
+
+@student_bp.route('/freelancing')
+@login_required
+def freelancing():
+    _student_required()
+    return _placeholder_page(
+        'Freelancing',
+        'Freelance opportunities and project listings will appear here once configured.',
+    )
+
+
+@student_bp.route('/trip-plus')
+@login_required
+def trip_plus():
+    _student_required()
+    return _placeholder_page(
+        'Trip +',
+        'Travel rewards and trip benefits will appear here once configured.',
+    )
 
 
 @student_bp.route('/affiliate-panel')

@@ -62,6 +62,76 @@ def dashboard():
     return render_template('admin/dashboard.html', stats=stats, recent_orders=recent_orders)
 
 
+def _placeholder_page(title, description=None):
+    return render_template(
+        'admin/placeholder.html',
+        page_title=title,
+        page_description=description,
+    )
+
+
+# ── Features (not configured yet) ─────────────────────────────────────────
+
+@admin_bp.route('/freelancing')
+@login_required
+@admin_required
+def freelancing():
+    return _placeholder_page(
+        'Freelancing',
+        'Manage freelance listings and student projects from here once configured.',
+    )
+
+
+@admin_bp.route('/community-link')
+@login_required
+@admin_required
+def community_link():
+    return _placeholder_page(
+        'Community Link',
+        'Community links and group URLs will be managed here once configured.',
+    )
+
+
+@admin_bp.route('/training')
+@login_required
+@admin_required
+def training():
+    return _placeholder_page(
+        'Training',
+        'Training content and schedules will be managed here once configured.',
+    )
+
+
+@admin_bp.route('/offers')
+@login_required
+@admin_required
+def offers():
+    return _placeholder_page(
+        'Offers',
+        'Member offers and promotions will be managed here once configured.',
+    )
+
+
+@admin_bp.route('/banner')
+@login_required
+@admin_required
+def banner():
+    return _placeholder_page(
+        'Banner',
+        'Site and dashboard banners will be managed here once configured.',
+    )
+
+
+@admin_bp.route('/certificate-plus')
+@login_required
+@admin_required
+def certificate_plus():
+    return _placeholder_page(
+        'Certificate+',
+        'Certificate templates and issuance will be managed here once configured.',
+    )
+
+
 # ── Users ──────────────────────────────────────────────────────────────────
 
 @admin_bp.route('/users')
