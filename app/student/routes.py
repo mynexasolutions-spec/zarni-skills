@@ -9,6 +9,7 @@ from app.utils.payments import is_razorpay_enabled, create_razorpay_order, verif
 from app.utils.email import send_purchase_confirmation
 from datetime import datetime, timezone, timedelta
 import uuid
+from sqlalchemy import func
 
 student_bp = Blueprint('student', __name__)
 
@@ -98,6 +99,108 @@ def dashboard():
     )
 
 
+@student_bp.route('/earnings-chart-data')
+@login_required
+def earnings_chart_data():
+    _student_required()
+    timeframe = request.args.get('timeframe', '7days')
+    now = datetime.now(timezone.utc)
+    
+    # Fetch relevant transactions (completed commissions)
+    query = db.session.query(WalletTransaction).filter(
+        WalletTransaction.user_id == current_user.id,
+        WalletTransaction.type == 'commission',
+        WalletTransaction.status == 'completed'
+    )
+    
+    labels = []
+    values = []
+    
+    if timeframe == '7days':
+        # Last 7 days including today (e.g. from 6 days ago)
+        start_date = now - timedelta(days=6)
+        start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        query = query.filter(WalletTransaction.created_at >= start_date)
+        txs = query.order_by(WalletTransaction.created_at.asc()).all()
+        
+        by_date = {}
+        for i in range(7):
+            d = (start_date + timedelta(days=i)).date()
+            by_date[d] = 0.0
+            
+        for tx in txs:
+            tx_date = tx.created_at.date()
+            if tx_date in by_date:
+                by_date[tx_date] += float(tx.amount)
+                
+        for d, amt in sorted(by_date.items()):
+            labels.append(d.strftime('%b %d'))
+            values.append(amt)
+            
+    elif timeframe == '30days':
+        # Last 30 days
+        start_date = now - timedelta(days=29)
+        start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        query = query.filter(WalletTransaction.created_at >= start_date)
+        txs = query.order_by(WalletTransaction.created_at.asc()).all()
+        
+        by_date = {}
+        for i in range(30):
+            d = (start_date + timedelta(days=i)).date()
+            by_date[d] = 0.0
+            
+        for tx in txs:
+            tx_date = tx.created_at.date()
+            if tx_date in by_date:
+                by_date[tx_date] += float(tx.amount)
+                
+        for d, amt in sorted(by_date.items()):
+            labels.append(d.strftime('%b %d'))
+            values.append(amt)
+            
+    else: # alltime
+        txs = query.order_by(WalletTransaction.created_at.asc()).all()
+        by_month = {}
+        
+        if txs:
+            first_tx = txs[0]
+            start_year = first_tx.created_at.year
+            start_month = first_tx.created_at.month
+            
+            curr_y, curr_m = start_year, start_month
+            end_y, end_m = now.year, now.month
+            
+            while (curr_y < end_y) or (curr_y == end_y and curr_m <= end_m):
+                by_month[(curr_y, curr_m)] = 0.0
+                curr_m += 1
+                if curr_m > 12:
+                    curr_m = 1
+                    curr_y += 1
+        else:
+            # default to last 6 months if no transactions
+            for i in range(5, -1, -1):
+                # approximate go back i months
+                m_date = now - timedelta(days=30*i)
+                by_month[(m_date.year, m_date.month)] = 0.0
+                
+        for tx in txs:
+            key = (tx.created_at.year, tx.created_at.month)
+            if key in by_month:
+                by_month[key] += float(tx.amount)
+            else:
+                by_month[key] = float(tx.amount)
+                
+        for (y, m), amt in sorted(by_month.items()):
+            labels.append(datetime(y, m, 1).strftime('%b %Y'))
+            values.append(amt)
+            
+    return jsonify({
+        'labels': labels,
+        'values': values,
+        'timeframe': timeframe
+    })
+
+
 def _placeholder_page(title: str, description=None):
     return render_template(
         'student/placeholder.html',
@@ -174,11 +277,11 @@ def mentorship():
     return _placeholder_page('Mentorship')
 
 
-@student_bp.route('/leaderboard')
-@login_required
-def leaderboard():
-    _student_required()
-    return _placeholder_page('Leaderboard')
+# @student_bp.route('/leaderboard')
+# @login_required
+# def leaderboard():
+#     _student_required()
+#     return _placeholder_page('Leaderboard')
 
 
 @student_bp.route('/selection-form')
@@ -396,6 +499,84 @@ def serve_video(chapter_id):
 
     return send_file(video_path, conditional=True)
 
+#leaderboard
+
+
+@login_required
+@student_bp.route('/leaderboard')  # or student_bp depending on your blueprint setup
+def leaderboard():
+    now = datetime.now(timezone.utc)
+    thirty_days_ago = now - timedelta(days=30)
+    
+    # ─── 1. TOP 3 LAST 30 DAYS (SAFE SUBQUERY) ───────────────────────────
+    # We aggregate inside a subquery first to prevent duplicate row join multiplication
+    monthly_subquery = (
+        db.session.query(
+            WalletTransaction.user_id.label('user_id'),
+            func.sum(WalletTransaction.amount).label('total_income')
+        )
+        .filter(
+            WalletTransaction.type == 'commission',
+            WalletTransaction.status == 'completed',
+            WalletTransaction.created_at >= thirty_days_ago  # Assumes your WalletTransaction has a created_at column
+        )
+        .group_by(WalletTransaction.user_id)
+        .subquery()
+    )
+    
+    monthly_raw = (
+        db.session.query(User, monthly_subquery.c.total_income)
+        .join(monthly_subquery, User.id == monthly_subquery.c.user_id)
+        .order_by(monthly_subquery.c.total_income.desc())
+        .limit(3)
+        .all()
+    )
+    
+    # Map raw query outputs safely to objects matching your Jinja template structures
+    monthly_top_3 = []
+    for user, income in monthly_raw:
+        monthly_top_3.append({
+            'name': user.name,
+            'profile_pic_url': user.profile_image,  # Maps your model's 'profile_image' to template variable
+            'income': float(income or 0)
+        })
+
+    # ─── 2. TOP 10 OVERALL (SAFE SUBQUERY) ──────────────────────────────
+    overall_subquery = (
+        db.session.query(
+            WalletTransaction.user_id.label('user_id'),
+            func.sum(WalletTransaction.amount).label('total_income')
+        )
+        .filter(
+            WalletTransaction.type == 'commission',
+            WalletTransaction.status == 'completed'
+        )
+        .group_by(WalletTransaction.user_id)
+        .subquery()
+    )
+    
+    overall_raw = (
+        db.session.query(User, overall_subquery.c.total_income)
+        .join(overall_subquery, User.id == overall_subquery.c.user_id)
+        .order_by(overall_subquery.c.total_income.desc())
+        .limit(10)
+        .all()
+    )
+    
+    overall_top_10 = []
+    for user, income in overall_raw:
+        overall_top_10.append({
+            'name': user.name,
+            'profile_pic_url': user.profile_image,
+            'income': float(income or 0)
+        })
+
+    # ─── 3. RENDER TEMPLATE ──────────────────────────────────────────────
+    return render_template(
+        "student/leaderboard.html", 
+        monthly_top_3=monthly_top_3, 
+        overall_top_10=overall_top_10
+    )
 
 # ── Packages & Purchase ────────────────────────────────────────────────────
 

@@ -8,7 +8,7 @@
   tailwind.config = {
     theme: {
       extend: {
-        fontFamily: { heading: ['Sora', 'sans-serif'], sans: ['DM Sans', 'sans-serif'] },
+        fontFamily: { heading: ['RupeeSans', 'Sora', 'sans-serif'], sans: ['RupeeSans', 'DM Sans', 'sans-serif'] },
         colors: {
           primary: { dark: '#1a6fcf', DEFAULT: '#2b80f0', light: '#4da6ff', muted: '#8aaac8' },
           dark: { DEFAULT: '#0d1b2a', muted: '#5a7a99' }
@@ -52,42 +52,56 @@
 <!-- Mobile Hero (Visible on screens < lg) -->
 <section class="lg:hidden block -mt-24 pt-28 px-4 pb-6 hero-light-bg relative overflow-hidden" id="hero-section-mobile">
   <!-- Soft radial glow blobs for background context -->
-  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[250px] bg-sky-200/40 blur-[80px] rounded-full pointer-events-none z-0"></div>
+  <div
+    class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[250px] bg-sky-200/40 blur-[80px] rounded-full pointer-events-none z-0">
+  </div>
 
   <!-- Mobile Card Wrapper -->
-  <div class="relative w-full h-[360px] sm:h-[420px] rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/10 bg-[#0d1b2a] z-10">
-    
+  <div
+    class="relative w-full h-[360px] sm:h-[420px] rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/10 bg-[#0d1b2a] z-10">
+
     <!-- Sharp background images -->
-    <div class="hero-slide-mobile absolute inset-0 z-0 transition-opacity duration-700 bg-cover bg-center" style="opacity: 1; background-image: url('https://plus.unsplash.com/premium_photo-1683121718643-fb18d2668d53?q=80&w=1632&auto=format&fit=crop');"></div>
-    <div class="hero-slide-mobile absolute inset-0 z-0 transition-opacity duration-700 bg-cover bg-center" style="opacity: 0; background-image: url('https://images.unsplash.com/photo-1673515335586-f9f662c01482?q=80&w=1170&auto=format&fit=crop');"></div>
-    <div class="hero-slide-mobile absolute inset-0 z-0 transition-opacity duration-700 bg-cover bg-center" style="opacity: 0; background-image: url('https://images.unsplash.com/photo-1548393488-ae8f117cbc1c?q=80&w=715&auto=format&fit=crop');"></div>
-    
+    <div class="hero-slide-mobile absolute inset-0 z-0 transition-opacity duration-700 bg-cover bg-center"
+      style="opacity: 1; background-image: url('https://plus.unsplash.com/premium_photo-1683121718643-fb18d2668d53?q=80&w=1632&auto=format&fit=crop');">
+    </div>
+    <div class="hero-slide-mobile absolute inset-0 z-0 transition-opacity duration-700 bg-cover bg-center"
+      style="opacity: 0; background-image: url('https://images.unsplash.com/photo-1673515335586-f9f662c01482?q=80&w=1170&auto=format&fit=crop');">
+    </div>
+    <div class="hero-slide-mobile absolute inset-0 z-0 transition-opacity duration-700 bg-cover bg-center"
+      style="opacity: 0; background-image: url('https://images.unsplash.com/photo-1548393488-ae8f117cbc1c?q=80&w=715&auto=format&fit=crop');">
+    </div>
+
     <!-- Deep premium gradient overlay -->
     <div class="absolute inset-0 z-10 bg-gradient-to-t from-black/95 via-black/60 to-transparent"></div>
 
     <!-- Content Overlaid at Bottom-Left -->
     <div class="absolute inset-0 z-20 flex flex-col justify-end p-6 pb-8 text-left">
       <!-- Badge -->
-      <div class="mb-2 flex items-center gap-1.5 hero-content-mobile transition-all duration-300">
-        <span id="slide-badge-mobile" class="text-amber-400 text-[11px] font-extrabold uppercase tracking-widest">40% OFF</span>
+      <div class="mb-2 flex items-center gap-1.5 hero-content hero-content-mobile transition-all duration-300">
+        <span id="slide-badge-mobile" class="text-amber-400 text-[11px] font-extrabold uppercase tracking-widest">40%
+          OFF</span>
         <span class="text-white/40 text-[10px] font-bold">•</span>
-        <span id="slide-badge-text-mobile" class="text-white/70 text-[11px] font-extrabold uppercase tracking-widest">LEARN FROM TODAY</span>
+        <span id="slide-badge-text-mobile"
+          class="text-white/70 text-[11px] font-extrabold uppercase tracking-widest">LEARN FROM TODAY</span>
       </div>
 
       <!-- Headline -->
-      <h1 class="text-2xl sm:text-3xl font-heading font-extrabold text-white leading-[1.25] mb-3 hero-content-mobile transition-all duration-300">
+      <h1
+        class="text-2xl sm:text-3xl font-heading font-extrabold text-white leading-[1.25] mb-3 hero-content hero-content-mobile transition-all duration-300">
         <span id="slide-headline-text-mobile">Zarni Skills Leads To A Brighter </span>
         <span class="text-amber-400 italic font-serif font-semibold" id="slide-highlight-mobile">Future.</span>
       </h1>
 
       <!-- Description -->
-      <p id="slide-desc-mobile" class="text-[12px] sm:text-sm text-slate-300 leading-relaxed font-normal mb-5 max-w-[90%] hero-content-mobile transition-all duration-300">
+      <p id="slide-desc-mobile"
+        class="text-[12px] sm:text-sm text-slate-300 leading-relaxed font-normal mb-5 max-w-[90%] hero-content hero-content-mobile transition-all duration-300">
         The future belongs to those who learn more skills and combine them in creative ways.
       </p>
 
       <!-- CTA Button -->
-      <div class="hero-content-mobile transition-all duration-300">
-        <button onclick="window.location.href='/auth/register'" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-extrabold uppercase px-6 py-2.5 rounded-lg text-[11px] tracking-wider transition-all duration-300 shadow-lg shadow-amber-500/20">
+      <div class="hero-content hero-content-mobile transition-all duration-300">
+        <button onclick="window.location.href='/auth/register'"
+          class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-extrabold uppercase px-6 py-2.5 rounded-lg text-[11px] tracking-wider transition-all duration-300 shadow-lg shadow-amber-500/20">
           Get Started
         </button>
       </div>
@@ -96,126 +110,164 @@
 
   <!-- Sleek Indicator Dots below Card -->
   <div class="flex justify-center gap-2 mt-4 relative z-20">
-    <button class="hero-dot-mobile w-8 h-2 rounded-full bg-amber-500 transition-all duration-300" data-slide="0"></button>
-    <button class="hero-dot-mobile w-2 h-2 rounded-full bg-slate-300 transition-all duration-300" data-slide="1"></button>
-    <button class="hero-dot-mobile w-2 h-2 rounded-full bg-slate-300 transition-all duration-300" data-slide="2"></button>
+    <button class="hero-dot-mobile w-8 h-2 rounded-full bg-amber-500 transition-all duration-300"
+      data-slide="0"></button>
+    <button class="hero-dot-mobile w-2 h-2 rounded-full bg-slate-300 transition-all duration-300"
+      data-slide="1"></button>
+    <button class="hero-dot-mobile w-2 h-2 rounded-full bg-slate-300 transition-all duration-300"
+      data-slide="2"></button>
   </div>
 </section>
 
 <!-- Desktop Hero (Visible on screens >= lg) -->
-<section class="hidden lg:flex relative min-h-[auto] lg:min-h-screen -mt-24 pt-32 pb-16 lg:pt-40 lg:pb-36 overflow-hidden hero-light-bg items-center" id="hero-section">
-
-  <!-- Per-slide background images (blurred, faded) -->
-  <div class="hero-slide absolute inset-0 z-0 transition-opacity duration-700" style="opacity:1;
-    background-image: url('https://plus.unsplash.com/premium_photo-1683121718643-fb18d2668d53?q=80&w=1632&auto=format&fit=crop');
-    background-size: cover; background-position: center; filter: blur(2px) brightness(0.92);">
-  </div>
-  <div class="hero-slide absolute inset-0 z-0 transition-opacity duration-700" style="opacity:0;
-    background-image: url('https://images.unsplash.com/photo-1673515335586-f9f662c01482?q=80&w=1170&auto=format&fit=crop');
-    background-size: cover; background-position: center; filter: blur(2px) brightness(0.92);">
-  </div>
-  <div class="hero-slide absolute inset-0 z-0 transition-opacity duration-700" style="opacity:0;
-    background-image: url('https://images.unsplash.com/photo-1548393488-ae8f117cbc1c?q=80&w=715&auto=format&fit=crop');
-    background-size: cover; background-position: center; filter: blur(2px) brightness(0.92);">
-  </div>
-  <!-- Overlay to keep light sky-blue theme readable -->
-  <div class="absolute inset-0 z-[1] pointer-events-none" style="background: linear-gradient(135deg, rgba(240,249,255,0.82) 0%, rgba(224,242,254,0.78) 40%, rgba(186,230,253,0.65) 100%);"></div>
-
-  <!-- Soft radial glow blobs -->
-  <div class="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-sky-200/60 blur-[100px] rounded-full pointer-events-none z-[2]"></div>
-  <div class="absolute bottom-10 right-[-5%] w-[400px] h-[400px] bg-blue-300/30 blur-[100px] rounded-full pointer-events-none z-[2]"></div>
-
-  <!-- Subtle dot grid -->
-  <div class="absolute inset-0 z-[2] pointer-events-none opacity-[0.03]"
-    style="background-image: radial-gradient(circle at 1px 1px, #1e40af 1.5px, transparent 0); background-size: 36px 36px;"></div>
-
-  <!-- Bottom Wave blending into white sections -->
-  <div class="absolute bottom-0 left-0 w-full z-20 overflow-hidden leading-[0] h-[60px] md:h-[90px] pointer-events-none">
-    <svg viewBox="0 0 2400 120" preserveAspectRatio="none" class="absolute bottom-0 w-[200%] h-full wave-back">
-      <path d="M0,60 C300,100 600,20 900,60 C1200,100 1500,20 1800,60 C2100,100 2400,60 2400,60 L2400,120 L0,120 Z" fill="rgba(255,255,255,0.4)"/>
-    </svg>
-    <svg viewBox="0 0 2400 120" preserveAspectRatio="none" class="absolute bottom-0 w-[200%] h-full wave-front">
-      <path d="M0,80 C300,30 600,130 900,80 C1200,30 1500,130 1800,80 C2100,30 2400,80 2400,80 L2400,120 L0,120 Z" fill="#f0f9ff"/>
-    </svg>
+<!-- Desktop Hero Section with Dynamic Tech Background -->
+<section id="process"
+  class="hidden lg:flex relative min-h-[auto] lg:min-h-screen -mt-24 pt-32 pb-16 lg:pt-40 lg:pb-36 overflow-hidden hero-light-bg items-center"
+  id="hero-section"">
+  <!-- Background Glow -->
+  <div class=" absolute inset-0 pointer-events-none">
+  <div class="absolute top-20 left-1/4 w-[500px] h-[500px] bg-sky-200/40 blur-[120px] rounded-full"></div>
+  <div class="absolute bottom-20 right-1/4 w-[500px] h-[500px] bg-blue-100/50 blur-[120px] rounded-full"></div>
   </div>
 
-  <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-30 w-full items-center">
-    <!-- Left Content -->
-    <div class="flex flex-col justify-center text-left max-w-xl xl:max-w-2xl py-10 lg:py-0">
+  <div class="max-w-6xl mx-auto px-6 relative z-10">
 
-      <!-- Badge -->
-      <div class="mb-4 md:mb-8 flex space-x-3 items-center hero-content" id="hero-badge">
-        <span id="slide-badge" class="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide shadow-md shadow-primary/25">40% OFF</span>
-        <span id="slide-badge-text" class="text-slate-500 text-xs font-bold uppercase tracking-widest">LEARN FROM TODAY</span>
-      </div>
-
-      <!-- Headline -->
-      <div class="min-h-0 md:min-h-[180px] flex items-start mb-4 md:mb-6">
-        <h1 id="slide-headline" class="text-4xl sm:text-5xl md:text-6xl font-heading font-extrabold text-slate-900 leading-[1.2] hero-content">
-          Zarni Skills Leads To A Brighter <span class="text-primary" id="slide-highlight">Future.</span>
-        </h1>
-      </div>
-
-      <!-- Description -->
-      <div class="min-h-0 md:min-h-[80px] mb-6 md:mb-10">
-        <p id="slide-desc" class="text-[17px] text-slate-500 leading-relaxed font-normal max-w-md hero-content">
-          The future belongs to those who learn more skills and combine them in creative ways.
-        </p>
-      </div>
-
-      <!-- Button -->
-      <div class="flex hero-content">
-        <button class="bg-primary hover:bg-primary-dark text-white px-8 py-3.5 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-3 hover:-translate-y-1 shadow-lg shadow-primary/30 group">
-          Get Started
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </button>
-      </div>
+    <!-- Soft Radial Tech Glow Blobs -->
+    <div
+      class="absolute top-[-10%] left-1/4 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none z-[1]">
+    </div>
+    <div
+      class="absolute bottom-10 right-[-5%] w-[500px] h-[500px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none z-[1]">
     </div>
 
-    <!-- Right: Circle Image -->
-    <div class="relative flex items-center justify-center lg:justify-end py-6 lg:py-10">
-      <div class="relative w-[300px] h-[300px] sm:w-[380px] sm:h-[380px] lg:w-[420px] lg:h-[420px] xl:w-[480px] xl:h-[480px]">
-        <div class="absolute inset-[-10%] rounded-full border border-primary/15 pointer-events-none z-10 animate-[pulse_4s_ease-in-out_infinite]"></div>
-        <div class="absolute inset-[-20%] rounded-full border border-primary/8 pointer-events-none z-10 hidden sm:block animate-[pulse_5s_ease-in-out_infinite]"></div>
-        <div class="relative w-full h-full rounded-full border-[6px] sm:border-[10px] border-white bg-sky-50 overflow-hidden shadow-[0_20px_60px_-10px_rgba(43,128,240,0.25)] z-20 mx-auto">
-          <img id="slide-circle-img"
-            src="https://plus.unsplash.com/premium_photo-1683121718643-fb18d2668d53?q=80&w=1632&auto=format&fit=crop"
-            alt="Learning Student"
-            class="w-full h-full object-cover transition-opacity duration-700"/>
+    <!-- Subtle Linear Grid Pattern -->
+    <div class="absolute inset-0 z-[1] pointer-events-none opacity-[0.05]"
+      style="background-image: linear-gradient(to right, #4f46e5 1px, transparent 1px), linear-gradient(to bottom, #4f46e5 1px, transparent 1px); background-size: 40px 40px;">
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 relative z-10 w-full items-center">
+
+      <!-- Left Content Column -->
+      <div class="flex flex-col justify-center text-left max-w-xl xl:max-w-2xl py-10 lg:py-0">
+
+        <!-- Badge Area -->
+        <div class="mb-6 flex space-x-3 items-center">
+          <span
+            class="bg-indigo-600 text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide shadow-md shadow-indigo-600/25">New
+            Era</span>
+          <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">Learn. Grow. Succeed.</span>
+        </div>
+
+        <!-- Headline (Designed for CSS/JS Text-Changer Motion) -->
+        <div class="min-h-[140px] mb-4 md:mb-6">
+          <h1 class="text-4xl sm:text-3xl sm:text-4xl lg:text-5xl md:text-4xl md:text-5xl lg:text-6xl font-extrabold  leading-[1.2]">
+            Learn Today, <br />
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-900 to-indigo-900">Lead
+              Tomorrow.</span>
+          </h1>
+        </div>
+
+        <!-- Description Subtext -->
+        <div class="mb-8 md:mb-10">
+          <p class="text-lg text-slate-900 leading-relaxed font-normal max-w-full sm:max-w-md">
+            Zarni Skills is your all-in-one learning platform to help you gain new skills, get certified, and advance
+            your career.
+          </p>
+        </div>
+
+        <!-- Action Buttons (Get Started & About Us) -->
+        <div class="flex flex-wrap gap-4">
+          <!-- Get Started Button -->
+          <button onclick="window.location.href='/auth/register'"
+            class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-3 hover:-translate-y-1 shadow-lg shadow-indigo-600/30 group">
+            Get Started
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </button>
+
+          <!-- About Us Button -->
+          <button onclick="window.location.href='/about'"
+            class="border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white px-8 py-3.5 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 hover:-translate-y-1">
+            About Us
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Student Image & Floating Skill Logos -->
+      <div class="relative flex items-center justify-center lg:justify-end py-6 lg:py-10">
+        <div class="relative w-[320px] h-[320px] sm:w-[400px] sm:h-[400px] xl:w-[460px] xl:h-[460px]">
+
+          <!-- Rotating Background Ring -->
+          <div
+            class="absolute inset-0 rounded-full border border-indigo-500/20 scale-110 animate-[spin_20s_linear_infinite]">
+          </div>
+
+          <!-- Student Image -->
+          <div class="relative z-10 flex items-center justify-center h-full">
+            <img
+              src="https://static.vecteezy.com/system/resources/thumbnails/057/228/414/small_2x/a-woman-in-a-pink-hoodie-is-sitting-on-a-chair-and-using-a-laptop-free-png.png"
+              alt="Learning Student" class="w-full h-full object-contain" />
+          </div>
+
+          <!-- Python Logo -->
+          <a href="#python"
+            class="absolute top-2 left-10 z-20 w-12 h-12
+sm:w-16 sm:h-16
+lg:w-20 lg:h-20  flex items-center justify-center animate-[bounce_3s_ease-in-out_infinite]">
+            <img src="https://www.pngmart.com/files/23/Python-Logo-PNG-Picture.png" alt="Python" class="w-15 h-15" />
+          </a>
+
+          <!-- JavaScript Logo -->
+          <a href="#javascript"
+            class="absolute top-1/2 -right-4 z-20 w-12 h-12
+sm:w-16 sm:h-16
+lg:w-20 lg:h-20 flex items-center justify-center animate-[bounce_4s_ease-in-out_infinite]">
+            <img src="https://freelogopng.com/images/all_img/1656733637logo-canva-png.png" alt="JavaScript"
+              class="w-15 h-15" />
+          </a>
+
+          <!-- React Logo -->
+          <a href="affiliate marketing "
+            class="absolute bottom-4 left-8 z-25 w-12 h-12
+sm:w-16 sm:h-16
+lg:w-20 lg:h-20 flex items-center justify-center animate-[bounce_3.5s_ease-in-out_infinite]">
+            <img src="https://a.mtstatic.com/@public/production/site_7336/1521843073-logo.png" alt="React"
+              class="w-12 h-12
+sm:w-16 sm:h-16
+lg:w-20 lg:h-20" />
+          </a>
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- Slide Dots -->
-  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-30">
-    <button class="hero-dot w-2.5 h-2.5 rounded-full bg-primary transition-all duration-300" data-slide="0"></button>
-    <button class="hero-dot w-2.5 h-2.5 rounded-full bg-primary/30 transition-all duration-300" data-slide="1"></button>
-    <button class="hero-dot w-2.5 h-2.5 rounded-full bg-primary/30 transition-all duration-300" data-slide="2"></button>
-  </div>
 </section>
+
 
 <!-- ============================================================
      TRANSFORMATION GRAPH
 ============================================================= -->
 <!-- <section id="process" class="pt-16 lg:pt-20 pb-24 py-14 bg-slate-950 relative overflow-hidden"> -->
-  <section id="process" class="pt-16 lg:pt-20 pb-24 py-14 bg-gradient-to-b from-sky-50 via-white to-white relative overflow-hidden">
+<section id="process"
+  class="pt-16 lg:pt-20 pb-24 py-14 bg-gradient-to-b from-sky-50 via-white to-white relative overflow-hidden">
   <!-- Background Glow -->
   <div class="absolute inset-0 pointer-events-none">
     <div class="absolute top-20 left-1/4 w-[500px] h-[500px] bg-sky-200/40 blur-[120px] rounded-full"></div>
-<div class="absolute bottom-20 right-1/4 w-[500px] h-[500px] bg-blue-100/50 blur-[120px] rounded-full"></div>
+    <div class="absolute bottom-20 right-1/4 w-[500px] h-[500px] bg-blue-100/50 blur-[120px] rounded-full"></div>
   </div>
 
   <div class="max-w-6xl mx-auto px-6 relative z-10">
 
     <!-- Heading -->
     <div class="text-center mb-10">
-      <span class="inline-block px-4 py-2 rounded-full border border-sky-200 bg-white shadow-sm text-[11px] font-semibold text-primary uppercase tracking-[0.2em] mb-5">
+      <span
+        class="inline-block px-4 py-2 rounded-full border border-sky-200 bg-white shadow-sm text-[11px] font-semibold text-primary uppercase tracking-[0.2em] mb-5">
         Real Results
       </span>
 
-      <h2 class="text-2xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.1] mb-4">
-      The
+      <h2 class="text-2xl md:text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.1] mb-4">
+        The
         <span class="text-primary">
           Transformation
         </span>
@@ -225,81 +277,63 @@
         From inconsistent growth to a predictable system that scales.
       </p>
     </div>
-    
+
 
     <!-- Graph -->
     <div id="growthChart"
-         class="max-w-4xl mx-auto relative bg-white border border-slate-200 rounded-[32px] p-6 md:p-10 shadow-[0_20px_80px_-20px_rgba(0,0,0,0.08)]">
+      class="max-w-4xl mx-auto relative bg-white border border-slate-200 rounded-[32px] p-6 md:p-10 shadow-[0_20px_80px_-20px_rgba(0,0,0,0.08)]">
 
       <div class="flex justify-between text-sm text-slate-500 mb-4">
         <span>Month 1</span>
         <span>Month 6</span>
       </div>
-      
-      <svg
-        class="w-full h-[180px] md:h-[220px]"
-        viewBox="0 0 1000 300">
+
+      <svg class="w-full h-[180px] md:h-[220px]" viewBox="0 0 1000 300">
 
         <!-- Grid Lines -->
         <g opacity="0.15">
-          <line x1="0" y1="250" x2="1000" y2="250" stroke="#4590ec"/>
-          <line x1="0" y1="190" x2="1000" y2="190" stroke="#4590ec"/>
-          <line x1="0" y1="130" x2="1000" y2="130" stroke="#4590ec"/>
-          <line x1="0" y1="70" x2="1000" y2="70" stroke="#4590ec"/>
+          <line x1="0" y1="250" x2="1000" y2="250" stroke="#4590ec" />
+          <line x1="0" y1="190" x2="1000" y2="190" stroke="#4590ec" />
+          <line x1="0" y1="130" x2="1000" y2="130" stroke="#4590ec" />
+          <line x1="0" y1="70" x2="1000" y2="70" stroke="#4590ec" />
         </g>
 
         <defs>
-          <linearGradient id="growthGradient"
-                          x1="0%"
-                          y1="0%"
-                          x2="100%"
-                          y2="0%">
-            <stop offset="0%" stop-color="#7ab7fd"/>
-            <stop offset="100%" stop-color="#0552f7"/>
+          <linearGradient id="growthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#7ab7fd" />
+            <stop offset="100%" stop-color="#0552f7" />
           </linearGradient>
         </defs>
 
         <!-- Area Fill -->
-        <path
-          d="M80 240
+        <path d="M80 240
              C250 240, 300 210, 420 180
              C550 145, 700 110, 920 40
              L920 260
-             L80 260 Z"
-          fill="url(#growthGradient)"
-          opacity="0.12">
+             L80 260 Z" fill="url(#growthGradient)" opacity="0.12">
         </path>
 
         <!-- Main Line -->
-        <path
-          id="growthPath"
-          d="M80 240
+        <path id="growthPath" d="M80 240
              C250 240, 300 210, 420 180
-             C550 145, 700 110, 920 40"
-          fill="none"
-          stroke="url(#growthGradient)"
-          stroke-width="6"
+             C550 145, 700 110, 920 40" fill="none" stroke="url(#growthGradient)" stroke-width="6"
           stroke-linecap="round">
         </path>
 
         <!-- End Point -->
-        <circle cx="920"
-                cy="40"
-                r="10"
-                fill="#1778f7"
-                class="animate-pulse">
+        <circle cx="920" cy="40" r="10" fill="#1778f7" class="animate-pulse">
         </circle>
       </svg>
 
       <!-- Metrics -->
-       <div class="grid md:grid-cols-3 gap-4 mt-8"> 
+      <div class="grid md:grid-cols-3 gap-4 mt-8">
         <div class="rounded-3xl bg-sky-50/70 p-6 border border-sky-100 hover:shadow-lg transition-all duration-300">
 
-       <!-- <div class="rounded-2xl bg-white/[0.03] p-5 border border-white/5"> -->
+          <!-- <div class="rounded-2xl bg-white/[0.03] p-5 border border-white/5"> -->
           <p class="text-slate-400 text-[11px] uppercase mb-2">
             Revenue
           </p>
-          <p class="text-5xl md:text-3xl font-bold text-primary">
+          <p class="text-3xl sm:text-4xl lg:text-5xl md:text-3xl font-bold text-primary">
             +500%
           </p>
         </div>
@@ -308,7 +342,7 @@
           <p class="text-slate-500 text-xs uppercase mb-2">
             Leads
           </p>
-          <p class="text-5xl md:text-3xl font-bold text-primary">
+          <p class="text-3xl sm:text-4xl lg:text-5xl md:text-3xl font-bold text-primary">
             200+
           </p>
         </div>
@@ -317,7 +351,7 @@
           <p class="text-slate-500 text-xs uppercase mb-2">
             In Just
           </p>
-          <p class="text-5xl md:text-3xl font-bold text-primary">
+          <p class="text-3xl sm:text-4xl lg:text-5xl md:text-3xl font-bold text-primary">
             6 Months
           </p>
         </div>
@@ -333,85 +367,110 @@
 
 ------------------>
 
-<!-- <section class="py-24 bg-slate-950 text-white relative overflow-hidden flex items-center min-h-[850px]" id="about"> -->
-  <section class="py-24 bg-slate-50 text-slate-900 dark-mode:bg-slate-950 dark-mode:text-white relative overflow-hidden" id="about">
-  
+<!-- <section class="py-24 bg-slate-950 text-white relative overflow-hidden flex items-center min-h-fit" id="about"> -->
+<section class="py-24 bg-slate-50 text-slate-900 dark-mode:bg-slate-950 dark-mode:text-white relative overflow-hidden"
+  id="about">
+
   <!-- Ambient Blue Effect Background Blobs -->
-  <div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none z-0"></div>
-  <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite] z-0"></div>
-  <div class="absolute right-0 bottom-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse] z-0"></div>
+  <div
+    class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none z-0">
+  </div>
+  <div
+    class="absolute -left-32 top-32 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite] z-0">
+  </div>
+  <div
+    class="absolute right-0 bottom-0 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse] z-0">
+  </div>
 
   <div class="max-w-7xl mx-auto px-6 relative z-10 w-full">
-    
+
     <!-- ORIGINAL MAIN HEADING HEADER RESTORED (Centered Top Layout) -->
-    <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+    <div class="text-center max-w-3xl mx-auto mb-10 md:mb-16 space-y-4">
       <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
-        <svg xmlns="http://w3.org" width="16" height="16" fill="currentColor" class="text-blue-400" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <svg xmlns="http://w3.org" width="16" height="16" fill="currentColor" class="text-blue-400" viewBox="0 0 24 24">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
         <span class="text-sm font-bold text-blue-400 tracking-widest uppercase">Trusted Platform</span>
       </div>
-      <h3 class="text-3xl md:text-5xl font-extrabold text-slate-900 leading-[1.2]">
-        Beyond Learning — We're Building <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-sky-400">Leaders.</span>
-      </h2>
-      <p class="text-slate-900/80 text-base leading-relaxed max-w-2xl mx-auto">
-        At Zarni Skills, we don't just sell courses; we empower individuals with the high-income skills the modern economy demands. We prioritize <strong class="text-slate-250">quality, transparency, and real-world results</strong> over empty promises.
-      </p>
+      <h3 class="text-3xl md:text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 leading-[1.2]">
+        Beyond Learning — We're Building <span
+          class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-sky-400">Leaders.</span>
+        </h2>
+        <p class="text-slate-900/80 text-base leading-relaxed max-w-2xl mx-auto">
+          At Zarni Skills, we don't just sell courses; we empower individuals with the high-income skills the modern
+          economy demands. We prioritize <strong class="text-slate-250">quality, transparency, and real-world
+            results</strong> over empty promises.
+        </p>
     </div>
-    
+
     <!-- Symmetric Grid Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center relative">
-      
+
       <!-- LEFT SIDE: 2 Glow Blocks -->
       <div class="order-2 lg:order-1 lg:col-span-4 space-y-8 z-20">
         <!-- Block 1 -->
-        <div class="bg-[#0A192F] border border-slate-800/80 p-6 rounded-2xl shadow-[0_0_25px_rgba(59,130,246,0.03)] hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] hover:border-blue-500/30 transition-all duration-300 backdrop-blur-md">
-          <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <div
+          class="bg-[#0A192F] border border-slate-800/80 p-6 rounded-2xl shadow-[0_0_25px_rgba(59,130,246,0.03)] hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] hover:border-blue-500/30 transition-all duration-300 backdrop-blur-md">
+          <div
+            class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
           </div>
           <h4 class="text-lg font-bold text-white mb-2">Expert Practical Training</h4>
-          <p class="text-slate-400 text-sm leading-relaxed">Learn directly from real-world practitioners with a curriculum built to map actionable results from day one.</p>
+          <p class="text-slate-400 text-sm leading-relaxed">Learn directly from real-world practitioners with a
+            curriculum built to map actionable results from day one.</p>
         </div>
 
         <!-- Block 2 -->
-        <div class="bg-[#0A192F] border border-slate-800/80 p-6 rounded-2xl shadow-[0_0_25px_rgba(59,130,246,0.03)] hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] hover:border-blue-500/30 transition-all duration-300 backdrop-blur-md">
-          <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        <div
+          class="bg-[#0A192F] border border-slate-800/80 p-6 rounded-2xl shadow-[0_0_25px_rgba(59,130,246,0.03)] hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] hover:border-blue-500/30 transition-all duration-300 backdrop-blur-md">
+          <div
+            class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+            </svg>
           </div>
           <h4 class="text-lg font-bold text-white mb-2">Collaborative Ecosystem</h4>
-          <p class="text-slate-400 text-sm leading-relaxed">You are never alone. Access full network rooms, active community support forums, and peers instantly.</p>
+          <p class="text-slate-400 text-sm leading-relaxed">You are never alone. Access full network rooms, active
+            community support forums, and peers instantly.</p>
         </div>
       </div>
 
       <!-- CENTER SIDE: 2D Line Sticky Guy with Folding Hands + Floating Yellow Star -->
+      <!-- CENTER SIDE: 2D Line Sticky Guy with Folding Hands + Floating Yellow Star -->
       <div class="order-1 lg:order-2 lg:col-span-4 flex flex-col items-center justify-center relative min-h-[450px]">
-        
+
         <!-- Background Focal Circular Aura Ring -->
-        <div class="absolute w-64 h-64 border border-slate-800/60 rounded-full flex items-center justify-center pointer-events-none z-0">
-          <div class="w-48 h-48 border border-slate-900 rounded-full"></div>
+        <div
+          class="absolute w-64 h-64 border border-black-900/10 rounded-full flex items-center justify-center pointer-events-none z-0">
+          <div class="w-48 h-48 border border-black-400/10 rounded-full"></div>
         </div>
 
-        <!-- 2D Line-art Sticky Leader Figure (Pure stroke lines, no solid body fill) -->
-         <div class="order-1 lg:order-2 lg:col-span-4 flex flex-col items-center justify-center relative min-h-[450px]">
-        
-        <!-- Background Focal Circular Aura Ring -->
-        <div class="absolute w-64 h-64 border border-black-900/150 rounded-full flex items-center justify-center pointer-events-none z-0">
-          <div class="w-48 h-48 border border-black-400/200  rounded-full"></div>
-        </div>
-
-        <!-- YOUR CUSTOM STICKY GUY IMAGE (Swapped from SVG) -->
+        <!-- YOUR CUSTOM STICKY GUY IMAGE -->
         <div class="relative z-10 w-full flex items-center justify-center">
-          <img 
-            src="..\static\img\black sticky guy.png" 
-            alt="Leadership Character" 
-            class="w-96 h-96 md:w-[28rem] md:h-[28rem]  object-contain  drop-shadow-[0_4px_20px_rgba(59,130,246,0.15)] "
-          />
+          <img src="{{ url_for('static', filename='img/black sticky guy.png') }}" alt="Leadership Character"
+            class="w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 md:w-[28rem] md:h-[28rem] object-contain drop-shadow-[0_4px_20px_rgba(59,130,246,0.15)]" />
         </div>
 
         <!-- FLOATING OVERLAY: Glowing Yellow Star & Plain Rating Content Frame -->
-        <div class="absolute bottom-6 bg-slate-900/95 border border-amber-500/30 rounded-xl px-5 py-3 shadow-[0_0_30px_rgba(245,158,11,0.12)] flex items-center gap-3 z-30 animate-[float_5s_ease-in-out_infinite] backdrop-blur-md">
+        <div
+          class="absolute bottom-6 bg-slate-900/95 border border-amber-500/30 rounded-xl px-5 py-3 shadow-[0_0_30px_rgba(245,158,11,0.12)] flex items-center gap-3 z-30 animate-[float_5s_ease-in-out_infinite] backdrop-blur-md">
           <!-- Yellow Glowing Star Accent -->
-          <div class="text-amber-400 filter drop-shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-spin [animation-duration:12s]">
-            <svg xmlns="http://w3.org" width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+          <div
+            class="text-amber-400 filter drop-shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-spin [animation-duration:12s]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
             </svg>
           </div>
           <!-- Plain Rating Texts -->
@@ -423,42 +482,38 @@
 
       </div>
 
-        <!-- FLOATING OVERLAY: Glowing Yellow Star & Plain Rating Content Frame -->
-        <!-- Placed dynamically in front of the line character at lower torso position -->
-        <div class="absolute bottom-6 bg-slate-900/95 border border-amber-500/30 rounded-xl px-5 py-3 shadow-[0_0_30px_rgba(245,158,11,0.12)] flex items-center gap-3 z-30 animate-[float_5s_ease-in-out_infinite] backdrop-blur-md">
-          <!-- Yellow Glowing Star Accent -->
-          <div class="text-amber-400 filter drop-shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-spin [animation-duration:12s]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
-          </div>
-          <!-- Plain Rating Texts (De-cluttered layout) -->
-          <div class="whitespace-nowrap">
-            <p class="text-sm font-black tracking-tight text-white">4.9 / 5 Rating</p>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">15,000+ Students</p>
-          </div>
-        </div>
-
-      </div>
-
       <!-- RIGHT SIDE: 2 Glow Blocks -->
       <div class="order-3 lg:col-span-4 space-y-8 z-20">
         <!-- Block 3 -->
-        <div class="bg-[#0A192F] border border-slate-800/80 p-6 rounded-2xl shadow-[0_0_25px_rgba(59,130,246,0.03)] hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] hover:border-blue-500/30 transition-all duration-300 backdrop-blur-md">
-          <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <div
+          class="bg-[#0A192F] border border-slate-800/80 p-6 rounded-2xl shadow-[0_0_25px_rgba(59,130,246,0.03)] hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] hover:border-blue-500/30 transition-all duration-300 backdrop-blur-md">
+          <div
+            class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+              </polygon>
+            </svg>
           </div>
           <h4 class="text-lg font-bold text-white mb-2">Proven Track Records</h4>
-          <p class="text-slate-400 text-sm leading-relaxed">We scale our targets by student success metrics. Transformed career arcs are our primary currency.</p>
+          <p class="text-slate-400 text-sm leading-relaxed">We scale our targets by student success metrics. Transformed
+            career arcs are our primary currency.</p>
         </div>
 
         <!-- Block 4 -->
-        <div class="bg-[#0A192F] border border-slate-800/80 p-6 rounded-2xl shadow-[0_0_25px_rgba(59,130,246,0.03)] hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] hover:border-blue-500/30 transition-all duration-300 backdrop-blur-md">
-          <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+        <div
+          class="bg-[#0A192F] border border-slate-800/80 p-6 rounded-2xl shadow-[0_0_25px_rgba(59,130,246,0.03)] hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] hover:border-blue-500/30 transition-all duration-300 backdrop-blur-md">
+          <div
+            class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
           </div>
           <h4 class="text-lg font-bold text-white mb-2">High-Income Focus</h4>
-          <p class="text-slate-400 text-sm leading-relaxed">Skip the fluff. We target high-demand economic skill sets that produce modern value fields.</p>
+          <p class="text-slate-400 text-sm leading-relaxed">Skip the fluff. We target high-demand economic skill sets
+            that produce modern value fields.</p>
         </div>
       </div>
 
@@ -470,138 +525,166 @@
 <!-- ============================================================
      PACKAGES
 ============================================================ -->
-<section class="py-24 bg-slate-50 text-slate-900 dark-mode:bg-slate-950 dark-mode:text-white relative overflow-hidden" id="about">
-  
+<section class="py-24 bg-slate-50 text-slate-900 dark-mode:bg-slate-950 dark-mode:text-white relative overflow-hidden"
+  id="about">
+
   <!-- Ambient Blue Effect Background Blobs -->
-  <div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none z-0"></div>
-  <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite] z-0"></div>
-  <div class="absolute right-0 bottom-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse] z-0"></div>
+  <div
+    class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none z-0">
+  </div>
+  <div
+    class="absolute -left-32 top-32 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite] z-0">
+  </div>
+  <div
+    class="absolute right-0 bottom-0 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse] z-0">
+  </div>
 
   <div class="max-w-7xl mx-auto px-6 relative z-10 w-full">
-  <div class="max-w-7xl mx-auto px-6 relative z-10">
-    <div class="text-center mb-16 reveal-on-scroll">
-      <h3 class="text-3xl md:text-5xl font-heading  text-slate-900 leading-[1.2]">
-        The <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-light to-primary">Zarni Skills</span> Packages
-      </h3>
-      <p class="text-lg text-slate-900/80 max-w-2xl mx-auto">Choose the perfect path to accelerate your career.</p>
-    </div>
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-10 md:mb-16 reveal-on-scroll">
+        <h3 class="text-3xl md:text-3xl sm:text-4xl lg:text-5xl font-heading  text-slate-900 leading-[1.2]">
+          The <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-light to-primary">Zarni
+            Skills</span> Packages
+        </h3>
+        <p class="text-lg text-slate-900/80 max-w-2xl mx-auto">Choose the perfect path to accelerate your career.</p>
+      </div>
 
-    {% set blue_gradients = ['from-blue-400 to-blue-700', 'from-blue-500 to-blue-800', 'from-blue-600 to-blue-900', 'from-blue-700 to-slate-900'] %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
+      {% set blue_gradients = ['from-blue-400 to-blue-700', 'from-blue-500 to-blue-800', 'from-blue-600 to-blue-900',
+      'from-blue-700 to-slate-900'] %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
 
 
-{% for pkg in packages %}
-<div class="group relative">
-    <div class="bg-white rounded-[2rem] p-6 pb-8 h-full flex flex-col items-center text-center shadow-xl border border-blue-100">  
-        
-        <!-- Folder Structure (Keeps your exact UI styles) -->
-        <div class="relative flex justify-center mb-10 mt-4">
-            <div class="folder-wrapper">
+        {% for pkg in packages %}
+        <div class="group relative">
+          <div
+            class="bg-white rounded-[2rem] p-6 pb-8 h-full flex flex-col items-center text-center shadow-xl border border-blue-100">
+
+            <!-- Folder Structure (Keeps your exact UI styles) -->
+            <div class="relative flex justify-center mb-10 mt-4">
+              <div class="folder-wrapper">
                 <div class="folder-back"></div>
                 <div class="folder-tab"></div>
                 <div class="folder-front">
-                    <!-- Dynamic Package Image -->
-                    <div class="folder-preview-placeholder">
-                        <img
-                            src="{{ pkg.thumbnail_display_url if pkg.thumbnail_display_url else 'https://freelogopng.com' }}"
-                            alt="{{ pkg.name }}"
-                            class="w-full h-full object-cover rounded-xl"
-                        >
-                    </div>
+                  <!-- Dynamic Package Image -->
+                  <div class="folder-preview-placeholder">
+                    <img
+                      src="{{ pkg.thumbnail_display_url if pkg.thumbnail_display_url else 'https://freelogopng.com' }}"
+                      alt="{{ pkg.name }}" class="w-full h-full object-cover rounded-xl">
+                  </div>
                 </div>
+              </div>
             </div>
-        </div>
 
-        <!-- Dynamic Title -->
-        <h3 class="text-xl font-bold text-slate-900 mb-2">
-            {{ pkg.name }}
-        </h3>
+            <!-- Dynamic Title -->
+            <h3 class="text-xl font-bold text-slate-900 mb-2">
+              {{ pkg.name }}
+            </h3>
 
-        <!-- Rating -->
-        <div class="flex items-center gap-1 mb-4 text-yellow-500">
-            ★★★★
-            <span class="text-xs text-slate-400 ml-1">
+            <!-- Rating -->
+            <div class="flex items-center gap-1 mb-4 text-yellow-500">
+              ★★★★
+              <span class="text-xs text-slate-400 ml-1">
                 {% if loop.index0 == 0 %}250+{% else %}175+{% endif %} rating
-            </span>
-        </div>
+              </span>
+            </div>
 
-        <!-- Dynamic Features (Supports string splits or course relation arrays) -->
-        <div class="flex-grow w-full">
-            {% if pkg.what_you_get %}
-            <ul class="mb-6 space-y-2 text-left w-full">
+            <!-- Dynamic Features (Supports string splits or course relation arrays) -->
+            <div class="flex-grow w-full">
+              {% if pkg.what_you_get %}
+              <ul class="mb-6 space-y-2 text-left w-full">
                 {% for item in pkg.what_you_get.split('\n')[:4] %}
                 {% if item.strip() %}
                 <li class="text-sm text-slate-600">
-                    ✓ {{ item.replace('✓', '').strip() }}
+                  ✓ {{ item.replace('✓', '').strip() }}
                 </li>
                 {% endif %}
                 {% endfor %}
-            </ul>
-            {% elif pkg.courses %}
-            <ul class="mb-6 space-y-2 text-left w-full">
+              </ul>
+              {% elif pkg.courses %}
+              <ul class="mb-6 space-y-2 text-left w-full">
                 {% for course in pkg.courses[:4] %}
                 <li class="text-sm text-slate-600">
-                    ✓ {{ course.title }}
+                  ✓ {{ course.title }}
                 </li>
                 {% endfor %}
-            </ul>
-            {% endif %}
-        </div>
+              </ul>
+              {% endif %}
+            </div>
 
-        <!-- Dynamic Prices (Formats with commas matching your original template) -->
-        <div class="flex gap-3 mb-6">
-            <span class="text-slate-400 line-through">
+            <!-- Dynamic Prices (Formats with commas matching your original template) -->
+            <div class="flex gap-3 mb-6">
+              <span class="text-slate-400 line-through">
                 ₹{{ '{:,.0f}'.format(pkg.price * 2) }}
-            </span>
+              </span>
 
-            <span class="text-3xl font-black text-blue-600">
+              <span class="text-3xl font-black text-blue-600">
                 ₹{{ '{:,.0f}'.format(pkg.price) }}
-            </span>
-        </div>
+              </span>
+            </div>
 
-        <!-- Dynamic Buttons with exact classes -->
-        <div class="grid grid-cols-2 gap-3 w-full">
-            <a href="{{ url_for('main.package_detail', pkg_id=pkg.id) }}"
-               class="border border-blue-600 text-blue-600 py-3 rounded-xl font-bold text-xs inline-block text-center transition-colors hover:bg-blue-50">
+            <!-- Dynamic Buttons with exact classes -->
+            <div class="grid grid-cols-2 gap-3 w-full">
+              <a href="{{ url_for('main.package_detail', pkg_id=pkg.id) }}"
+                class="border border-blue-600 text-blue-600 py-3 rounded-xl font-bold text-xs inline-block text-center transition-colors hover:bg-blue-50">
                 View Details
-            </a>
+              </a>
 
-            <a href="{{ url_for('auth.register') }}"
-               class="bg-blue-600 text-white py-3 rounded-xl font-bold text-xs inline-block text-center transition-opacity hover:opacity-90">
+              <a href="{{ url_for('auth.register') }}"
+                class="bg-blue-600 text-white py-3 rounded-xl font-bold text-xs inline-block text-center transition-opacity hover:opacity-90">
                 Enroll Now
-            </a>
+              </a>
+            </div>
+          </div>
         </div>
-    </div>
-</div>
-{% else %}
-<div class="col-span-full text-center py-16 text-slate-400">
-    <p class="text-lg">Packages coming soon.</p>
-</div>
-{% endfor %}
+        {% else %}
+        <div class="col-span-full text-center py-16 text-slate-400">
+          <p class="text-lg">Packages coming soon.</p>
+        </div>
+        {% endfor %}
 
 
+      </div>
+
     </div>
-    
-  </div>
-  
+
 </section>
 <!-- ============================================================
      COURSES SECTION (Premium Redesign)
  ============================================================ -->
 <section class="py-32 bg-slate-50 relative overflow-hidden" id="courses">
   <!-- Decorative Background Elements -->
-  <div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
-  <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite]"></div>
-  <div class="absolute right-0 bottom-0 w-96 h-96 bg-primary-light/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse]"></div>
+  <div
+    class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none">
+  </div>
+  <div
+    class="absolute -left-32 top-32 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite]">
+  </div>
+  <div
+    class="absolute right-0 bottom-0 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-primary-light/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse]">
+  </div>
 
   <div class="max-w-7xl mx-auto px-6 relative z-10">
-    <div class="text-center mb-16 reveal-on-scroll">
-      <div class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm mb-6 mx-auto">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-primary" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    <div class="text-center mb-10 md:mb-16 reveal-on-scroll">
+      <div
+        class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm mb-6 mx-auto">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-primary"
+          viewBox="0 0 24 24">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
         <span class="text-sm font-bold text-slate-700 tracking-widest uppercase">Premium Catalog</span>
       </div>
-      <h3 class="text-3xl md:text-5xl font-extrabold text-slate-900 leading-[1.2]">
-        Courses that <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-sky-400">Shape Your Future</span>
+      <h3 class="text-3xl md:text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 leading-[1.2]">
+        Courses that <span
+          class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-sky-400">Shape Your
+          Future</span>
       </h3>
       <p class="text-slate-500 mt-4">
         Learn practical skills and accelerate your career.
@@ -611,159 +694,192 @@
 
   <div class="relative max-w-7xl mx-auto px-6 group/slider z-10">
     <!-- Navigation Arrows (Desktop) -->
-    <button id="course-prev" class="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-14 h-14 bg-white/90 backdrop-blur-md rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 flex items-center justify-center text-slate-800 opacity-0 group-hover/slider:opacity-100 transition-all hover:bg-primary hover:text-white hover:scale-110 -translate-x-1/2 disabled:opacity-0">
-      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    <button id="course-prev"
+      class="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-14 h-14 bg-white/90 backdrop-blur-md rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 flex items-center justify-center text-slate-800 opacity-0 group-hover/slider:opacity-100 transition-all hover:bg-primary hover:text-white hover:scale-110 -translate-x-1/2 disabled:opacity-0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor"
+        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
     </button>
-    <button id="course-next" class="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-14 h-14 bg-white/90 backdrop-blur-md rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 flex items-center justify-center text-slate-800 opacity-0 group-hover/slider:opacity-100 transition-all hover:bg-primary hover:text-white hover:scale-110 translate-x-1/2 disabled:opacity-0">
-      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <button id="course-next"
+      class="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-14 h-14 bg-white/90 backdrop-blur-md rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 flex items-center justify-center text-slate-800 opacity-0 group-hover/slider:opacity-100 transition-all hover:bg-primary hover:text-white hover:scale-110 translate-x-1/2 disabled:opacity-0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor"
+        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
     </button>
 
-   
+
     <!-- Category Buttons: Hidden due to empty category database properties -->
     <div class="flex flex-wrap justify-center gap-4 mb-12">
-        <button class="filter-btn active" data-category="all">All</button>
-        <button class="filter-btn" data-category="creative">Creative</button>
-        <button class="filter-btn" data-category="technical">Technical</button>
-        <button class="filter-btn" data-category="softskills">Soft Skills</button>
+      <button class="filter-btn active" data-category="all">All</button>
+      <button class="filter-btn" data-category="creative">Creative</button>
+      <button class="filter-btn" data-category="technical">Technical</button>
+      <button class="filter-btn" data-category="softskills">Soft Skills</button>
     </div>
-  
+
 
     <!-- Slider Container (Children elements loop horizontally here) -->
-    <div id="course-slider" class="flex gap-6 lg:gap-8 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar pb-12 px-4 -mx-4 pt-4">
-        {% for course in courses %}
-        <div class="snap-center shrink-0">
-            <a href="{{ url_for('main.course_detail', course_id=course.id) }}" 
-               class="block w-[300px] md:w-[340px] rounded-[2.5rem] bg-white border border-slate-100/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_-10px_rgba(43,128,240,0.15)] hover:-translate-y-3 transition-all duration-500 overflow-hidden group/card relative flex flex-col h-full">
-              
-              <!-- Image Section -->
-              <div class="relative aspect-[4/3] w-full overflow-hidden p-2">
-                <div class="w-full h-full rounded-[2rem] overflow-hidden relative shadow-inner">
-                  <img src="{{ course.thumbnail_display_url }}" alt="{{ course.title }}" class="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-700"/>
-                  
-                  <!-- Overlay -->
-                  <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent opacity-60 group-hover/card:opacity-80 transition-opacity duration-500"></div>
-                  
-                  <!-- Badge -->
-                  <div class="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg">
-                    Course
-                  </div>
-                  
-                  <!-- Play Button Hover Effect -->
-                  <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 transform group-hover/card:scale-100 scale-75">
-                    <div class="w-16 h-16 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center border border-white/50 shadow-2xl">
-                      <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg text-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" class="translate-x-0.5"><path d="M8 5v14l11-7z"/></svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+    <div id="course-slider"
+      class="flex gap-6 lg:gap-8 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar pb-12 px-4 -mx-4 pt-4">
+      {% for course in courses %}
+      <div class="snap-center shrink-0">
+        <a href="{{ url_for('main.course_detail', course_id=course.id) }}"
+          class="block w-[260px]
+sm:w-[290px]
+md:w-[320px]
+lg:w-[340px] rounded-[2.5rem] bg-white border border-slate-100/50 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_-10px_rgba(43,128,240,0.15)] hover:-translate-y-3 transition-all duration-500 overflow-hidden group/card relative flex flex-col h-full">
+
+          <!-- Image Section -->
+          <div class="relative aspect-[4/3] w-full overflow-hidden p-2">
+            <div class="w-full h-full rounded-[2rem] overflow-hidden relative shadow-inner">
+              <img src="{{ course.thumbnail_display_url }}" alt="{{ course.title }}"
+                class="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-700" />
+
+              <!-- Overlay -->
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent opacity-60 group-hover/card:opacity-80 transition-opacity duration-500">
               </div>
 
-              <!-- Content Section -->
-              <div class="px-6 py-6 flex-grow flex flex-col relative bg-white">
-                <div class="flex items-center gap-2 text-yellow-400 mb-3 text-xs">
-                  {% for _ in range(5) %}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{% endfor %}
-                  <span class="text-slate-400 font-bold ml-1 tracking-wider">5.0</span>
-                </div>
-                
-                <h3 class="font-heading font-black text-slate-800 text-lg sm:text-xl uppercase tracking-wide group-hover/card:text-primary transition-colors line-clamp-2 leading-tight mb-4">
-                    {{ course.title }}
-                </h3>
-                
-                <div class="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-                  <span class="text-sm font-bold text-slate-500 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    Self-paced
-                  </span>
-                  <span class="text-sm font-black text-primary uppercase tracking-wider group-hover/card:translate-x-1 transition-transform flex items-center gap-1">
-                    Explore
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                  </span>
+              <!-- Badge -->
+              <div
+                class="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg">
+                Course
+              </div>
+
+              <!-- Play Button Hover Effect -->
+              <div
+                class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 transform group-hover/card:scale-100 scale-75">
+                <div
+                  class="w-16 h-16 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center border border-white/50 shadow-2xl">
+                  <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg text-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                      viewBox="0 0 24 24" class="translate-x-0.5">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
                 </div>
               </div>
-            </a>
-        </div>
-        {% else %}
-        <div class="text-center py-12 text-slate-400 w-full">
-            <p>No courses available right now.</p>
-        </div>
-        {% endfor %}
+            </div>
+          </div>
+
+          <!-- Content Section -->
+          <div class="px-6 py-6 flex-grow flex flex-col relative bg-white">
+            <div class="flex items-center gap-2 text-yellow-400 mb-3 text-xs">
+              {% for _ in range(5) %}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
+                viewBox="0 0 24 24">
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>{% endfor %}
+              <span class="text-slate-400 font-bold ml-1 tracking-wider">5.0</span>
+            </div>
+
+            <h3
+              class="font-heading font-black text-slate-800 text-lg sm:text-xl uppercase tracking-wide group-hover/card:text-primary transition-colors line-clamp-2 leading-tight mb-4">
+              {{ course.title }}
+            </h3>
+
+            <div class="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-sm font-bold text-slate-500 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor"
+                  stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Self-paced
+              </span>
+              <span
+                class="text-sm font-black text-primary uppercase tracking-wider group-hover/card:translate-x-1 transition-transform flex items-center gap-1">
+                Explore
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor"
+                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% else %}
+      <div class="text-center py-12 text-slate-400 w-full">
+        <p>No courses available right now.</p>
+      </div>
+      {% endfor %}
     </div>
   </div>
 </section>
 
 
 <style>
+  .filter-btn {
+    padding: 12px 24px;
+    border-radius: 999px;
+    background: white;
+    border: 1px solid #dbeafe;
+    color: #2563eb;
+    font-weight: 600;
+    transition: .3s;
+  }
 
-.filter-btn{
-    padding:12px 24px;
-    border-radius:999px;
-    background:white;
-    border:1px solid #dbeafe;
-    color:#2563eb;
-    font-weight:600;
-    transition:.3s;
-}
+  .filter-btn:hover {
+    background: #eff6ff;
+  }
 
-.filter-btn:hover{
-    background:#eff6ff;
-}
+  .filter-btn.active {
+    background: #2563eb;
+    color: white;
+  }
 
-.filter-btn.active{
-    background:#2563eb;
-    color:white;
-}
+  .course-card {
+    overflow: hidden;
+    border-radius: 22px;
+    background: white;
+  }
 
-.course-card{
-    overflow:hidden;
-    border-radius:22px;
-    background:white;
-}
+  .course-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(37, 99, 235, .15);
+  }
 
-.course-card:hover{
-    transform:translateY(-8px);
-    box-shadow:0 20px 40px rgba(37,99,235,.15);
-}
+  .course-thumb {
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-.course-thumb{
-    height:220px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
+  .course-tag {
+    display: inline-block;
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
 
-.course-tag{
-    display:inline-block;
-    background:#eff6ff;
-    color:#2563eb;
-    padding:6px 12px;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:600;
-    margin-bottom:12px;
-}
+  .course-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
 
-.course-title{
-    font-size:22px;
-    font-weight:700;
-    color:#0f172a;
-    margin-bottom:10px;
-}
+  .course-desc {
+    color: #64748b;
+    margin-bottom: 20px;
+    line-height: 1.35;
+    margin-bottom: 14px;
+  }
 
-.course-desc{
-    color:#64748b;
-    margin-bottom:20px;
-    line-height:1.35;
-    margin-bottom:14px;
-}
-
-.course-meta{
-    display:flex;
-    justify-content:space-between;
-    color:#94a3b8;
-    font-size:14px;
-}
-
+  .course-meta {
+    display: flex;
+    justify-content: space-between;
+    color: #94a3b8;
+    font-size: 14px;
+  }
 </style>
 
 <!-- ============================================================
@@ -777,6 +893,7 @@
   :root {
     --orbit-path-radius: 280px;
   }
+
   @media (max-width: 640px) {
     :root {
       --orbit-path-radius: 170px;
@@ -788,7 +905,7 @@
     perspective: 1200px;
     transform-style: preserve-3d;
   }
-  
+
   .symmetrical-track {
     position: absolute;
     inset: 0;
@@ -802,65 +919,97 @@
   @keyframes cleanRingOrbit {
     0% {
       transform: rotateY(0deg) translateX(var(--orbit-path-radius)) rotateY(0deg);
-      z-index: 40; /* Front Layer */
+      z-index: 40;
+      /* Front Layer */
     }
+
     49.9% {
       z-index: 40;
     }
+
     50% {
       transform: rotateY(180deg) translateX(var(--orbit-path-radius)) rotateY(-180deg);
-      z-index: 10; /* Back Layer */
+      z-index: 10;
+      /* Back Layer */
     }
+
     99.9% {
       z-index: 10;
     }
+
     100% {
       transform: rotateY(360deg) translateX(var(--orbit-path-radius)) rotateY(-360deg);
-      z-index: 40; /* Loop Reset */
+      z-index: 40;
+      /* Loop Reset */
     }
   }
 
   /* Perfectly phased intervals (Total 24s cycle divided evenly by 4 cards = 6s steps) */
-  .orbit-card-1 { animation: cleanRingOrbit 24s linear infinite 0s; }
-  .orbit-card-2 { animation: cleanRingOrbit 24s linear infinite -6s; }
-  .orbit-card-3 { animation: cleanRingOrbit 24s linear infinite -12s; }
-  .orbit-card-4 { animation: cleanRingOrbit 24s linear infinite -18s; }
+  .orbit-card-1 {
+    animation: cleanRingOrbit 24s linear infinite 0s;
+  }
+
+  .orbit-card-2 {
+    animation: cleanRingOrbit 24s linear infinite -6s;
+  }
+
+  .orbit-card-3 {
+    animation: cleanRingOrbit 24s linear infinite -12s;
+  }
+
+  .orbit-card-4 {
+    animation: cleanRingOrbit 24s linear infinite -18s;
+  }
 </style>
 
 
 
-<section class="py-24 bg-slate-50 text-slate-900 relative overflow-hidden flex items-center min-h-[750px]">
-  
+<section class="py-24 bg-slate-50 text-slate-900 relative overflow-hidden flex items-center min-h-fit">
+
   <!-- Grid Matrix Overlay Background -->
-<div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
-  <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite]"></div>
-  <div class="absolute right-0 bottom-0 w-96 h-96 bg-primary-light/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse]"></div>
+  <div
+    class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none">
+  </div>
+  <div
+    class="absolute -left-32 top-32 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite]">
+  </div>
+  <div
+    class="absolute right-0 bottom-0 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-primary-light/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse]">
+  </div>
 
   <div class="max-w-7xl mx-auto px-6 relative z-10 w-full">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-      
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+
       <!-- LEFT COLUMN: Static Text Header Info -->
       <div class="lg:col-span-5 space-y-6 text-left">
         <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
-           <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-           <span class="text-xs font-bold text-blue-400 tracking-widest uppercase">Zarni Skills Network</span>
+          <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+          <span class="text-xs font-bold text-blue-400 tracking-widest uppercase">Zarni Skills Network</span>
         </div>
-        
-        <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
+
+        <h2 class="text-4xl md:text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
           India's Trusted Educational Platform
         </h2>
-        
-        <p class="text-slate-900/95 text-sm leading-relaxed max-w-md">
-          Empowering learners across the nation with highly dynamic, interactive, and modern industry-ready knowledge bases. Experience a balanced ecosystem built for real-world growth.
+
+        <p class="text-slate-900/95 text-sm leading-relaxed max-w-full sm:max-w-md">
+          Empowering learners across the nation with highly dynamic, interactive, and modern industry-ready knowledge
+          bases. Experience a balanced ecosystem built for real-world growth.
         </p>
       </div>
 
       <!-- RIGHT COLUMN: Perfectly Balanced 3D Carousel System -->
-      <div class="lg:col-span-7 flex items-center justify-center relative w-full aspect-square max-w-[550px] mx-auto symmetrical-scene">
-        
+      <div
+        class="lg:col-span-7 flex items-center justify-center relative w-full aspect-square max-w-[550px] mx-auto symmetrical-scene">
+
         <!-- CENTRAL CORE: Enlarged 2D Line-Art Institute -->
-        <div class="relative z-20 w-36 h-36 md:w-44 md:h-44 bg-blue-100 border border-slate-100 rounded-full flex items-center justify-center backdrop-blur-md ">
-          <svg class="w-16 h-16 md:w-20 md:h-20 text-blue-500 " xmlns="http://w3.org" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <div
+          class="relative z-20 w-36 h-36 md:w-44 md:h-44 bg-blue-100 border border-slate-100 rounded-full flex items-center justify-center backdrop-blur-md ">
+          <svg class="w-16 h-16 md:w-20 md:h-20 text-blue-500 " xmlns="http://w3.org" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 10v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10" />
             <path d="M2 10l10-7 10 7" />
             <path d="M6 23v-4c0-1 1-2 2-2h8c1 0 2 1 2 2v4" />
@@ -872,15 +1021,18 @@
         </div>
 
         <!-- Optional Decorative Center Ring Track to anchor the look -->
-        <div class="absolute w-[80%] h-[80%] rounded-full border border-slate-900/60 pointer-events-none z-0 transform [transform:rotateX(75deg)] hidden sm:block"></div>
+        <div
+          class="absolute w-[80%] h-[80%] rounded-full border border-slate-900/60 pointer-events-none z-0 transform [transform:rotateX(75deg)] hidden sm:block">
+        </div>
 
         <!-- ============================================================
              SYNCHRONIZED FLOATING CARDS (Value + Title kept together)
             ============================================================ -->
-        
+
         <!-- Block 1: Enrolled Students -->
         <div class="symmetrical-track orbit-card-1">
-          <div class="bg-slate-900/95 border border-slate-800 text-white rounded-xl p-3.5 shadow-2xl w-32 sm:w-36 text-center backdrop-blur-md select-none hover:border-blue-500/60 transition-colors">
+          <div
+            class="bg-slate-900/95 border border-slate-800 text-white rounded-xl p-3.5 shadow-2xl w-32 sm:w-36 text-center backdrop-blur-md select-none hover:border-blue-500/60 transition-colors">
             <h3 class="text-xl sm:text-2xl font-black tracking-tight">15k<span class="text-blue-400">+</span></h3>
             <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Enrolled Students</p>
           </div>
@@ -888,7 +1040,8 @@
 
         <!-- Block 2: Video Courses -->
         <div class="symmetrical-track orbit-card-2">
-          <div class="bg-slate-900/95 border border-slate-800 text-white rounded-xl p-3.5 shadow-2xl w-32 sm:w-36 text-center backdrop-blur-md select-none hover:border-blue-400/60 transition-colors">
+          <div
+            class="bg-slate-900/95 border border-slate-800 text-white rounded-xl p-3.5 shadow-2xl w-32 sm:w-36 text-center backdrop-blur-md select-none hover:border-blue-400/60 transition-colors">
             <h3 class="text-xl sm:text-2xl font-black tracking-tight">20<span class="text-blue-400">+</span></h3>
             <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Video Courses</p>
           </div>
@@ -896,7 +1049,8 @@
 
         <!-- Block 3: Expert Mentors -->
         <div class="symmetrical-track orbit-card-3">
-          <div class="bg-slate-900/95 border border-slate-800 text-white rounded-xl p-3.5 shadow-2xl w-32 sm:w-36 text-center backdrop-blur-md select-none hover:border-blue-400/60 transition-colors">
+          <div
+            class="bg-slate-900/95 border border-slate-800 text-white rounded-xl p-3.5 shadow-2xl w-32 sm:w-36 text-center backdrop-blur-md select-none hover:border-blue-400/60 transition-colors">
             <h3 class="text-xl sm:text-2xl font-black tracking-tight">100<span class="text-blue-400">+</span></h3>
             <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Expert Mentors</p>
           </div>
@@ -904,7 +1058,8 @@
 
         <!-- Block 4: Award Winners -->
         <div class="symmetrical-track orbit-card-4">
-          <div class="bg-slate-900/95 border border-slate-800 text-white rounded-xl p-3.5 shadow-2xl w-32 sm:w-36 text-center backdrop-blur-md select-none hover:border-blue-500/60 transition-colors">
+          <div
+            class="bg-slate-900/95 border border-slate-800 text-white rounded-xl p-3.5 shadow-2xl w-32 sm:w-36 text-center backdrop-blur-md select-none hover:border-blue-500/60 transition-colors">
             <h3 class="text-xl sm:text-2xl font-black tracking-tight">200<span class="text-blue-400">+</span></h3>
             <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Award Achievers</p>
           </div>
@@ -921,163 +1076,238 @@
 <!-- ============================================================
      TEAM
 ============================================================ -->
-<section class="py-24 bg-slate-50 text-slate-900 relative overflow-hidden flex items-center min-h-[750px]">
-  
-  <!-- Grid Matrix Overlay Background -->
-<div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
-  <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite]"></div>
-  <div class="absolute right-0 bottom-0 w-96 h-96 bg-primary-light/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse]"></div>
+<section class="py-24 bg-slate-50 text-slate-900 relative overflow-hidden flex items-center min-h-fit">
 
-  
-    <div class="absolute -top-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
-    <div class="absolute top-1/2 -right-24 w-80 h-80 bg-blue-400/5 rounded-full blur-3xl"></div>
+  <!-- Grid Matrix Overlay Background -->
+  <div
+    class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none">
+  </div>
+  <div
+    class="absolute -left-32 top-32 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite]">
+  </div>
+  <div
+    class="absolute right-0 bottom-0 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-primary-light/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse]">
+  </div>
+
+
+  <div class="absolute -top-24 -left-24 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
+  <div class="absolute top-1/2 -right-24 w-80 h-80 bg-blue-400/5 rounded-full blur-3xl"></div>
   </div>
 
   <div class="max-w-7xl mx-auto px-6 relative z-10">
-    <div class="text-center mb-16 reveal-on-scroll">
-      <h1 class="text-4xl md:text-5xl font-extrabold text-900 tracking-tight leading-[1.15]">
+    <div class="text-center mb-10 md:mb-10 md:mb-16 reveal-on-scroll">
+      <h1 class="text-4xl md:text-3xl sm:text-4xl lg:text-5xl font-extrabold text-900 tracking-tight leading-[1.15]">
         Our Expert <span class="text-primary-dark">Team</span>
       </h1>
-      <p class="text-lg text-slate-900/80 max-w-2xl mx-auto">Connect with experts ready to help you achieve your learning goals.</p>
+      <p class="text-lg text-slate-900/80 max-w-2xl mx-auto">Connect with experts ready to help you achieve your
+        learning goals.</p>
       <div class="w-48 h-1 mx-auto mt-6 bg-gradient-to-r from-transparent via-primary-light to-transparent"></div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-  {% set team = [
-    ("Suriya Yadav", "CEO & FOUNDER", "Suriya_Yadav _CEO_FOUNDER.webp"),
-    ("Karan Yadav", "COO & CO-FOUNDER", "Karan_Yadav_COO_CO_Founder.webp"),
-    ("Ajay Yadav", "Director", "Ajay_Yadav_Director.webp"),
-    ("Shailendra Yadav", "Manager", "Shailendra_Yadav_Manager.webp"),
-    ("Tarun Prajapati", "Distributor", "Tarun_Prajapati_Distributor.webp")
-  ] %}
-  {% for name, role, img_file in team %}
-  <div class="group reveal-on-scroll" style="transition-delay: {{ loop.index0 * 0.1 }}s">
-    
-    <!-- UPDATED: Added transition-all, hover:shadow-rgba blue glow, and custom hover:border tint -->
-    <div class="bg-white rounded-[2rem] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-slate-100 h-full flex flex-col items-center hover:-translate-y-2.5 hover:shadow-[0_12px_35px_rgba(59,130,246,0.22)] hover:border-blue-200 transition-all duration-300">
-      
-      <div class="w-full aspect-[4/5] rounded-3xl overflow-hidden mb-6 relative">
-        <img
-          src="{{ url_for('static', filename='img/team/' ~ img_file) }}"
-          alt="{{ name }}"
-          class="w-full h-full object-cover origin-top hover:scale-105 transition-transform duration-700 group-hover:brightness-110"/>
-      </div>
-      <h3 class="font-heading font-bold text-dark text-lg md:text-xl uppercase tracking-wide text-center group-hover:text-primary transition-colors">{{ name }}</h3>
-      <div class="mt-3 px-4 py-1.5 bg-primary/5 rounded-full border border-primary/10 group-hover:bg-primary group-hover:border-primary transition-all duration-300">
-        <p class="text-xs md:text-sm font-extrabold text-primary group-hover:text-white uppercase tracking-widest text-center">{{ role }}</p>
-      </div>
-    </div>
+    <div class="grid grid-cols-2
+sm:grid-cols-2
+md:grid-cols-3
+lg:grid-cols-5 gap-6">
+      {% set team = [
+      ("Suriya Yadav", "CEO & FOUNDER", "Suriya_Yadav _CEO_FOUNDER.webp"),
+      ("Karan Yadav", "COO & CO-FOUNDER", "Karan_Yadav_COO_CO_Founder.webp"),
+      ("Ajay Yadav", "Director", "Ajay_Yadav_Director.webp"),
+      ("Shailendra Yadav", "Manager", "Shailendra_Yadav_Manager.webp"),
+      ("Tarun Prajapati", "Distributor", "Tarun_Prajapati_Distributor.webp")
+      ] %}
+      {% for name, role, img_file in team %}
+      <div class="group reveal-on-scroll" style="transition-delay: {{ loop.index0 * 0.1 }}s">
 
+        <!-- UPDATED: Added transition-all, hover:shadow-rgba blue glow, and custom hover:border tint -->
+        <div
+          class="bg-white rounded-[2rem] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-slate-100 h-full flex flex-col items-center hover:-translate-y-2.5 hover:shadow-[0_12px_35px_rgba(59,130,246,0.22)] hover:border-blue-200 transition-all duration-300">
+
+          <div class="w-full aspect-[4/5] rounded-3xl overflow-hidden mb-6 relative">
+            <img src="{{ url_for('static', filename='img/team/' ~ img_file) }}" alt="{{ name }}"
+              class="w-full h-full object-cover origin-top hover:scale-105 transition-transform duration-700 group-hover:brightness-110" />
+          </div>
+          <h3
+            class="font-heading font-bold text-dark text-lg md:text-xl uppercase tracking-wide text-center group-hover:text-primary transition-colors">
+            {{ name }}</h3>
+          <div
+            class="mt-3 px-4 py-1.5 bg-primary/5 rounded-full border border-primary/10 group-hover:bg-primary group-hover:border-primary transition-all duration-300">
+            <p
+              class="text-xs md:text-sm font-extrabold text-primary group-hover:text-white uppercase tracking-widest text-center">
+              {{ role }}</p>
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
   </div>
-  {% endfor %}
-</div>
-</div>
 </section>
 <!-- ============================================================
      TESTIMONIALS (LIGHT MODE)
 ============================================================ -->
-<section class="py-24 bg-slate-50 text-slate-900 relative overflow-hidden  min-h-[750px]">
-  
+<section class="py-24 bg-slate-50 text-slate-900 relative overflow-hidden  min-h-fit">
+
   <!-- Grid Matrix Overlay Background -->
-<div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
-  <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite]"></div>
-  <div class="absolute right-0 bottom-0 w-96 h-96 bg-primary-light/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse]"></div>
+  <div
+    class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none">
+  </div>
+  <div
+    class="absolute -left-32 top-32 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite]">
+  </div>
+  <div
+    class="absolute right-0 bottom-0 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-primary-light/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse]">
+  </div>
 
-    <!-- Header Container -->
-    <div class="max-w-7xl mx-auto px-6 text-center mb-16 reveal-on-scroll">
+  <!-- Header Container -->
+  <div class="max-w-7xl mx-auto px-6 text-center mb-10 md:mb-16 reveal-on-scroll">
     <!-- Title updated to high-contrast slate-900 text -->
-    <h2 class="text-2xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.1] mb-4">
-      What Our <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 font-extrabold">Students</span> Say
+    <h2 class="text-2xl md:text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.1] mb-4">
+      What Our <span
+        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 font-extrabold">Students</span>
+      Say
     </h2>
-      
 
-      <!-- Description adjusted to a clean soft slate gray -->
-      <p class="text-lg text-slate-600 max-w-2xl mx-auto mt-2">Discover what our students have to say about their learning journey with us</p>
-      <div class="w-48 h-1 mx-auto mt-6 bg-gradient-to-r from-transparent via-primary-light to-transparent"></div>
+
+    <!-- Description adjusted to a clean soft slate gray -->
+    <p class="text-lg text-slate-600 max-w-2xl mx-auto mt-2">Discover what our students have to say about their learning
+      journey with us</p>
+    <div class="w-48 h-1 mx-auto mt-6 bg-gradient-to-r from-transparent via-primary-light to-transparent"></div>
+  </div>
+
+  <!-- Continuous Infinite Slider (Right to Left) -->
+  <div class="w-full overflow-hidden hover-pause relative">
+    <!-- Gradient Fades on edges matching the clean white/slate background -->
+    <div class="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-slate-50 to-transparent z-20">
+    </div>
+    <div class="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-slate-50 to-transparent z-20">
     </div>
 
-    <!-- Continuous Infinite Slider (Right to Left) -->
-    <div class="w-full overflow-hidden hover-pause relative">
-      <!-- Gradient Fades on edges matching the clean white/slate background -->
-      <div class="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-slate-50 to-transparent z-20"></div>
-      <div class="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-slate-50 to-transparent z-20"></div>
+    {% set reviews = [
+    ("TONI", "Affiliate Marketer", "Life-changing experience! The training was clear, actionable, and easy to follow
+    even with zero experience. Highly recommended!",
+    "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=100&auto=format&fit=crop"),
+    ("Maha Lakshmi", "Freelancer", "Course chala easy and simple. Online nundi extra income start chesanu. I highly
+    suggest this to everyone!",
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&auto=format&fit=crop"),
+    ("Ravi Varma", "Student", "Transformative journey. Started with zero knowledge, now I enjoy steady online income.
+    Perfect fit for beginners!",
+    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop"),
+    ("Anjali Sharma", "Digital Marketer", "The community support here is incredible. I've scaled my freelancing business
+    to new heights within months.",
+    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=100&auto=format&fit=crop"),
+    ("Vikram Singh", "Entrepreneur", "Finally found a course that actually works. Actionable strategies that deliver
+    real-world ROI. 10/10!",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop"),
+    ("Priya Das", "Content Creator", "From struggling to find a niche to becoming a top creator. Zarni Skills gave me
+    the roadmap I needed.", "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=100&auto=format&fit=crop")
+    ] %}
 
-      {% set reviews = [
-        ("TONI", "Affiliate Marketer", "Life-changing experience! The training was clear, actionable, and easy to follow even with zero experience. Highly recommended!", "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=100&auto=format&fit=crop"),
-        ("Maha Lakshmi", "Freelancer", "Course chala easy and simple. Online nundi extra income start chesanu. I highly suggest this to everyone!", "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&auto=format&fit=crop"),
-        ("Ravi Varma", "Student", "Transformative journey. Started with zero knowledge, now I enjoy steady online income. Perfect fit for beginners!", "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop"),
-        ("Anjali Sharma", "Digital Marketer", "The community support here is incredible. I've scaled my freelancing business to new heights within months.", "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=100&auto=format&fit=crop"),
-        ("Vikram Singh", "Entrepreneur", "Finally found a course that actually works. Actionable strategies that deliver real-world ROI. 10/10!", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop"),
-        ("Priya Das", "Content Creator", "From struggling to find a niche to becoming a top creator. Zarni Skills gave me the roadmap I needed.", "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=100&auto=format&fit=crop")
-      ] %}
-
-      <!-- Flex wrapper hosting two identical rows to bridge the infinite loop gap -->
-      <div class="flex w-max gap-6 animate-marquee py-4 px-3">
-        {% for i in range(2) %}
-          {% for name, role, text, img in reviews %}
-          <div class="shrink-0">
-            <!-- Cards converted to light mode with white bg, soft gray shadow, slate-200 border, and active light blue hover glow shadow -->
-            <div class="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between border border-slate-200 h-full w-[280px] md:w-[320px] transition-all duration-300 hover:shadow-[0_12px_35px_rgba(59,130,246,0.18)] hover:border-blue-200 hover:-translate-y-1">
-              <div>
-                <!-- Gold Star Reviews -->
-                <div class="flex text-amber-500 mb-4 gap-0.5">
-                  {% for _ in range(5) %}
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                  {% endfor %}
-                </div>
-                <!-- Review Text changed to deep slate description text -->
-                <p class="text-slate-600 text-sm italic leading-relaxed mb-6 font-medium">"{{ text }}"</p>
-              </div>
-              <!-- Divider line and user metadata section -->
-              <div class="flex items-center gap-3 border-t border-slate-100 pt-4">
-                <img src="{{ img }}" alt="{{ name }}" class="w-10 h-10 rounded-full border-2 border-primary-light object-cover"/>
-                <div>
-                  <h4 class="font-heading font-bold text-slate-900 text-xs uppercase tracking-wider">{{ name }}</h4>
-                  <p class="text-primary-dark font-bold text-[10px] uppercase tracking-widest">{{ role }}</p>
-                </div>
-              </div>
+    <!-- Flex wrapper hosting two identical rows to bridge the infinite loop gap -->
+    <div class="flex w-max gap-6 animate-marquee py-4 px-3">
+      {% for i in range(2) %}
+      {% for name, role, text, img in reviews %}
+      <div class="shrink-0">
+        <!-- Cards converted to light mode with white bg, soft gray shadow, slate-200 border, and active light blue hover glow shadow -->
+        <div
+          class="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between border border-slate-200 h-full w-[280px] md:w-[320px] transition-all duration-300 hover:shadow-[0_12px_35px_rgba(59,130,246,0.18)] hover:border-blue-200 hover:-translate-y-1">
+          <div>
+            <!-- Gold Star Reviews -->
+            <div class="flex text-amber-500 mb-4 gap-0.5">
+              {% for _ in range(5) %}
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              {% endfor %}
+            </div>
+            <!-- Review Text changed to deep slate description text -->
+            <p class="text-slate-600 text-sm italic leading-relaxed mb-6 font-medium">"{{ text }}"</p>
+          </div>
+          <!-- Divider line and user metadata section -->
+          <div class="flex items-center gap-3 border-t border-slate-100 pt-4">
+            <img src="{{ img }}" alt="{{ name }}"
+              class="w-10 h-10 rounded-full border-2 border-primary-light object-cover" />
+            <div>
+              <h4 class="font-heading font-bold text-slate-900 text-xs uppercase tracking-wider">{{ name }}</h4>
+              <p class="text-primary-dark font-bold text-[10px] uppercase tracking-widest">{{ role }}</p>
             </div>
           </div>
-          {% endfor %}
-        {% endfor %}
+        </div>
       </div>
+      {% endfor %}
+      {% endfor %}
     </div>
+  </div>
   </div>
 </section>
 
 <!-- ============================================================
      FAQ
 ============================================================ -->
-<section class="py-24 bg-slate-50 text-slate-900 relative overflow-hidden flex items-center min-h-[750px]">
-  
+<section class="py-24 bg-slate-50 text-slate-900 relative overflow-hidden flex items-center min-h-fit">
+
   <!-- Grid Matrix Overlay Background -->
-<div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
-  <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite]"></div>
-  <div class="absolute right-0 bottom-0 w-96 h-96 bg-primary-light/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse]"></div>
+  <div
+    class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none">
+  </div>
+  <div
+    class="absolute -left-32 top-32 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite]">
+  </div>
+  <div
+    class="absolute right-0 bottom-0 w-52 h-52
+sm:w-72 sm:h-72
+lg:w-96 lg:h-96 bg-primary-light/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse]">
+  </div>
 
   <div class="max-w-4xl mx-auto px-6 relative z-10">
-    <div class="text-center mb-16 reveal-on-scroll">
-      <h2 class="text-2xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.1] mb-4">
+    <div class="text-center mb-10 md:mb-16 reveal-on-scroll">
+      <h2 class="text-2xl md:text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.1] mb-4">
         Frequently Asked <span class="text-primary-dark">Questions</span>
       </h2>
-      <p class="text-lg text-slate-500 max-w-2xl mx-auto">Explore our frequently asked questions to find answers to common queries.</p>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto">Explore our frequently asked questions to find answers to
+        common queries.</p>
       <div class="w-48 h-1 mx-auto mt-6 bg-gradient-to-r from-transparent via-primary-light to-transparent mb-12"></div>
     </div>
 
     <div class="space-y-4" id="faq-container">
       {% set faqs = [
-        ("Can I contact support if I have questions or issues?", "Absolutely! Once you enroll in a course, you'll have lifetime access to the course materials. This means you can revisit the content, review the lessons, and access any future updates or additions to the course."),
-        ("Can I access the course materials after I complete the course?", "Yes, you have lifetime access to all course materials including videos, PDFs, and bonuses even after completion."),
-        ("Do You Offer Any Certifications?", "Yes, upon successfully completing a course and passing the final assessment, you will receive a verified certificate of completion."),
-        ("How can I join?", "Simply choose a package from the pricing section above, click 'Enroll Now', and complete the secure payment process to get instant access.")
+      ("Can I contact support if I have questions or issues?", "Absolutely! Once you enroll in a course, you'll have
+      lifetime access to the course materials. This means you can revisit the content, review the lessons, and access
+      any future updates or additions to the course."),
+      ("Can I access the course materials after I complete the course?", "Yes, you have lifetime access to all course
+      materials including videos, PDFs, and bonuses even after completion."),
+      ("Do You Offer Any Certifications?", "Yes, upon successfully completing a course and passing the final assessment,
+      you will receive a verified certificate of completion."),
+      ("How can I join?", "Simply choose a package from the pricing section above, click 'Enroll Now', and complete the
+      secure payment process to get instant access.")
       ] %}
       {% for q, a in faqs %}
-      <div class="faq-item border border-slate-200 rounded-lg overflow-hidden reveal-on-scroll" style="transition-delay: {{ loop.index0 * 0.1 }}s">
-        <button class="faq-btn w-full text-left px-6 py-4 flex justify-between items-center transition-colors {% if loop.first %}bg-primary text-white{% else %}bg-white text-slate-800 hover:bg-slate-50{% endif %}">
+      <div class="faq-item border border-slate-200 rounded-lg overflow-hidden reveal-on-scroll"
+        style="transition-delay: {{ loop.index0 * 0.1 }}s">
+        <button
+          class="faq-btn w-full text-left px-6 py-4 flex justify-between items-center transition-colors {% if loop.first %}bg-primary text-white{% else %}bg-white text-slate-800 hover:bg-slate-50{% endif %}">
           <span class="font-heading font-semibold text-[15px]">{{ q }}</span>
-          <svg class="faq-icon transition-transform duration-300 {% if loop.first %}rotate-180 text-white{% else %}text-slate-400{% endif %}" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg
+            class="faq-icon transition-transform duration-300 {% if loop.first %}rotate-180 text-white{% else %}text-slate-400{% endif %}"
+            xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </button>
-        <div class="faq-answer bg-white overflow-hidden transition-all duration-300 {% if loop.first %}max-h-96{% else %}max-h-0{% endif %}">
+        <div
+          class="faq-answer bg-white overflow-hidden transition-all duration-300 {% if loop.first %}max-h-96{% else %}max-h-0{% endif %}">
           <p class="p-6 text-slate-600 font-medium leading-relaxed">{{ a }}</p>
         </div>
       </div>
@@ -1091,7 +1321,7 @@
 <script>
   // Navbar Scroll Logic (Since extending base, some logic might differ)
   // But let's add the hero specific stuff
-  
+
   // Star field for hero background
   (function initHeroStars() {
     const container = document.getElementById('hero-stars');
@@ -1142,36 +1372,37 @@
   ];
 
   function goToSlide(idx) {
-    const heroDots = document.querySelectorAll('.hero-dot');
-    const contentEls = document.querySelectorAll('.hero-content');
+    const heroDots = document.querySelectorAll('.hero-dot-mobile');
+    const contentEls = document.querySelectorAll('#hero-section-mobile .hero-content');
+    const slideImgEls = document.querySelectorAll('.hero-slide-mobile');
 
     contentEls.forEach(el => {
       el.classList.add('is-fading-out');
       el.classList.remove('is-fading-in');
     });
 
+    // Fade between mobile background slides
+    slideImgEls.forEach((slide, i) => {
+      if (i === idx) {
+        slide.style.opacity = '1';
+      } else {
+        slide.style.opacity = '0';
+      }
+    });
+
     setTimeout(() => {
       const s = slideData[idx];
-      const slideBadge = document.getElementById('slide-badge');
-      const slideBadgeText = document.getElementById('slide-badge-text');
-      const slideHeadline = document.getElementById('slide-headline');
-      const slideHighlight = document.getElementById('slide-highlight');
-      const slideDesc = document.getElementById('slide-desc');
-      const slideCircleImg = document.getElementById('slide-circle-img');
+      const slideBadge = document.getElementById('slide-badge-mobile');
+      const slideBadgeText = document.getElementById('slide-badge-text-mobile');
+      const slideHeadlineText = document.getElementById('slide-headline-text-mobile');
+      const slideHighlight = document.getElementById('slide-highlight-mobile');
+      const slideDesc = document.getElementById('slide-desc-mobile');
 
       if (slideBadge) slideBadge.textContent = s.badge;
       if (slideBadgeText) slideBadgeText.textContent = s.badgeText;
-      if (slideHeadline) slideHeadline.childNodes[0].textContent = s.headline;
+      if (slideHeadlineText) slideHeadlineText.textContent = s.headline;
       if (slideHighlight) slideHighlight.textContent = s.highlight;
       if (slideDesc) slideDesc.textContent = s.desc;
-
-      if (slideCircleImg) {
-        slideCircleImg.style.opacity = '0';
-        setTimeout(() => {
-          slideCircleImg.src = s.img;
-          slideCircleImg.style.opacity = '1';
-        }, 200);
-      }
 
       contentEls.forEach(el => {
         el.classList.remove('is-fading-out');
@@ -1193,18 +1424,18 @@
 
     heroDots.forEach((dot, i) => {
       if (i === idx) {
-        dot.classList.remove('bg-white/30', 'w-2');
+        dot.classList.remove('bg-slate-300', 'w-2');
         dot.classList.add('bg-amber-500', 'w-8');
       } else {
         dot.classList.remove('bg-amber-500', 'w-8');
-        dot.classList.add('bg-white/30', 'w-2');
+        dot.classList.add('bg-slate-300', 'w-2');
       }
     });
 
     currentSlide = idx;
   }
 
-  document.querySelectorAll('.hero-dot').forEach(dot => {
+  document.querySelectorAll('.hero-dot-mobile').forEach(dot => {
     dot.addEventListener('click', () => goToSlide(parseInt(dot.dataset.slide)));
   });
 
@@ -1218,9 +1449,9 @@
       const item = btn.parentElement;
       const answer = item.querySelector('.faq-answer');
       const icon = btn.querySelector('.faq-icon');
-      
+
       const isOpen = answer.style.maxHeight && answer.style.maxHeight !== '0px';
-      
+
       // Close others
       document.querySelectorAll('.faq-answer').forEach(ans => ans.style.maxHeight = '0px');
       document.querySelectorAll('.faq-btn').forEach(b => {
@@ -1228,7 +1459,7 @@
         b.classList.add('bg-white', 'text-slate-800');
       });
       document.querySelectorAll('.faq-icon').forEach(i => i.classList.remove('rotate-180', 'text-white'));
-      
+
       if (!isOpen) {
         answer.style.maxHeight = answer.scrollHeight + 'px';
         btn.classList.add('bg-primary', 'text-white');
@@ -1242,14 +1473,14 @@
   const slider = document.getElementById('course-slider');
   const prevBtn = document.getElementById('course-prev');
   const nextBtn = document.getElementById('course-next');
-  
+
   if (slider && prevBtn && nextBtn) {
     const scrollAmount = 350;
-    
+
     prevBtn.addEventListener('click', () => {
       slider.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
     });
-    
+
     nextBtn.addEventListener('click', () => {
       slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     });
@@ -1259,14 +1490,14 @@
   const rSlider = document.getElementById('review-slider');
   const rPrevBtn = document.getElementById('review-prev');
   const rNextBtn = document.getElementById('review-next');
-  
+
   if (rSlider && rPrevBtn && rNextBtn) {
     const rScrollAmount = 350;
-    
+
     rPrevBtn.addEventListener('click', () => {
       rSlider.scrollBy({ left: -rScrollAmount, behavior: 'smooth' });
     });
-    
+
     rNextBtn.addEventListener('click', () => {
       rSlider.scrollBy({ left: rScrollAmount, behavior: 'smooth' });
     });
@@ -1284,46 +1515,46 @@
   document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", () => {
 
-  const path = document.getElementById("growthPath");
+    const path = document.getElementById("growthPath");
 
-  const length = path.getTotalLength();
+    const length = path.getTotalLength();
 
-  path.style.strokeDasharray = length;
-  path.style.strokeDashoffset = length;
+    path.style.strokeDasharray = length;
+    path.style.strokeDashoffset = length;
 
-  const observer = new IntersectionObserver(
-    (entries) => {
+    const observer = new IntersectionObserver(
+      (entries) => {
 
-      entries.forEach(entry => {
+        entries.forEach(entry => {
 
-        if(entry.isIntersecting){
+          if (entry.isIntersecting) {
 
-          path.animate(
-            [
-              { strokeDashoffset: length },
-              { strokeDashoffset: 0 }
-            ],
-            {
-              duration: 2500,
-              easing: "ease-out",
-              fill: "forwards"
-            }
-          );
+            path.animate(
+              [
+                { strokeDashoffset: length },
+                { strokeDashoffset: 0 }
+              ],
+              {
+                duration: 2500,
+                easing: "ease-out",
+                fill: "forwards"
+              }
+            );
 
-          observer.unobserve(entry.target);
-        }
+            observer.unobserve(entry.target);
+          }
 
-      });
+        });
 
-    },
-    {
-      threshold: 0.4
-    }
-  );
+      },
+      {
+        threshold: 0.4
+      }
+    );
 
-  observer.observe(document.getElementById("growthChart"));
-});
+    observer.observe(document.getElementById("growthChart"));
+  });
 </script>
 {% endblock %}

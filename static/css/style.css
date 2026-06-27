@@ -2,6 +2,12 @@
    Custom styles complementing Tailwind
    ====================================================== */
 
+@font-face {
+  font-family: 'RupeeSans';
+  src: local('Segoe UI'), local('Arial'), local('Roboto'), local('Helvetica Neue'), local('Helvetica');
+  unicode-range: U+20B9;
+}
+
 /* Glass utility */
 .glass {
   background: rgba(255, 255, 255, 0.7);
