@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, abort
+from flask import Blueprint, render_template, abort, request, flash, redirect, url_for
 from app.models import Package, Course
 
 main_bp = Blueprint('main', __name__)
@@ -64,6 +64,31 @@ def about():
     return render_template('about.html')
 
 
-@main_bp.route('/contact')
+@main_bp.route('/contact', methods=['GET', 'POST'])
 def contact():
-    return render_template('contact.html')
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        subject = request.form.get('subject', '').strip()
+        message = request.form.get('message', '').strip()
+
+        if not all([name, email, subject, message]):
+            flash('Please fill in all fields.', 'danger')
+            return render_template('contact.html', form=request.form)
+
+        from app.utils.email import send_email
+        html_body = f"""
+            <p><strong>From:</strong> {name} ({email})</p>
+            <p><strong>Subject:</strong> {subject}</p>
+            <p><strong>Message:</strong></p>
+            <p>{message}</p>
+        """
+        sent = send_email(to='support@zarniskills.com', subject=f'[Contact Form] {subject}', html_body=html_body)
+
+        if sent:
+            flash("Message sent! We'll get back to you soon.", 'success')
+        else:
+            flash('Could not send your message right now. Please email us directly at support@zarniskills.com.', 'warning')
+        return redirect(url_for('main.contact'))
+
+    return render_template('contact.html', form=None)

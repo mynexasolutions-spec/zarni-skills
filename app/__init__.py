@@ -48,6 +48,7 @@ def create_app():
 
     @app.context_processor
     def inject_global_data():
+        from datetime import datetime, timezone
         from app.models import Package, Course
         try:
             packages = Package.query.filter_by(is_active=True).order_by(Package.price).all()
@@ -55,7 +56,8 @@ def create_app():
         except Exception:
             packages = []
             courses = []
-        return dict(global_packages=packages, global_courses=courses)
+        return dict(global_packages=packages, global_courses=courses,
+                     current_year=datetime.now(timezone.utc).year)
 
     # Apply schema migrations for columns added after initial DB creation
     with app.app_context():

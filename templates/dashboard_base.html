@@ -23,26 +23,46 @@
     width: 0;
     flex-shrink: 0;
     overflow: hidden;
-    background: #fff;
+    background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
     border-right: 1px solid #e5e7eb;
     transition: width .3s ease;
     display: flex;
     flex-direction: column;
     z-index: 50;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
   }
 
   #offcanvas-sidebar.open {
-    width: 260px;
-    min-width: 260px;
+    width: 280px;
+    min-width: 280px;
   }
 
   #sidebar-inner {
-    width: 260px;
+    width: 280px;
     flex-shrink: 0;
     overflow-y: auto;
     height: 100%;
     display: flex;
     flex-direction: column;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  #sidebar-inner::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #sidebar-inner::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  #sidebar-inner::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+
+  #sidebar-inner::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
   }
 
   #student-main {
@@ -61,51 +81,81 @@
   }
 
   .sidebar-logo-area {
-    height: 64px;
+    height: 70px;
     display: flex;
     align-items: center;
-    padding: 0 20px;
-    border-bottom: 1px solid #f3f4f6;
+    justify-content: center;
+    padding: 0 16px;
+    border-bottom: 1px solid #e5e7eb;
     gap: 10px;
     flex-shrink: 0;
+    background: linear-gradient(180deg, #fff 0%, #f9fafb 100%);
+  }
+
+  .sidebar-logo-area img {
+    transition: transform .2s;
+  }
+
+  .sidebar-logo-area:hover img {
+    transform: scale(1.05);
   }
 
   .oc-group-header {
-    padding: 8px 16px;
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .08em;
+    padding: 12px 16px;
+    font-size: .65rem;
+    font-weight: 800;
+    letter-spacing: .1em;
     text-transform: uppercase;
-    color: #fff;
-    background: #2563eb;
-    margin-top: 8px;
+    color: #6b7280;
+    background: transparent;
+    margin-top: 16px;
+    margin-bottom: 4px;
+    border-top: 1px solid #f3f4f6;
+  }
+
+  .oc-group-header:first-of-type {
+    border-top: none;
+    margin-top: 0;
   }
 
   .oc-link {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 9px 20px;
+    gap: 12px;
+    padding: 11px 14px;
+    margin: 0 8px;
     font-size: .875rem;
-    color: #374151;
+    color: #6b7280;
     text-decoration: none;
-    transition: background .15s;
+    transition: all .2s;
+    border-radius: 10px;
+    border-left: 3px solid transparent;
+    font-weight: 500;
   }
 
   .oc-link:hover {
     background: #f3f4f6;
     color: #111;
+    border-left-color: #2563eb;
   }
 
   .oc-link.active {
-    background: #eff6ff;
-    color: #2b80f0;
-    font-weight: 600;
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+    color: #1e40af;
+    font-weight: 700;
+    border-left-color: #2563eb;
+    box-shadow: inset 0 2px 8px rgba(37, 99, 235, 0.1);
+  }
+
+  .oc-link.logout-link {
+    color: #ef4444;
+    margin-top: 8px;
   }
 
   .oc-link.logout-link:hover {
     background: #fef2f2;
     color: #dc2626;
+    border-left-color: #dc2626;
   }
 
   .oc-link svg {
@@ -113,6 +163,19 @@
     height: 18px;
     flex-shrink: 0;
     stroke: currentColor;
+    transition: all .2s;
+  }
+
+  .oc-link:hover svg {
+    stroke: #2563eb;
+  }
+
+  .oc-link.active svg {
+    stroke: #1e40af;
+  }
+
+  .oc-link.logout-link:hover svg {
+    stroke: #dc2626;
   }
 
   #profile-dropdown {
@@ -120,36 +183,104 @@
     position: absolute;
     right: 0;
     top: calc(100% + 8px);
-    min-width: 200px;
+    min-width: 280px;
     background: #fff;
     border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .15);
     z-index: 500;
     overflow: hidden;
+    animation: slideDown .2s ease-out;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   #profile-dropdown.open {
     display: block;
   }
 
+  #profile-dropdown .profile-header {
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+    border-bottom: 1px solid #dbeafe;
+  }
+
+  #profile-dropdown .profile-header-user {
+    font-weight: 700;
+    color: #1e40af;
+    font-size: .95rem;
+    margin-bottom: 2px;
+  }
+
+  #profile-dropdown .profile-header-role {
+    font-size: .75rem;
+    color: #3b82f6;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  #profile-dropdown .dropdown-section {
+    padding: 8px 0;
+  }
+
+  #profile-dropdown .dropdown-section-title {
+    padding: 8px 16px;
+    font-size: .7rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    background: #fafafa;
+  }
+
   #profile-dropdown a {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 16px;
+    gap: 12px;
+    padding: 12px 16px;
     font-size: .875rem;
     color: #374151;
     text-decoration: none;
-    transition: background .15s;
+    transition: all .2s;
+    border-left: 3px solid transparent;
+  }
+
+  #profile-dropdown a svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: #6b7280;
+    transition: color .2s;
   }
 
   #profile-dropdown a:hover {
-    background: #f3f4f6;
+    background: #f9fafb;
+    color: #1f2937;
+    border-left-color: #2563eb;
+  }
+
+  #profile-dropdown a:hover svg {
+    color: #2563eb;
+  }
+
+  #profile-dropdown a.logout-link {
+    color: #dc2626;
+  }
+
+  #profile-dropdown a.logout-link svg {
+    color: #fca5a5;
   }
 
   #profile-dropdown a.logout-link:hover {
     background: #fef2f2;
+    border-left-color: #dc2626;
+  }
+
+  #profile-dropdown a.logout-link:hover svg {
     color: #dc2626;
   }
 
@@ -279,43 +410,11 @@
 
     <div style="position:relative;" id="profile-icon-wrapper">
       <button id="profile-icon-btn"
-        style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;font-weight:700;font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;">
         {{ current_user.name[0].upper() }}
       </button>
       <div id="profile-dropdown">
-        <a href="{{ url_for('student.profile') }}"><svg style="width:16px;height:16px;" fill="none"
-            stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M5.121 17.804A4 4 0 0010 21h4a4 4 0 004.879-3.196M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
-          </svg>My Profile</a>
-        <a href="{{ url_for('student.my_courses') }}"><svg style="width:16px;height:16px;" fill="none"
-            stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />
-          </svg>My Courses</a>
-        {% if is_manager %}
-        <a href="{{ url_for('manager.dashboard') }}"><svg style="width:16px;height:16px;" fill="none"
-            stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>Manager Panel</a>
-        {% endif %}
-        <a href="{{ url_for('student.upgrade_panel') }}"><svg style="width:16px;height:16px;" fill="none"
-            stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V6m0 12v-2m9-4a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>Upgrade Panel</a>
-        <a href="{{ url_for('student.buy') }}"><svg style="width:16px;height:16px;" fill="none" stroke="currentColor"
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>Buy Package</a>
-        <div class="dropdown-divider"></div>
-        <a href="{{ url_for('auth.logout') }}" class="logout-link"><svg style="width:16px;height:16px;" fill="none"
-            stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>Logout</a>
+        {% include "partials/profile_dropdown.html" %}
       </div>
     </div>
     <a href="{{ url_for('student.dashboard') }}" id="open-sidebar-btn"
@@ -331,7 +430,13 @@
 <div id="student-layout" style="display:flex;">
   <aside id="offcanvas-sidebar" class="open" style="margin-top:0;">
     <div id="sidebar-inner">
-      <nav style="flex:1;padding-bottom:16px;">
+      <!-- Sidebar Logo -->
+      <div class="sidebar-logo-area">
+        <img src="{{ url_for('static', filename='img/zarni-logo.png') }}" alt="Zarni Skills" style="height:32px;width:auto;" />
+        <span style="font-weight:800;font-size:.85rem;color:#1e40af;letter-spacing:-.3px;">Zarni</span>
+      </div>
+
+      <nav style="flex:1;padding-bottom:16px;padding-top:8px;">
 
         {# ── Manager-specific section ── #}
         {% if is_manager %}

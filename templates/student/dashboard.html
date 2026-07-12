@@ -7,159 +7,173 @@
 <!-- ══════════════════════════════════════════════
      SECTION 1: KPI BANNER
 ══════════════════════════════════════════════ -->
-<section class="rounded-2xl overflow-hidden mb-8" style="background: linear-gradient(135deg, #0a0f2e 0%, #0b1a3e 50%, #050c1a 100%);
-                border: 1px solid rgba(255,255,255,0.08);
-                box-shadow: 0 4px 32px rgba(0,0,0,0.3);">
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;">
+<section class="mb-8">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
 
     <!-- All Time Earnings -->
-    <div style="padding:28px 24px;border-right:1px solid rgba(255,255,255,0.08);">
-      <p
-        style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">
+    <div class="kpi-card">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V6m0 12v-2m9-4a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
         All Time Earnings
       </p>
-      <p style="font-size:1.75rem;font-weight:800;color:#4ade80;line-height:1.1;">
-        ₹ {{ '%.0f'|format(all_time_earnings) }}/-
-      </p>
+      <p class="kpi-value">₹ {{ '%.0f'|format(all_time_earnings) }}</p>
+      <p class="kpi-subtext">Lifetime earnings</p>
     </div>
 
     <!-- All Time Paid -->
-    <div style="padding:28px 24px;border-right:1px solid rgba(255,255,255,0.08);">
-      <p
-        style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">
+    <div class="kpi-card kpi-card--green">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
         All Time Paid
       </p>
-      <p style="font-size:1.75rem;font-weight:800;color:#4ade80;line-height:1.1;">
-        ₹ {{ '%.0f'|format(all_time_paid) }}/-
-      </p>
+      <p class="kpi-value">₹ {{ '%.0f'|format(all_time_paid) }}</p>
+      <p class="kpi-subtext">Payouts received</p>
     </div>
 
     <!-- Last 30 Days Earnings -->
-    <div style="padding:28px 24px;border-right:1px solid rgba(255,255,255,0.08);">
-      <p
-        style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">
-        Last 30 Days Earnings
+    <div class="kpi-card kpi-card--blue">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8L5.257 19.293A2 2 0 005 18.414V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-.257.914l-7.743-7.743" />
+        </svg>
+        Last 30 Days
       </p>
-      <p style="font-size:1.75rem;font-weight:800;color:#4ade80;line-height:1.1;">
-        ₹ {{ '%.0f'|format(last_30_earnings) }}/-
-      </p>
+      <p class="kpi-value">₹ {{ '%.0f'|format(last_30_earnings) }}</p>
+      <p class="kpi-subtext">This month</p>
     </div>
 
     <!-- Last 7 Days Earnings -->
-    <div style="padding:28px 24px;">
-      <p
-        style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">
-        Last 7 Days Earnings
+    <div class="kpi-card kpi-card--purple">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        Last 7 Days
       </p>
-      <p style="font-size:1.75rem;font-weight:800;color:#4ade80;line-height:1.1;">
-        ₹ {{ '%.0f'|format(last_7_earnings) }}/-
-      </p>
+      <p class="kpi-value">₹ {{ '%.0f'|format(last_7_earnings) }}</p>
+      <p class="kpi-subtext">This week</p>
     </div>
 
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════
-     SECTION 1b: FEATURES (coming soon)
+     SECTION 1b: QUICK ACTIONS
 ══════════════════════════════════════════════ -->
-<section style="margin-bottom:24px;">
-  <h2 style="font-weight:700;font-size:1rem;color:#111;margin-bottom:14px;">Features</h2>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-    <a href="{{ url_for('student.offers') }}" class="feature-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div
-          style="width:40px;height:40px;border-radius:12px;background:#eff6ff;color:#2563eb;display:flex;align-items:center;justify-content:center;">
-          <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
-          </svg>
-        </div>
-        <span class="feature-card__badge">Soon</span>
+<section style="margin-bottom:40px;">
+  <div style="display:flex;align-items:center;gap:0;margin-bottom:20px;">
+    <h2 style="font-weight:800;font-size:1.125rem;color:#111;margin:0;flex:0;">Quick Actions</h2>
+    <div style="flex:1;height:1px;background:linear-gradient(90deg,#e5e7eb 0%,transparent 100%);"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;">
+
+    <a href="{{ url_for('student.offers') }}" class="action-card">
+      <div class="action-icon-wrapper">
+        <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
       </div>
-      <h3 style="font-weight:700;font-size:.95rem;color:#111;margin-bottom:4px;">Offers</h3>
-      <p style="font-size:.8rem;color:#6b7280;line-height:1.4;">Exclusive deals for members — not configured yet.</p>
+      <h3 class="action-title">My Offers</h3>
+      <p class="action-desc">View exclusive offers</p>
     </a>
-    <a href="{{ url_for('student.freelancing') }}" class="feature-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div
-          style="width:40px;height:40px;border-radius:12px;background:#f0fdf4;color:#16a34a;display:flex;align-items:center;justify-content:center;">
-          <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0v6a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0V4" />
-          </svg>
-        </div>
-        <span class="feature-card__badge">Soon</span>
+
+    <a href="{{ url_for('student.freelancing') }}" class="action-card action-card--green">
+      <div class="action-icon-wrapper action-icon-wrapper--green">
+        <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0v6a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0V4" />
+        </svg>
       </div>
-      <h3 style="font-weight:700;font-size:.95rem;color:#111;margin-bottom:4px;">Freelancing</h3>
-      <p style="font-size:.8rem;color:#6b7280;line-height:1.4;">Find freelance projects — not configured yet.</p>
+      <h3 class="action-title">Freelancing</h3>
+      <p class="action-desc">Find projects</p>
     </a>
-    <a href="{{ url_for('student.trip_plus') }}" class="feature-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div
-          style="width:40px;height:40px;border-radius:12px;background:#fdf4ff;color:#9333ea;display:flex;align-items:center;justify-content:center;">
-          <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <span class="feature-card__badge">Soon</span>
+
+    <a href="{{ url_for('student.trip_plus') }}" class="action-card action-card--purple">
+      <div class="action-icon-wrapper action-icon-wrapper--purple">
+        <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 5.364a9 9 0 1012.728 0M9 9h.01M15 9h.01M9 15a6 6 0 1-1.08 3.469M12 12.5V9.5m-6 6h12" />
+        </svg>
       </div>
-      <h3 style="font-weight:700;font-size:.95rem;color:#111;margin-bottom:4px;">Trip +</h3>
-      <p style="font-size:.8rem;color:#6b7280;line-height:1.4;">Travel rewards and trips — not configured yet.</p>
+      <h3 class="action-title">Trip +</h3>
+      <p class="action-desc">Travel rewards</p>
     </a>
+
+    <a href="{{ url_for('student.upgrade_panel') }}" class="action-card action-card--amber">
+      <div class="action-icon-wrapper action-icon-wrapper--amber">
+        <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <h3 class="action-title">Upgrade</h3>
+      <p class="action-desc">Level up now</p>
+    </a>
+
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════
      SECTION 2: EARNING GRAPH + TOP REFERRALS
 ══════════════════════════════════════════════ -->
-<section style="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 relative z-10 w-full">
+<section style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:40px;">
 
   <!-- Earning Graph -->
-  <!-- Include Chart.js Library near your block top or head -->
-  <script src="https://jsdelivr.net"></script>
-
-  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
-    <div
-      style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #f3f4f6;">
-      <h2 style="font-weight:700;font-size:1rem;color:#111;">Earning Graph</h2>
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8L5.257 19.293A2 2 0 005 18.414V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-.257.914l-7.743-7.743" />
+        </svg>
+        Earning Trend
+      </h2>
       <select id="earnings-timeframe"
-        style="font-size:.8rem;padding:6px 14px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;">
+        style="font-size:.85rem;padding:8px 12px;border-radius:8px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-weight:500;">
         <option value="7days" selected>Last 7 Days</option>
         <option value="30days">Last 30 Days</option>
         <option value="alltime">All Time</option>
       </select>
     </div>
-    <div style="padding:15px;position:relative;height:210px;">
-      <!-- Loading spinner -->
+    <div style="padding:24px;position:relative;height:240px;">
       <div id="chart-loader" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10 rounded-2xl">
         <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
       </div>
-      <!-- No data overlay -->
       <div id="chart-no-data"
         style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#9ca3af;font-size:.875rem;background:#fff;z-index:5;">
         No data available
       </div>
-      <!-- FIXED: Canvas element added inside a responsive wrapper -->
-      <div style="width:100%; height:100%;">
-        <canvas id="earnings-chart-canvas"></canvas>
-      </div>
+      <canvas id="earnings-chart-canvas"></canvas>
     </div>
   </div>
 
-
   <!-- Top Referrals -->
-  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
-    <div style="padding:18px 22px;border-bottom:1px solid #f3f4f6;">
-      <h2 style="font-weight:700;font-size:1rem;color:#111;">Top Referrals</h2>
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Your Network
+      </h2>
     </div>
-    <div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <div class="panel-content" style="text-align:center;padding:32px 24px;">
       {% set total_referrals = current_user.referrals.count() %}
       {% if total_referrals == 0 %}
-      <p style="color:#9ca3af;font-size:.875rem;">No data available</p>
+      <div style="text-align:center;">
+        <div style="width:60px;height:60px;background:#f3f4f6;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <svg style="width:32px;height:32px;color:#d1d5db;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <p style="color:#9ca3af;font-size:.875rem;margin:0;">No referrals yet</p>
+      </div>
       {% else %}
-      <p style="font-size:3rem;font-weight:800;color:#111;line-height:1;">{{ total_referrals }}</p>
-      <p style="color:#6b7280;font-size:.875rem;margin-top:4px;">total referrals</p>
+      <p style="font-size:3rem;font-weight:800;color:#2563eb;line-height:1;margin:0;">{{ total_referrals }}</p>
+      <p style="color:#6b7280;font-size:.875rem;margin-top:8px;margin-bottom:0;">Active referrals</p>
+      <a href="{{ url_for('student.referrals') }}" style="display:inline-block;margin-top:12px;padding:8px 16px;background:#eff6ff;color:#2563eb;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem;transition:all 0.2s;hover:background:#dbeafe;">
+        View all →
+      </a>
       {% endif %}
     </div>
   </div>
@@ -169,34 +183,37 @@
 <!-- ══════════════════════════════════════════════
      SECTION 3: RECENT REFERRALS + LEADERBOARD
 ══════════════════════════════════════════════ -->
-<section style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+<section style="display:grid;grid-template-columns:1fr 1fr;gap:28px;">
 
   <!-- Your Recent Referrals -->
-  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
-    <div style="padding:18px 22px;border-bottom:1px solid #f3f4f6;">
-      <h2 style="font-weight:700;font-size:1rem;color:#111;">Your Recent Referrals</h2>
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+        Recent Joins
+      </h2>
     </div>
     <div style="overflow-x:auto;">
-      <table style="width:100%;font-size:.875rem;border-collapse:collapse;">
+      <table class="dashboard-table">
         <thead>
-          <tr style="border-bottom:1px solid #f3f4f6;">
-            <th style="text-align:left;font-weight:600;font-size:.75rem;color:#6b7280;padding:12px 20px;">S.No</th>
-            <th style="text-align:left;font-weight:600;font-size:.75rem;color:#6b7280;padding:12px 20px;">Name</th>
-            <th style="text-align:left;font-weight:600;font-size:.75rem;color:#6b7280;padding:12px 20px;">Registered On
-            </th>
+          <tr>
+            <th>S.No</th>
+            <th>Name</th>
+            <th>Joined</th>
           </tr>
         </thead>
         <tbody>
           {% for r in recent_referrals %}
-          <tr style="border-bottom:1px solid #f9fafb;">
-            <td style="padding:12px 20px;color:#374151;">{{ loop.index }}</td>
-            <td style="padding:12px 20px;font-weight:500;color:#111;">{{ r.name }}</td>
-            <td style="padding:12px 20px;color:#6b7280;">{{ r.created_at.strftime('%d-%m-%Y') }}</td>
+          <tr>
+            <td class="font-weight-semi">{{ loop.index }}</td>
+            <td class="font-weight-semi">{{ r.name }}</td>
+            <td class="text-secondary">{{ r.created_at.strftime('%d %b, %Y') }}</td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="3" style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:.875rem;">No data
-              available</td>
+            <td colspan="3" style="padding:32px 16px;text-align:center;color:#9ca3af;font-size:.875rem;">No referrals yet</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -205,47 +222,35 @@
   </div>
 
   <!-- Leaderboard -->
-  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
-    <div
-      style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #f3f4f6;">
-      <h2 style="font-weight:700;font-size:1rem;color:#111;">Leaderboard</h2>
-      <span
-        style="font-size:.875rem;font-weight:700;color:#374151;background:#f3f4f6;padding:4px 12px;border-radius:999px;">
-        Position #{{ leaderboard_position }}
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l-2 2m2-2l2 2M15 19V10l-2 2m2-2l2 2M5 20h14" />
+        </svg>
+        Top Earners
+      </h2>
+      <span style="font-size:.85rem;font-weight:700;color:#374151;background:#f3f4f6;padding:6px 12px;border-radius:999px;">
+        Rank #{{ leaderboard_position }}
       </span>
     </div>
 
-    <!-- Table header -->
-    <div
-      style="display:grid;grid-template-columns:40px 1fr 1fr;align-items:center;padding:10px 20px;border-bottom:1px solid #f3f4f6;">
-      <span
-        style="font-size:.7rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;">Image</span>
-      <span
-        style="font-size:.7rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;">Name</span>
-      <span
-        style="font-size:.7rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;text-align:right;">Earnings</span>
-    </div>
-
-    <div>
+    <div style="padding:12px 0;">
       {% for row in leaderboard %}
-      <div style="display:grid;grid-template-columns:40px 1fr 1fr;align-items:center;padding:12px 20px;border-bottom:1px solid #f9fafb;
-                    {% if row.id == current_user.id %}background:#eff6ff;{% endif %}">
-        <div
-          style="width:36px;height:36px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-weight:700;color:#2563eb;font-size:.9rem;">
-          {{ row.name[0].upper() }}
+      <div style="display:grid;grid-template-columns:40px 1fr 1fr;align-items:center;padding:12px 16px;border-bottom:1px solid #f9fafb;{% if row.id == current_user.id %}background:#eff6ff;{% endif %}">
+        <div class="rank-badge">
+          {{ loop.index }}
         </div>
-        <p style="font-weight:500;color:#111;font-size:.875rem;
-                    {% if row.id == current_user.id %}color:#2563eb;font-weight:700;{% endif %}">
+        <p style="font-weight:600;color:#111;font-size:.875rem;margin:0;{% if row.id == current_user.id %}color:#2563eb;font-weight:700;{% endif %}">
           {{ row.name }}
-          {% if row.id == current_user.id %}<span style="font-size:.7rem;color:#2563eb;margin-left:6px;">(You)</span>{%
-          endif %}
+          {% if row.id == current_user.id %}<span style="font-size:.7rem;color:#2563eb;margin-left:6px;">(You)</span>{% endif %}
         </p>
-        <p style="font-size:.875rem;color:#374151;text-align:right;font-weight:600;">
-          ₹ {{ '%.0f'|format(row.earnings) }}/-
+        <p style="font-size:.875rem;color:#374151;text-align:right;font-weight:700;margin:0;">
+          ₹ {{ '%.0f'|format(row.earnings) }}
         </p>
       </div>
       {% else %}
-      <div style="padding:32px 20px;text-align:center;color:#9ca3af;font-size:.875rem;">No data available</div>
+      <div style="padding:32px 16px;text-align:center;color:#9ca3af;font-size:.875rem;">No data available</div>
       {% endfor %}
     </div>
   </div>
@@ -286,7 +291,7 @@
 
           // Create sleek matching gradient fill for the chart line
           const gradient = ctx.createLinearGradient(0, 0, 0, 180);
-          gradient.addColorStop(0, 'rgba(59, 130, 246, 0.25)'); // Match your brand primary theme
+          gradient.addColorStop(0, 'rgba(59, 130, 246, 0.25)');
           gradient.addColorStop(1, 'rgba(59, 130, 246, 0.00)');
 
           earningsChart = new Chart(ctx, {
@@ -294,31 +299,34 @@
             data: {
               labels: data.labels,
               datasets: [{
-                label: 'Earnings ($)',
+                label: 'Earnings',
                 data: data.values,
-                borderColor: '#3b82f6', // Tailwinds Blue-500 or your custom primary
+                borderColor: '#3b82f6',
                 borderWidth: 2.5,
                 backgroundColor: gradient,
                 fill: true,
-                tension: 0.3, // Gives that modern curved wave appearance
-                pointRadius: 2,
-                pointHoverRadius: 5
+                tension: 0.4,
+                pointRadius: 3,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 6
               }]
             },
             options: {
               responsive: true,
               maintainAspectRatio: false,
               plugins: {
-                legend: { display: false } // Hidden to look clean like a professional dashboard
+                legend: { display: false }
               },
               scales: {
                 x: {
                   grid: { display: false },
-                  ticks: { font: { size: 10 }, color: '#9ca3af' }
+                  ticks: { font: { size: 11, weight: '600' }, color: '#9ca3af' }
                 },
                 y: {
-                  grid: { color: '#f3f4f6' },
-                  ticks: { font: { size: 10 }, color: '#9ca3af' },
+                  grid: { color: '#f3f4f6', drawBorder: false },
+                  ticks: { font: { size: 11, weight: '600' }, color: '#9ca3af' },
                   beginAtZero: true
                 }
               }

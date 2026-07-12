@@ -262,7 +262,7 @@
       <!-- RIGHT COLUMN: Student Image & Floating Cards -->
       <div class="relative flex items-center justify-center py-6 lg:py-10 order-1 lg:order-2 group/right">
         <!-- Outer positioning container -->
-        <div class="relative w-[290px] h-[290px] sm:w-[400px] sm:h-[400px] lg:w-[460px] lg:h-[460px]">
+        <div class="relative w-[220px] h-[220px] sm:w-[400px] sm:h-[400px] lg:w-[460px] lg:h-[460px]">
 
           <!-- Animated concentric rings -->
           <div class="absolute inset-[-20px] rounded-full border border-primary/8 animate-[spin_60s_linear_infinite]">
@@ -284,10 +284,10 @@
               class="w-full h-full object-contain drop-shadow-[0_20px_40px_rgba(59,130,246,0.18)]" />
           </div>
 
-          <!-- FLOATING CARD: Live Students Online (top-left) -->
-          <div class="absolute -top-4 -left-8 sm:-top-6 sm:-left-14 lg:-top-4 lg:-left-16 z-20 animate-float">
+          <!-- FLOATING CARD: Live Students Online (top-left, pushed to outer side on mobile so the character stays visible) -->
+          <div class="absolute top-8 -left-16 sm:-top-6 sm:-left-14 lg:-top-4 lg:-left-16 z-20 animate-float">
             <div
-              class="bg-white/95 backdrop-blur-md border border-white/90 rounded-2xl p-3.5 sm:p-4 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.12),0_0_0_1px_rgba(255,255,255,0.9)] min-w-[148px] sm:min-w-[170px] transition-all duration-700 group-hover/right:translate-y-[-10px] group-hover/right:translate-x-[-6px]">
+              class="bg-white/95 backdrop-blur-md border border-white/90 rounded-2xl p-2.5 sm:p-4 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.12),0_0_0_1px_rgba(255,255,255,0.9)] min-w-[124px] sm:min-w-[170px] transition-all duration-700 group-hover/right:translate-y-[-10px] group-hover/right:translate-x-[-6px]">
               <div class="flex items-center gap-2.5 mb-2">
                 <div class="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600" fill="none"
@@ -319,10 +319,10 @@
             </div>
           </div>
 
-          <!-- FLOATING CARD: Course Progress (bottom-right) -->
-          <div class="absolute -bottom-4 -right-4 sm:-bottom-8 sm:-right-8 z-20 animate-float-delayed">
+          <!-- FLOATING CARD: Course Progress (bottom-right, pushed to outer side on mobile so the character stays visible) -->
+          <div class="absolute bottom-8 -right-16 sm:-bottom-8 sm:-right-8 z-20 animate-float-delayed">
             <div
-              class="bg-white/95 backdrop-blur-md border border-white/90 rounded-2xl p-3.5 sm:p-4 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.12),0_0_0_1px_rgba(255,255,255,0.9)] min-w-[160px] sm:min-w-[188px] transition-all duration-700 group-hover/right:translate-y-[10px] group-hover/right:translate-x-[6px]">
+              class="bg-white/95 backdrop-blur-md border border-white/90 rounded-2xl p-2.5 sm:p-4 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.12),0_0_0_1px_rgba(255,255,255,0.9)] min-w-[136px] sm:min-w-[188px] transition-all duration-700 group-hover/right:translate-y-[10px] group-hover/right:translate-x-[6px]">
               <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">Course Progress</p>
               <div class="flex items-center gap-2.5 mb-3">
                 <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
@@ -355,7 +355,7 @@
 
           <!-- FLOATING BADGE: Play button (top-right) -->
           <div
-            class="absolute top-4 right-0 sm:top-6 sm:-right-2 z-20 transition-transform duration-500 group-hover/right:translate-y-[-4px] group-hover/right:translate-x-[4px]">
+            class="absolute top-2 -right-10 sm:top-6 sm:-right-2 z-20 transition-transform duration-500 group-hover/right:translate-y-[-4px] group-hover/right:translate-x-[4px]">
             <div class="relative">
               <div class="absolute inset-0 rounded-full bg-primary/25 animate-ping"></div>
               <div
@@ -820,6 +820,226 @@
     </div>
   </section>
   </div>
+
+  <!-- ============================================================
+     SKILLS TO EARNING MACHINE — TRANSFORMATION SHOWCASE
+============================================================ -->
+  <section class="py-24 relative overflow-hidden" id="transformation"
+    style="background: radial-gradient(ellipse 90% 70% at 50% 0%, #eef6ff 0%, #d6e9fb 45%, #aed0f2 100%);">
+
+    <!-- Ambient gradient backdrop -->
+    <div class="absolute -left-24 top-1/3 w-72 h-72 bg-white/40 rounded-full blur-[110px] pointer-events-none z-0">
+    </div>
+    <div
+      class="absolute -right-24 bottom-1/4 w-72 h-72 bg-indigo-300/20 rounded-full blur-[110px] pointer-events-none z-0">
+    </div>
+
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+
+      <!-- Header -->
+      <div class="text-center max-w-2xl mx-auto mb-16 space-y-5">
+        <h2
+          class="font-heading font-black text-3xl sm:text-4xl lg:text-5xl text-slate-900 leading-tight tracking-tight">
+          Turn Your
+          <span
+            class="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary align-middle mx-1 shadow-md shadow-primary/30">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24"
+              stroke="#fff" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.42A12.02 12.02 0 0122 12c0 2.4-.72 4.63-1.96 6.49L12 14zm0 0l-6.16-3.42A12.02 12.02 0 002 12c0 2.4.72 4.63 1.96 6.49L12 14zm0 7v-7" />
+            </svg>
+          </span>
+          Skills<br class="hidden sm:block" />
+          Into an
+          <span
+            class="bg-gradient-to-r from-primary via-blue-500 to-indigo-600 bg-clip-text text-transparent">Earning
+            Machine</span>
+        </h2>
+        <p class="text-slate-500 text-base sm:text-lg font-medium leading-relaxed">
+          We help students land high-paying roles and build passive income through <strong
+            class="text-slate-700 font-bold">expert-led courses and a high-converting affiliate program</strong>.
+        </p>
+        <div class="pt-2">
+          <button onclick="window.location.href='{{ url_for('auth.register') }}'"
+            class="group relative inline-flex items-center gap-2 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white px-8 py-3.5 rounded-full font-bold text-sm transition-all duration-300 hover:-translate-y-0.5 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 overflow-hidden">
+            <span
+              class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+            Start Learning Free
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Before / After Showcase -->
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-16 lg:gap-4 items-center pt-6">
+
+        <!-- BEFORE CARD -->
+        <div class="relative mx-auto w-full max-w-[280px]">
+          <p class="text-center text-slate-400/90 font-black uppercase tracking-widest text-xs mb-5">Before</p>
+          <div class="relative -rotate-6 hover:rotate-0 transition-transform duration-500 ease-out">
+
+            <!-- Stacked ghost card (depth) -->
+            <div class="absolute inset-0 translate-x-4 -translate-y-3 bg-white/50 border border-white/70 rounded-2xl -z-10">
+            </div>
+
+            <!-- Card -->
+            <div class="relative bg-white/95 border border-white rounded-2xl shadow-[0_20px_45px_rgba(30,64,110,0.18)] p-4">
+              <div class="flex justify-end mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-300" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="M21 15l-5-5L5 21" />
+                </svg>
+              </div>
+              <div class="relative w-14 h-14 mb-3">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=160&q=80"
+                  alt="Before joining Zarni Skills" class="w-14 h-14 rounded-full object-cover grayscale" />
+                <span
+                  class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center ring-2 ring-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5 text-white" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                    <path stroke-linecap="round" d="M12 5v14M5 12h14" />
+                  </svg>
+                </span>
+              </div>
+              <p class="font-black text-slate-800 text-sm">Rohan Mehta</p>
+              <p class="text-slate-400 text-xs font-medium">Confused Beginner</p>
+              <p class="text-slate-300 text-[11px] mt-0.5">Stuck in a low-paying job, no clear direction</p>
+              <p class="text-slate-300 text-[10px] font-semibold mt-2.5">0 courses completed · ₹0 extra income</p>
+
+              <!-- Mock UI footer bar -->
+              <div class="flex items-center gap-1.5 mt-3">
+                <div class="h-5 flex-1 rounded-full bg-slate-100"></div>
+                <div class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                  <span class="text-slate-300 text-xs leading-none">&#8230;</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating Courses badge -->
+          <div
+            class="absolute top-2 -left-4 sm:-left-9 bg-rose-50 border border-rose-100 rounded-xl shadow-md px-3 py-1.5 z-20">
+            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">Courses</p>
+            <p class="text-rose-500 font-black text-sm flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7l10 10M17 7v10H7" />
+              </svg>
+              0
+            </p>
+          </div>
+
+          <!-- Floating Income badge -->
+          <div
+            class="absolute top-1/2 -right-4 sm:-right-10 bg-rose-50 border border-rose-100 rounded-xl shadow-md px-3 py-1.5 z-20">
+            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">Extra income</p>
+            <p class="text-rose-500 font-black text-sm flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7l10 10M17 7v10H7" />
+              </svg>
+              ₹0
+            </p>
+          </div>
+        </div>
+
+        <!-- ARROW: curved swoosh, matching reference -->
+        <div class="hidden lg:flex items-center justify-center w-32 -mt-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-32 h-24 text-[#5b9df5] overflow-visible"
+            viewBox="0 0 130 90" fill="none">
+            <path d="M6 76 C 40 86, 55 40, 112 16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" />
+            <path d="M96 8 C 104 10, 111 12, 116 17 C 113 22, 110 28, 107 34" stroke="currentColor"
+              stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+          </svg>
+        </div>
+        <div class="flex lg:hidden items-center justify-center py-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-[#5b9df5] rotate-90 overflow-visible"
+            viewBox="0 0 130 90" fill="none">
+            <path d="M6 76 C 40 86, 55 40, 112 16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" />
+            <path d="M96 8 C 104 10, 111 12, 116 17 C 113 22, 110 28, 107 34" stroke="currentColor"
+              stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+          </svg>
+        </div>
+
+        <!-- AFTER CARD -->
+        <div class="relative mx-auto w-full max-w-[300px] lg:-translate-y-6">
+          <p class="text-center text-primary font-black uppercase tracking-widest text-xs mb-5">After</p>
+          <div class="relative rotate-3 hover:rotate-0 transition-transform duration-500 ease-out">
+
+            <!-- Stacked ghost card (depth) -->
+            <div
+              class="absolute inset-0 -translate-x-4 -translate-y-3 bg-white/50 border border-white/70 rounded-2xl -z-10">
+            </div>
+
+            <!-- Card -->
+            <div class="relative bg-white border border-white rounded-2xl shadow-[0_25px_60px_-8px_rgba(30,64,110,0.28)] p-4">
+              <div class="flex items-center gap-2.5 mb-2.5">
+                <div class="relative w-14 h-14 shrink-0">
+                  <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=160&q=80"
+                    alt="After joining Zarni Skills" class="w-14 h-14 rounded-full object-cover" />
+                  <span
+                    class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center ring-2 ring-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5 text-white" fill="none"
+                      viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                      <path stroke-linecap="round" d="M12 5v14M5 12h14" />
+                    </svg>
+                  </span>
+                </div>
+              </div>
+              <p class="font-black text-slate-900 text-sm">Rohan Mehta</p>
+              <p class="text-slate-500 text-xs font-bold">Full-Stack Developer @ TechNova</p>
+              <p class="text-slate-400 text-[11px] mt-0.5 leading-relaxed">Completed the Full-Stack bundle and now
+                earns ₹45,000/month plus affiliate bonuses.</p>
+              <p class="text-slate-400 text-[10px] font-semibold mt-2.5">12 courses completed · ₹18,400 affiliate
+                earnings</p>
+
+              <!-- Mock UI footer bar -->
+              <div class="flex items-center gap-1.5 mt-3">
+                <div class="h-6 flex-1 rounded-full bg-primary/10 border border-primary/15 flex items-center px-3">
+                  <span class="text-primary text-[10px] font-bold">Open to mentoring</span>
+                </div>
+                <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                  <span class="text-slate-400 text-xs leading-none">&#8230;</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating Courses badge -->
+          <div
+            class="absolute -top-2 -left-4 sm:-left-9 bg-emerald-50 border border-emerald-100 rounded-xl shadow-md px-3 py-1.5 z-20 animate-float">
+            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">Courses</p>
+            <p class="text-emerald-600 font-black text-sm flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 17L7 7M7 17V7h10" />
+              </svg>
+              12+
+            </p>
+          </div>
+
+          <!-- Floating Income badge -->
+          <div
+            class="absolute top-1/3 -right-4 sm:-right-10 bg-emerald-50 border border-emerald-100 rounded-xl shadow-md px-3 py-1.5 z-20 animate-float-delayed">
+            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">Monthly income</p>
+            <p class="text-emerald-600 font-black text-sm flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 17L7 7M7 17V7h10" />
+              </svg>
+              ₹45K+
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
 
   <!-- ============================================================
      PACKAGES

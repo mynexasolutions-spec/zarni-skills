@@ -4,243 +4,490 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/auth.css') }}" />
 {% endblock %}
 
-
-
 {% block content %}
 {% include 'partials/navbar.html' %}
 
-<div class="auth-bg min-h-screen flex flex-col items-center justify-center p-4 pt-32">
-  <!-- Package Selection Section (Now integrated) -->
-  <div class="max-w-7xl w-full mb-12">
+<div class="auth-bg min-h-screen flex flex-col items-center justify-center p-4 pt-32 relative overflow-hidden">
+
+  <!-- Ambient decorative blobs -->
+  <div class="absolute -top-32 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-indigo-400/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+  <!-- Package Selection Section -->
+  <div class="max-w-7xl w-full mb-12 relative z-10">
     <div class="text-center mb-10">
-      <h2 class="text-3xl md:text-5xl font-heading font-extrabold tracking-tight text-dark mb-4">
-        Choose Your <span class="text-primary">Path</span>
+      <div
+        class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/8 border border-primary/15 text-xs font-bold text-primary uppercase tracking-widest mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+        Step 1 &middot; Premium Bundles
+      </div>
+      <h2 class="text-3xl md:text-5xl font-black text-slate-900 leading-[1.1] tracking-tight mb-4">
+        Choose Your <span
+          class="bg-gradient-to-r from-primary via-indigo-600 to-indigo-700 bg-clip-text text-transparent">Path</span>
       </h2>
-      <p class="text-lg text-slate-500 max-w-2xl mx-auto font-medium">Select a package to unlock your future potential</p>
-      <div class="w-24 h-1 bg-primary mx-auto mt-4 rounded-full"></div>
+      <p class="text-lg text-slate-500 max-w-2xl mx-auto font-medium">Select a package to unlock your future
+        potential</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 xl:gap-8 max-w-6xl mx-auto">
       {% for pkg in packages %}
-      <div class="package-card-selector group cursor-pointer relative" onclick="selectPackage('{{ pkg.id }}', this)">
-        <!-- Explicit Checkbox -->
-        <input type="checkbox" id="check_{{ pkg.id }}" class="package-checkbox absolute top-6 left-6 w-6 h-6 rounded border-2 border-primary/30 text-primary focus:ring-primary z-40 pointer-events-none" />
-        
-        <div class="bg-white rounded-[2.5rem] p-6 h-full flex flex-col items-center text-center relative overflow-hidden transition-all duration-500 shadow-xl border-2 border-transparent hover:shadow-primary/20 hover:border-primary/30 relative">
-          
-          <!-- Selection Overlay (Optional now but keeping for extra polish) -->
-          <div class="selection-check absolute top-6 right-6 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center opacity-0 scale-0 transition-all duration-300 z-30">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+      {% set is_popular = (loop.index == 2) %}
+      <div class="package-card-selector group cursor-pointer relative flex flex-col h-full"
+        onclick="selectPackage('{{ pkg.id }}', this)">
+        <input type="checkbox" id="check_{{ pkg.id }}" class="package-checkbox hidden pointer-events-none" />
+
+        <!-- Outer glow on hover / selection -->
+        <div
+          class="package-glow absolute -inset-[2px] rounded-[2rem] {% if is_popular %}bg-gradient-to-br from-primary via-indigo-500 to-indigo-600{% else %}bg-gradient-to-br from-slate-200 to-slate-300{% endif %} opacity-0 group-hover:opacity-60 blur-[6px] transition-all duration-500 pointer-events-none z-0">
+        </div>
+
+        <!-- Card -->
+        <div
+          class="package-card-inner relative flex flex-col h-full bg-white rounded-[1.8rem] overflow-hidden border-2 {% if is_popular %}border-primary/30{% else %}border-slate-200/80{% endif %} shadow-[0_4px_24px_rgba(0,0,0,0.04)] group-hover:shadow-[0_24px_60px_-12px_rgba(43,128,240,0.2)] group-hover:-translate-y-1.5 transition-all duration-500 z-10">
+
+          <!-- Selection check badge -->
+          <div
+            class="selection-check absolute top-4 right-4 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center opacity-0 scale-0 transition-all duration-300 z-30 shadow-lg shadow-primary/40">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
           </div>
 
-          <!-- Book-style cover (Dynamic) -->
-          {% if pkg.thumbnail_display_url %}
-          <div class="relative w-[calc(100%+3rem)] -mx-6 -mt-6 mb-6 shadow-2xl overflow-hidden">
-            <img src="{{ pkg.thumbnail_display_url }}" alt="{{ pkg.name }}" class="w-full h-auto object-cover" />
+          <!-- Top gradient accent bar -->
+          <div
+            class="{% if is_popular %}bg-gradient-to-r from-primary to-indigo-600{% else %}bg-gradient-to-r from-slate-100 to-slate-200{% endif %} h-1.5 w-full shrink-0">
           </div>
-          {% else %}
-          <div class="relative w-40 mb-8 mt-4 shadow-2xl rounded-lg overflow-hidden">
-             {% set grad = 'from-primary to-primary-dark' %}
-             <div class="absolute inset-0 bg-gradient-to-br {{ grad }} rounded-lg border border-white/20 shadow-2xl flex flex-col items-center justify-center p-4 z-20">
-              <p class="text-[10px] uppercase font-bold text-white/60 tracking-widest mb-2">Zarni Skills</p>
-              <h4 class="font-heading font-black text-white text-xl leading-tight text-center">
-                {% set words = pkg.name.split() %}
-                {% for w in words %}<span class="block">{{ w|upper }}</span>{% endfor %}
-              </h4>
+
+          <!-- Card body -->
+          <div class="flex flex-col flex-1 p-6 sm:p-7">
+
+            <!-- Top row: Badge + Thumbnail -->
+            <div class="flex items-start justify-between mb-5">
+              <div>
+                {% if is_popular %}
+                <div
+                  class="inline-flex items-center gap-1.5 bg-gradient-to-r from-primary to-indigo-600 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md shadow-primary/25 mb-3">
+                  <span class="w-1.5 h-1.5 rounded-full bg-white/80 animate-ping"></span>
+                  Best Seller
+                </div>
+                {% else %}
+                <div
+                  class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-500 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full mb-3">
+                  <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  Bundle Package
+                </div>
+                {% endif %}
+                <h4
+                  class="text-lg sm:text-xl font-black text-slate-900 leading-snug group-hover:text-primary transition-colors duration-300">
+                  {{ pkg.name }}
+                </h4>
+                <p class="text-xs text-slate-400 font-medium mt-1 leading-relaxed">
+                  {% if loop.index0 == 0 %}Kickstart your learning journey
+                  {% elif loop.index0 == 1 %}Advance your career skills
+                  {% else %}Master in-demand high income skills{% endif %}
+                </p>
+              </div>
+
+              <!-- Thumbnail -->
+              <div
+                class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl {% if is_popular %}bg-gradient-to-br from-primary/10 to-indigo-100/50{% else %}bg-slate-50{% endif %} border border-slate-100 flex items-center justify-center overflow-hidden shrink-0 ml-4 group-hover:scale-105 group-hover:rotate-1 transition-all duration-500 shadow-sm">
+                <img
+                  src="{{ pkg.thumbnail_display_url if pkg.thumbnail_display_url else 'https://cdn-icons-png.flaticon.com/512/3233/3233483.png' }}"
+                  alt="{{ pkg.name }}" class="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
+              </div>
             </div>
-            <div class="absolute inset-y-0 -left-6 w-6 bg-gradient-to-b {{ grad }} brightness-75 rounded-l-lg border-l border-y border-white/10 skew-y-[15deg] origin-right z-10"></div>
-          </div>
-          {% endif %}
 
-          <h3 class="text-xl font-heading font-bold text-slate-900 mb-2">{{ pkg.name }}</h3>
-          <div class="flex items-center justify-center gap-3 mb-6 w-full">
-            <span class="text-base text-slate-400 line-through font-medium">₹{{ '{:,.0f}'.format(pkg.price * 2) }}</span>
-            <span class="text-3xl font-heading font-black text-primary">₹{{ '{:,.0f}'.format(pkg.price) }}</span>
+            <!-- Price block -->
+            <div
+              class="flex items-center gap-3 mb-5 p-3.5 rounded-2xl {% if is_popular %}bg-primary/5 border border-primary/10{% else %}bg-slate-50 border border-slate-100{% endif %}">
+              <div>
+                <div class="flex items-baseline gap-2">
+                  <span
+                    class="text-2xl font-black {% if is_popular %}text-primary{% else %}text-slate-900{% endif %}">₹{{
+                    '{:,.0f}'.format(pkg.price) }}</span>
+                  <span class="text-xs text-slate-400 line-through">₹{{ '{:,.0f}'.format(pkg.price * 2) }}</span>
+                </div>
+                <span
+                  class="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md mt-1 inline-block">SAVE
+                  50% TODAY</span>
+              </div>
+            </div>
+
+            <!-- Feature list -->
+            <div class="flex-1 mb-6">
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">What you get</p>
+              <ul class="space-y-2">
+                {% if pkg.what_you_get %}
+                {% for item in pkg.what_you_get.split('\n')[:5] %}
+                {% if item.strip() %}
+                <li class="flex items-center gap-2.5 text-xs text-slate-600 font-medium py-0.5">
+                  <div
+                    class="w-4 h-4 rounded-full {% if is_popular %}bg-primary/15 text-primary{% else %}bg-slate-100 text-slate-400{% endif %} flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span>{{ item.replace('✓', '').strip() }}</span>
+                </li>
+                {% endif %}
+                {% endfor %}
+                {% elif pkg.courses %}
+                {% for course in pkg.courses[:5] %}
+                <li class="flex items-center gap-2.5 text-xs text-slate-600 font-medium py-0.5">
+                  <div
+                    class="w-4 h-4 rounded-full {% if is_popular %}bg-primary/15 text-primary{% else %}bg-slate-100 text-slate-400{% endif %} flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span>{{ course.title }}</span>
+                </li>
+                {% endfor %}
+                {% endif %}
+              </ul>
+            </div>
+
+            <!-- Select bar (reflects selection state via JS) -->
+            <div
+              class="select-bar w-full py-3.5 px-6 rounded-xl font-black text-xs inline-flex items-center justify-center gap-2 text-center transition-all duration-300 uppercase tracking-widest {% if is_popular %}bg-primary/10 text-primary border-2 border-primary/20{% else %}bg-slate-50 text-slate-500 border-2 border-slate-200{% endif %}">
+              <span class="select-label-default">Select Package</span>
+              <span class="select-label-selected hidden">Selected</span>
+              <svg class="select-icon-default w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+              <svg class="select-icon-selected w-3.5 h-3.5 shrink-0 hidden" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
           </div>
         </div>
+      </div>
+      {% else %}
+      <div class="col-span-full text-center py-16 text-slate-400">
+        <p class="text-lg">Packages coming soon.</p>
       </div>
       {% endfor %}
     </div>
   </div>
 
-  <div class="auth-card bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl p-10 md:p-16 relative z-10">
+  <!-- Registration Form -->
+  <div class="auth-card bg-white rounded-[2.5rem] shadow-2xl shadow-primary/10 w-full max-w-2xl p-8 sm:p-10 md:p-14 relative z-10">
     <!-- Logo -->
-    <div class="flex flex-col items-center mb-10">
-      <div class="w-20 h-20 rounded-2xl bg-white shadow-lg border border-primary/10 flex items-center justify-center mb-4 p-2">
-        <img src="{{ url_for('static', filename='img/zarni-logo.png') }}" alt="Zarni Skills" class="w-full h-auto object-contain" />
+    <div class="flex flex-col items-center mb-8">
+      <div
+        class="w-20 h-20 rounded-2xl bg-white shadow-lg border border-primary/10 flex items-center justify-center mb-4 p-2">
+        <img src="{{ url_for('static', filename='img/zarni-logo.png') }}" alt="Zarni Skills"
+          class="w-full h-auto object-contain" />
       </div>
-      <h1 class="font-heading font-bold text-3xl text-gray-900">Create your account</h1>
-      <p class="text-slate-500 font-medium mt-2">Join thousands of students on their journey to mastery</p>
+      <div
+        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest mb-3">
+        Step 2
+      </div>
+      <h1 class="font-heading font-black text-2xl sm:text-3xl text-slate-900">Create your account</h1>
+      <p class="text-slate-500 font-medium mt-2 text-center text-sm">Join thousands of students on their journey to
+        mastery</p>
     </div>
 
     {% if ref_code %}
-      <div class="mb-8 px-6 py-4 bg-primary/5 border border-primary/20 rounded-2xl text-sm text-primary font-bold text-center">
-        ✨ You were referred by a friend &mdash; your account will be linked automatically.
-      </div>
+    <div
+      class="mb-8 px-6 py-4 bg-primary/5 border border-primary/20 rounded-2xl text-sm text-primary font-bold text-center">
+      ✨ You were referred by a friend &mdash; your account will be linked automatically.
+    </div>
     {% endif %}
 
-    <form method="POST" action="{{ url_for('auth.register') }}" enctype="multipart/form-data" novalidate class="space-y-6">
+    <form method="POST" action="{{ url_for('auth.register') }}" enctype="multipart/form-data" novalidate
+      class="space-y-8">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <input type="hidden" name="package_id" id="selected_package_id" value="{{ request.form.get('package_id', '') }}" />
       {% if ref_code %}
-        <input type="hidden" name="ref" value="{{ ref_code }}" />
+      <input type="hidden" name="ref" value="{{ ref_code }}" />
       {% endif %}
 
-      <script>
-      function selectPackage(id, element) {
-        // Update hidden input
-        document.getElementById('selected_package_id').value = id;
-        
-        // Update UI
-        document.querySelectorAll('.package-card-selector div').forEach(el => {
-          el.classList.remove('border-primary', 'shadow-primary/30', 'scale-105');
-          el.classList.add('border-transparent');
-        });
-        document.querySelectorAll('.selection-check').forEach(el => {
-          el.classList.add('opacity-0', 'scale-0');
-        });
-        document.querySelectorAll('.package-checkbox').forEach(cb => {
-          cb.checked = false;
-        });
-        
-        const innerCard = element.querySelector('.bg-white');
-        innerCard.classList.remove('border-transparent');
-        innerCard.classList.add('border-primary', 'shadow-primary/30', 'scale-105');
-        
-        const check = element.querySelector('.selection-check');
-        check.classList.remove('opacity-0', 'scale-0');
-        check.classList.add('opacity-100', 'scale-100');
+      <!-- Personal Details -->
+      <div class="space-y-4">
+        <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Personal Details</p>
 
-        const checkbox = element.querySelector('.package-checkbox');
-        checkbox.checked = true;
-      }
-
-      // Initial state if package was already selected
-      window.addEventListener('DOMContentLoaded', () => {
-        const preSelected = document.getElementById('selected_package_id').value;
-        if (preSelected) {
-          const selectors = document.querySelectorAll('.package-card-selector');
-          // This is a bit tricky without knowing which one is which in JS easily, 
-          // but we can just match the ID if we had it in a data attribute.
-          // For now, the user will just click.
-        }
-      });
-      </script>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="name">Full Name</label>
-          <input id="name" name="name" type="text" required autocomplete="name"
-                 value="{{ request.form.get('name', '') }}"
-                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="username">Username</label>
-          <input id="username" name="username" type="text" required autocomplete="username"
-                 value="{{ request.form.get('username', '') }}"
-                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="email">Email</label>
-          <input id="email" name="email" type="email" required autocomplete="email"
-                 value="{{ request.form.get('email', '') }}"
-                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="confirm_email">Confirm Email</label>
-          <input id="confirm_email" name="confirm_email" type="email" required autocomplete="email"
-                 value="{{ request.form.get('confirm_email', '') }}"
-                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="phone">Phone</label>
-          <input id="phone" name="phone" type="tel" autocomplete="tel"
-                 value="{{ request.form.get('phone', '') }}"
-                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="state">State</label>
-          <input id="state" name="state" type="text" required autocomplete="address-level1"
-                 value="{{ request.form.get('state', '') }}"
-                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="dob">Date of Birth</label>
-          <input id="dob" name="dob" type="date" required autocomplete="bday"
-                 value="{{ request.form.get('dob', '') }}"
-                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="referral_code">Referral Code (optional)</label>
-          <input id="referral_code" name="referral_code" type="text"
-                 value="{{ request.form.get('referral_code', '') }}"
-                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="profile_image">Profile Image (optional)</label>
-        <input id="profile_image" name="profile_image" type="file" accept="image/*"
-               class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition bg-white" />
-      </div>
-
-      <div>
-        <label class="inline-flex items-center">
-          <input type="checkbox" name="terms" required class="accent-primary mr-2">
-          <span class="text-sm text-gray-700">I agree to the <a href="#" class="text-primary underline">Terms & Conditions</a></span>
-        </label>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="password">Password</label>
-          <div class="relative">
-            <input id="password" name="password" type="password" required autocomplete="new-password"
-                   class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition pr-10" />
-            <button type="button" onclick="togglePwd('password')"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5" for="name">Full Name</label>
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.964 0a9 9 0 10-11.964 0m11.964 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-            </button>
+              <input id="name" name="name" type="text" required autocomplete="name"
+                value="{{ request.form.get('name', '') }}" placeholder="Jane Doe"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5" for="username">Username</label>
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 12H8m8 0a4 4 0 10-8 0m8 0a4 4 0 01-8 0m8 0v6a4 4 0 01-8 0v-6" />
+              </svg>
+              <input id="username" name="username" type="text" required autocomplete="username"
+                value="{{ request.form.get('username', '') }}" placeholder="janedoe"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition" />
+            </div>
           </div>
         </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5" for="email">Email</label>
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.25 6.75c0-.83.67-1.5 1.5-1.5h16.5c.83 0 1.5.67 1.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5V6.75z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.5 7l9.5 6.5L21.5 7" />
+              </svg>
+              <input id="email" name="email" type="email" required autocomplete="email"
+                value="{{ request.form.get('email', '') }}" placeholder="you@example.com"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5" for="confirm_email">Confirm Email</label>
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.25 6.75c0-.83.67-1.5 1.5-1.5h16.5c.83 0 1.5.67 1.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5V6.75z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.5 7l9.5 6.5L21.5 7" />
+              </svg>
+              <input id="confirm_email" name="confirm_email" type="email" required autocomplete="email"
+                value="{{ request.form.get('confirm_email', '') }}" placeholder="you@example.com"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition" />
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5" for="phone">Phone</label>
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a1.5 1.5 0 001.5-1.5v-3.098a1.5 1.5 0 00-1.21-1.47l-4.318-.863a1.5 1.5 0 00-1.463.43l-1.05 1.05a11.25 11.25 0 01-5.13-5.13l1.05-1.05a1.5 1.5 0 00.43-1.463L8.318 3.71a1.5 1.5 0 00-1.47-1.21H3.75a1.5 1.5 0 00-1.5 1.5v2.25z" />
+              </svg>
+              <input id="phone" name="phone" type="tel" required autocomplete="tel"
+                value="{{ request.form.get('phone', '') }}" placeholder="+91 98765 43210"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5" for="state">State</label>
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+              </svg>
+              <input id="state" name="state" type="text" required autocomplete="address-level1"
+                value="{{ request.form.get('state', '') }}" placeholder="Maharashtra"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition" />
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5" for="dob">Date of Birth</label>
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+              </svg>
+              <input id="dob" name="dob" type="date" required autocomplete="bday"
+                value="{{ request.form.get('dob', '') }}"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5" for="referral_code">Referral Code
+              <span class="text-slate-400 font-medium normal-case">(optional)</span></label>
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.412-.081-.795.05-1.126.291l-3.104 2.328a1.5 1.5 0 01-2.1-.267l-.933-1.244a1.5 1.5 0 01.267-2.1l2.328-3.104c.24-.331.372-.714.291-1.126A6 6 0 1121.75 8.25z" />
+              </svg>
+              <input id="referral_code" name="referral_code" type="text"
+                value="{{ request.form.get('referral_code', '') }}" placeholder="ZARNI2026"
+                class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition uppercase placeholder:normal-case" />
+            </div>
+          </div>
+        </div>
+
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5" for="confirm_password">Confirm Password</label>
-          <input id="confirm_password" name="confirm_password" type="password" required autocomplete="new-password"
-                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
+          <label class="block text-sm font-bold text-slate-700 mb-1.5" for="profile_image">Profile Image
+            <span class="text-slate-400 font-medium normal-case">(optional)</span></label>
+          <label for="profile_image"
+            class="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-dashed border-slate-300 text-sm bg-slate-50/60 hover:bg-slate-50 hover:border-primary/40 transition cursor-pointer">
+            <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            <span id="profile_image_label" class="text-slate-500 font-medium">Click to upload a photo</span>
+            <input id="profile_image" name="profile_image" type="file" accept="image/*"
+              onchange="document.getElementById('profile_image_label').textContent = this.files[0] ? this.files[0].name : 'Click to upload a photo'"
+              class="hidden" />
+          </label>
         </div>
       </div>
 
+      <!-- Account Security -->
+      <div class="space-y-4">
+        <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Account Security</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5" for="password">Password</label>
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+              <input id="password" name="password" type="password" required autocomplete="new-password"
+                placeholder="••••••••"
+                class="w-full pl-10 pr-11 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition" />
+              <button type="button" onclick="togglePwd('password', this)"
+                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition">
+                <svg class="w-5 h-5 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <svg class="w-5 h-5 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c1.113 0 2.18-.174 3.181-.497M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400 font-medium mt-1.5">Minimum 6 characters</p>
+          </div>
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5" for="confirm_password">Confirm
+              Password</label>
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+              <input id="confirm_password" name="confirm_password" type="password" required
+                autocomplete="new-password" placeholder="••••••••"
+                class="w-full pl-10 pr-11 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition" />
+              <button type="button" onclick="togglePwd('confirm_password', this)"
+                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition">
+                <svg class="w-5 h-5 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <svg class="w-5 h-5 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c1.113 0 2.18-.174 3.181-.497M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <label
+        class="flex items-start gap-3 p-4 rounded-xl bg-slate-50/60 border border-slate-200 cursor-pointer select-none">
+        <input type="checkbox" name="terms" required
+          class="mt-0.5 w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/40 shrink-0" />
+        <span class="text-sm text-slate-600">I agree to the <a href="#"
+            class="text-primary font-bold underline">Terms &amp; Conditions</a> and <a href="#"
+            class="text-primary font-bold underline">Privacy Policy</a></span>
+      </label>
+
       <button type="submit"
-              class="w-full py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition text-sm">
+        class="group relative w-full py-3.5 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white font-bold rounded-xl transition-all duration-300 text-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 flex items-center justify-center gap-2 overflow-hidden">
+        <span
+          class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
         Create Account
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
       </button>
     </form>
 
-    <p class="text-center text-sm text-gray-500 mt-6">
+    <p class="text-center text-sm text-slate-500 mt-6">
       Already have an account?
-      <a href="{{ url_for('auth.login') }}" class="text-primary font-medium hover:underline">Sign in</a>
+      <a href="{{ url_for('auth.login') }}" class="text-primary font-bold hover:underline">Sign in</a>
     </p>
   </div>
 </div>
 
 <script>
-function togglePwd(id) {
+function selectPackage(id, element) {
+  document.getElementById('selected_package_id').value = id;
+
+  document.querySelectorAll('.package-card-selector').forEach(card => {
+    card.classList.remove('is-selected');
+    card.querySelector('.package-card-inner').classList.remove('ring-2', 'ring-primary/30', '-translate-y-1.5', 'shadow-[0_24px_60px_-12px_rgba(43,128,240,0.2)]');
+    card.querySelector('.package-glow').classList.remove('opacity-60');
+    card.querySelector('.selection-check').classList.add('opacity-0', 'scale-0');
+    card.querySelector('.selection-check').classList.remove('opacity-100', 'scale-100');
+    card.querySelector('.package-checkbox').checked = false;
+
+    const bar = card.querySelector('.select-bar');
+    bar.classList.remove('bg-primary', 'text-white', 'border-primary');
+    bar.querySelector('.select-label-default').classList.remove('hidden');
+    bar.querySelector('.select-label-selected').classList.add('hidden');
+    bar.querySelector('.select-icon-default').classList.remove('hidden');
+    bar.querySelector('.select-icon-selected').classList.add('hidden');
+  });
+
+  element.classList.add('is-selected');
+  element.querySelector('.package-card-inner').classList.add('ring-2', 'ring-primary/30', '-translate-y-1.5', 'shadow-[0_24px_60px_-12px_rgba(43,128,240,0.2)]');
+  element.querySelector('.package-glow').classList.add('opacity-60');
+
+  const check = element.querySelector('.selection-check');
+  check.classList.remove('opacity-0', 'scale-0');
+  check.classList.add('opacity-100', 'scale-100');
+
+  element.querySelector('.package-checkbox').checked = true;
+
+  const bar = element.querySelector('.select-bar');
+  bar.classList.add('bg-primary', 'text-white', 'border-primary');
+  bar.querySelector('.select-label-default').classList.add('hidden');
+  bar.querySelector('.select-label-selected').classList.remove('hidden');
+  bar.querySelector('.select-icon-default').classList.add('hidden');
+  bar.querySelector('.select-icon-selected').classList.remove('hidden');
+}
+
+function togglePwd(id, btn) {
   const el = document.getElementById(id);
   el.type = el.type === 'password' ? 'text' : 'password';
+  btn.querySelector('.eye-open').classList.toggle('hidden');
+  btn.querySelector('.eye-closed').classList.toggle('hidden');
 }
 </script>
 {% endblock %}

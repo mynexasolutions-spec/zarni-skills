@@ -2,122 +2,117 @@
 {% block title %}{{ pkg.name }} – Zarni Skills{% endblock %}
 
 {% block content %}
-<!-- Page Banner -->
-<section class="relative h-[45vh] md:h-[60vh] flex items-center justify-center overflow-hidden -mt-24 mb-12">
-  <div class="absolute inset-0 z-0">
-    <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop" 
-         alt="{{ pkg.name }}" class="w-full h-full object-cover">
-    <div class="absolute inset-0 bg-blue-950/80 backdrop-blur-[3px]"></div>
-  </div>
-  
-  <div class="relative z-10 text-center px-6 pt-20">
-    <h1 class="text-3xl md:text-5xl font-heading font-extrabold text-white mb-2 tracking-tight uppercase">
-      {{ pkg.name }}
-    </h1>
-    <div class="w-24 h-1 bg-primary mx-auto rounded-full"></div>
-  </div>
-</section>
+<div class="bg-slate-50 min-h-screen -mt-24 pt-24">
+  <!-- Page Banner -->
+  <section class="relative py-20 md:py-28 flex items-center justify-center overflow-hidden"
+    style="background: radial-gradient(ellipse 90% 70% at 50% 0%, #eef6ff 0%, #f8faff 60%, #f8faff 100%);">
+    <!-- Decorative grid + glow backdrop -->
+    <div class="absolute inset-0 pointer-events-none z-0"
+      style="background-image: linear-gradient(rgba(43,128,240,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(43,128,240,0.05) 1px, transparent 1px); background-size: 44px 44px;">
+    </div>
+    <div class="absolute -top-16 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
+    <div class="absolute -top-16 right-1/4 w-72 h-72 bg-indigo-300/20 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
-<div class="min-h-screen bg-slate-50">
+    <div class="relative z-10 text-center px-6">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/8 border border-primary/15 text-xs font-bold text-primary uppercase tracking-widest mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Premium Learning Package
+      </div>
+      <h1 class="text-4xl md:text-6xl font-heading font-black text-slate-900 tracking-tight leading-[1.1]">
+        {{ pkg.name }}
+      </h1>
+      {% if pkg.description %}
+      <p class="text-slate-500 text-base sm:text-lg font-medium leading-relaxed max-w-2xl mx-auto mt-4">
+        {{ pkg.description }}
+      </p>
+      {% endif %}
+    </div>
+  </section>
+
   <div class="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
 
     <!-- Breadcrumb -->
-    <nav class="text-sm text-slate-500 mb-8 flex items-center gap-2">
-      <a href="{{ url_for('main.index') }}" class="hover:text-primary transition-colors">Home</a>
-      <span>/</span>
-      <a href="{{ url_for('main.all_packages') }}" class="hover:text-primary transition-colors">Packages</a>
-      <span>/</span>
-      <span class="text-slate-800 font-medium">{{ pkg.name }}</span>
+    <nav class="text-sm text-slate-500 mb-10 flex items-center gap-2 flex-wrap">
+      <a href="{{ url_for('main.index') }}" class="hover:text-primary transition-colors font-medium">Home</a>
+      <span class="text-slate-300">/</span>
+      <a href="{{ url_for('main.all_packages') }}" class="hover:text-primary transition-colors font-medium">Packages</a>
+      <span class="text-slate-300">/</span>
+      <span class="text-slate-700 font-semibold">{{ pkg.name }}</span>
     </nav>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
 
       <!-- Left: Main content -->
-      <div class="lg:col-span-2 space-y-10">
+      <div class="lg:col-span-2 space-y-8">
 
-        <!-- Square Thumbnail -->
-        <div class="rounded-[2.5rem] overflow-hidden shadow-2xl bg-white p-3 border border-slate-200">
-          {% if pkg.thumbnail_display_url %}
-            <div class="aspect-square w-full relative rounded-[2rem] overflow-hidden">
-              <img src="{{ pkg.thumbnail_display_url }}" alt="{{ pkg.name }}" class="w-full h-full object-cover" />
-            </div>
-          {% else %}
-            <div class="aspect-square w-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center rounded-[2rem]">
-              <div class="text-center text-white p-8">
-                <p class="text-xs uppercase tracking-widest text-white/60 mb-4 font-bold">Zarni Skills</p>
-                <h2 class="font-heading font-black text-4xl md:text-5xl uppercase leading-tight">{{ pkg.name }}</h2>
+        <!-- Square Thumbnail with glow -->
+        <div class="group relative">
+          <div class="absolute -inset-[2px] rounded-[1.9rem] bg-gradient-to-br from-primary via-indigo-500 to-indigo-600 opacity-0 group-hover:opacity-60 blur-[6px] transition-all duration-500 pointer-events-none z-0"></div>
+          <div class="relative rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] group-hover:shadow-[0_24px_60px_-12px_rgba(43,128,240,0.2)] transition-all duration-500 z-10 bg-white p-3 border border-slate-100">
+            {% if pkg.thumbnail_display_url %}
+              <div class="aspect-square w-full relative rounded-[1.5rem] overflow-hidden">
+                <img src="{{ pkg.thumbnail_display_url }}" alt="{{ pkg.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               </div>
-            </div>
-          {% endif %}
-        </div>
-
-        <!-- Description -->
-        <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100">
-          <h2 class="text-2xl font-heading font-extrabold text-slate-900 mb-4 uppercase tracking-tight">About This Package</h2>
-          {% if pkg.description %}
-          <p class="text-slate-600 leading-relaxed text-lg">{{ pkg.description }}</p>
-          {% else %}
-          <p class="text-slate-400 italic">No description provided for this package.</p>
-          {% endif %}
-        </div>
-
-        <!-- Technical details table -->
-        {% if pkg.level or pkg.language or pkg.pkg_duration %}
-        <div class="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm">
-          <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50">
-            <h2 class="font-heading font-bold text-slate-800 text-sm uppercase tracking-widest">Package Highlights</h2>
+            {% else %}
+              <div class="aspect-square w-full bg-gradient-to-br from-primary/80 via-blue-600 to-indigo-700 flex items-center justify-center rounded-[1.5rem]">
+                <div class="text-center text-white p-8">
+                  <p class="text-xs uppercase tracking-widest text-white/60 mb-4 font-bold">Zarni Skills</p>
+                  <h2 class="font-heading font-black text-4xl md:text-5xl uppercase leading-tight">{{ pkg.name }}</h2>
+                </div>
+              </div>
+            {% endif %}
           </div>
-          <table class="w-full text-sm">
-            <tbody class="divide-y divide-slate-50">
-              {% if pkg.pkg_duration %}
-              <tr>
-                <td class="px-8 py-4 font-bold text-slate-400 uppercase text-[11px] tracking-widest w-1/3">Duration</td>
-                <td class="px-8 py-4 text-slate-800 font-bold">{{ pkg.pkg_duration }}</td>
-              </tr>
-              {% endif %}
-              {% if pkg.level %}
-              <tr class="bg-slate-50/30">
-                <td class="px-8 py-4 font-bold text-slate-400 uppercase text-[11px] tracking-widest">Skill Level</td>
-                <td class="px-8 py-4 text-slate-800 font-bold">{{ pkg.level }}</td>
-              </tr>
-              {% endif %}
-              {% if pkg.language %}
-              <tr>
-                <td class="px-8 py-4 font-bold text-slate-400 uppercase text-[11px] tracking-widest">Language</td>
-                <td class="px-8 py-4 text-slate-800 font-bold">{{ pkg.language }}</td>
-              </tr>
-              {% endif %}
-              <tr class="bg-slate-50/30">
-                <td class="px-8 py-4 font-bold text-slate-400 uppercase text-[11px] tracking-widest">Curriculum</td>
-                <td class="px-8 py-4 text-slate-800 font-bold">{{ pkg.courses|length }} Professional Courses</td>
-              </tr>
-              <tr>
-                <td class="px-8 py-4 font-bold text-slate-400 uppercase text-[11px] tracking-widest">L1 Commission</td>
-                <td class="px-8 py-4 text-green-600 font-black">₹ {{ '{:,.0f}'.format(pkg.price * pkg.level1_commission_percent / 100) }} ({{ pkg.level1_commission_percent }}%)</td>
-              </tr>
-              <tr class="bg-slate-50/30">
-                <td class="px-8 py-4 font-bold text-slate-400 uppercase text-[11px] tracking-widest">L2 Commission</td>
-                <td class="px-8 py-4 text-blue-600 font-black">₹ {{ '{:,.0f}'.format(pkg.price * pkg.level2_commission_percent / 100) }} ({{ pkg.level2_commission_percent }}%)</td>
-              </tr>
-            </tbody>
-          </table>
+        </div>
+
+        <!-- Technical details grid -->
+        {% if pkg.level or pkg.language or pkg.pkg_duration or pkg.courses %}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          {% if pkg.pkg_duration %}
+          <div class="bg-white border border-slate-100 rounded-2xl p-4 text-center hover:border-primary/20 transition-colors">
+            <svg class="w-5 h-5 text-primary mx-auto mb-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Duration</p>
+            <p class="text-sm font-bold text-slate-800">{{ pkg.pkg_duration }}</p>
+          </div>
+          {% endif %}
+          {% if pkg.level %}
+          <div class="bg-white border border-slate-100 rounded-2xl p-4 text-center hover:border-primary/20 transition-colors">
+            <svg class="w-5 h-5 text-primary mx-auto mb-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <p class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Level</p>
+            <p class="text-sm font-bold text-slate-800">{{ pkg.level }}</p>
+          </div>
+          {% endif %}
+          {% if pkg.language %}
+          <div class="bg-white border border-slate-100 rounded-2xl p-4 text-center hover:border-primary/20 transition-colors">
+            <svg class="w-5 h-5 text-primary mx-auto mb-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>
+            <p class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Language</p>
+            <p class="text-sm font-bold text-slate-800">{{ pkg.language }}</p>
+          </div>
+          {% endif %}
+          <div class="bg-white border border-slate-100 rounded-2xl p-4 text-center hover:border-primary/20 transition-colors">
+            <svg class="w-5 h-5 text-primary mx-auto mb-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h7"/></svg>
+            <p class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Courses</p>
+            <p class="text-sm font-bold text-slate-800">{{ pkg.courses|length }}</p>
+          </div>
         </div>
         {% endif %}
 
         <!-- What You Get -->
         {% if pkg.what_you_get %}
-        <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100">
-          <h2 class="text-2xl font-heading font-extrabold text-slate-900 mb-6 uppercase tracking-tight">What's Included</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-gradient-to-br from-primary/5 to-indigo-600/5 border border-primary/10 rounded-3xl p-7 sm:p-8">
+          <h2 class="text-lg font-heading font-black text-slate-900 mb-6 flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            What's Included
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {% for item in pkg.what_you_get.split('\n') %}
             {% if item.strip() %}
-            <div class="flex items-start gap-4 bg-slate-50 rounded-2xl px-5 py-4 border border-slate-100 group hover:border-primary/30 transition-colors">
-              <div class="mt-1 bg-green-500 text-white rounded-full p-1 shadow-lg shadow-green-200">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <span class="text-sm text-slate-700 font-bold">{{ item.strip() }}</span>
+            <div class="flex items-start gap-3 bg-white rounded-2xl p-4 border border-slate-100 hover:border-primary/20 hover:shadow-sm transition-all">
+              <svg class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-sm text-slate-700 font-medium">{{ item.strip() }}</span>
             </div>
             {% endif %}
             {% endfor %}
@@ -128,34 +123,40 @@
         <!-- Included Courses -->
         {% if pkg.courses %}
         <div class="space-y-6">
-          <h2 class="text-2xl font-heading font-extrabold text-slate-900 uppercase tracking-tight">
+          <h2 class="text-lg font-heading font-black text-slate-900 flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h7"/></svg>
             Comprehensive Curriculum
-            <span class="text-primary ml-2">{{ pkg.courses|length }} Courses</span>
+            <span class="text-primary ml-auto">{{ pkg.courses|length }} Courses</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {% for course in pkg.courses %}
             <a href="{{ url_for('main.course_detail', course_id=course.id) }}"
-               class="group bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <div class="aspect-video w-full relative overflow-hidden">
-                {% if course.thumbnail_display_url %}
-                  <img src="{{ course.thumbnail_display_url }}" alt="{{ course.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                {% else %}
-                  <div class="w-full h-full bg-gradient-to-br from-primary/10 to-primary/30 flex items-center justify-center">
-                    <svg class="w-12 h-12 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-                    </svg>
+               class="group relative">
+              <!-- Outer glow on hover -->
+              <div class="absolute -inset-[2px] rounded-[1.9rem] bg-gradient-to-br from-primary via-indigo-500 to-indigo-600 opacity-0 group-hover:opacity-40 blur-[4px] transition-all duration-500 pointer-events-none z-0"></div>
+
+              <div class="relative bg-white rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] group-hover:shadow-[0_24px_60px_-12px_rgba(43,128,240,0.2)] group-hover:-translate-y-1.5 transition-all duration-500 z-10 overflow-hidden">
+                <div class="aspect-video w-full relative overflow-hidden">
+                  {% if course.thumbnail_display_url %}
+                    <img src="{{ course.thumbnail_display_url }}" alt="{{ course.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  {% else %}
+                    <div class="w-full h-full bg-gradient-to-br from-primary/10 to-indigo-600/10 flex items-center justify-center">
+                      <svg class="w-12 h-12 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                      </svg>
+                    </div>
+                  {% endif %}
+                  <div class="absolute top-3.5 left-3.5 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-primary uppercase tracking-widest shadow-sm">
+                    {{ course.level or 'All Levels' }}
                   </div>
-                {% endif %}
-                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-black text-primary uppercase tracking-widest">
-                  {{ course.level or 'All Levels' }}
                 </div>
-              </div>
-              <div class="p-6">
-                <h3 class="font-heading font-black text-slate-900 text-base group-hover:text-primary transition-colors mb-2 uppercase leading-tight">{{ course.title }}</h3>
-                <div class="flex items-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                  <span>{{ course.course_duration or 'Lifetime' }}</span>
-                  <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                  <span>{{ course.language or 'Hindi' }}</span>
+                <div class="p-5 sm:p-6">
+                  <h3 class="font-heading font-black text-slate-900 text-sm sm:text-base group-hover:text-primary transition-colors mb-3 uppercase leading-tight line-clamp-2">{{ course.title }}</h3>
+                  <div class="flex items-center gap-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-widest flex-wrap">
+                    {% if course.course_duration %}<span>{{ course.course_duration }}</span>{% endif %}
+                    {% if course.course_duration and course.language %}<span class="w-1 h-1 rounded-full bg-slate-300"></span>{% endif %}
+                    {% if course.language %}<span>{{ course.language }}</span>{% endif %}
+                  </div>
                 </div>
               </div>
             </a>
@@ -167,56 +168,70 @@
 
       <!-- Right: Sticky enrollment card -->
       <div class="lg:col-span-1">
-        <div class="sticky top-28 bg-white rounded-[2.5rem] border border-slate-200 shadow-2xl p-8 space-y-6">
+        <div class="sticky top-28 group relative">
 
-          <!-- Price -->
-          <div class="text-center pb-6 border-b border-slate-100">
-            <p class="text-sm text-slate-400 line-through font-bold mb-1">₹{{ '{:,.0f}'.format(pkg.price * 2) }}</p>
-            <p class="text-5xl font-heading font-black text-primary">₹{{ '{:,.0f}'.format(pkg.price) }}</p>
-            <div class="mt-4 inline-block bg-green-500 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-green-200">
-              50% Instant Discount
+          <!-- Outer glow on hover -->
+          <div class="absolute -inset-[1.5px] rounded-[1.9rem] bg-gradient-to-br from-primary via-indigo-500 to-indigo-600 opacity-0 group-hover:opacity-40 blur-[8px] transition-all duration-500 pointer-events-none z-0"></div>
+
+          <div class="relative z-10 bg-white rounded-3xl border border-slate-100 shadow-[0_8px_32px_rgba(0,0,0,0.06)] group-hover:shadow-[0_24px_60px_-12px_rgba(43,128,240,0.15)] transition-all duration-500 p-6 sm:p-7 space-y-6">
+
+            <!-- Price -->
+            <div class="text-center pb-6 border-b border-slate-100">
+              <p class="text-sm text-slate-400 line-through font-bold mb-2">₹{{ '{:,.0f}'.format(pkg.price * 2) }}</p>
+              <p class="text-5xl font-heading font-black bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">₹{{ '{:,.0f}'.format(pkg.price) }}</p>
+              <div class="mt-4 inline-block bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-emerald-200">
+                Save 50%
+              </div>
             </div>
-          </div>
 
-          <!-- Commission info -->
-          <div class="bg-blue-50 border border-blue-100 rounded-3xl p-6 space-y-4">
-            <p class="text-xs font-black text-blue-800 uppercase tracking-widest mb-2 flex items-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              Referral Earnings
-            </p>
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-slate-600 font-bold uppercase text-[11px] tracking-tight">Direct (L1)</span>
-              <span class="font-black text-green-600 text-lg">{{ pkg.level1_commission_percent }}%</span>
+            <!-- Commission info -->
+            <div class="space-y-3">
+              <p class="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Referral Earnings
+              </p>
+              <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs font-bold text-slate-600 uppercase tracking-tight">Direct (L1)</span>
+                  <span class="font-black text-emerald-600 text-lg">{{ pkg.level1_commission_percent }}%</span>
+                </div>
+                <div class="border-t border-slate-200"></div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs font-bold text-slate-600 uppercase tracking-tight">Passive (L2)</span>
+                  <span class="font-black text-blue-600 text-lg">{{ pkg.level2_commission_percent }}%</span>
+                </div>
+              </div>
+              <p class="text-xs text-slate-400 text-center">
+                Direct: ₹{{ '{:,.0f}'.format(pkg.price * pkg.level1_commission_percent / 100) }} | Passive: ₹{{ '{:,.0f}'.format(pkg.price * pkg.level2_commission_percent / 100) }}
+              </p>
             </div>
-            <div class="flex justify-between items-center text-sm pt-2 border-t border-blue-100/50">
-              <span class="text-slate-600 font-bold uppercase text-[11px] tracking-tight">Passive (L2)</span>
-              <span class="font-black text-blue-600 text-lg">{{ pkg.level2_commission_percent }}%</span>
+
+            <!-- CTA -->
+            <div class="space-y-3">
+              {% if current_user.is_authenticated %}
+                <a href="{{ url_for('student.buy_package', package_id=pkg.id) }}"
+                   class="group/btn relative w-full py-3.5 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white font-black rounded-xl text-sm transition-all shadow-lg shadow-primary/20 uppercase tracking-wider overflow-hidden inline-flex items-center justify-center">
+                  <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-500"></span>
+                  Buy This Package
+                </a>
+              {% else %}
+                <a href="{{ url_for('auth.register') }}"
+                   class="group/btn relative w-full py-3.5 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white font-black rounded-xl text-sm transition-all shadow-lg shadow-primary/20 uppercase tracking-wider overflow-hidden inline-flex items-center justify-center">
+                  <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-500"></span>
+                  Enroll Now
+                </a>
+                <a href="{{ url_for('auth.login') }}"
+                   class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-xs border border-slate-200 uppercase tracking-wider inline-block text-center">
+                  Already Enrolled? Login
+                </a>
+              {% endif %}
             </div>
-          </div>
 
-          <!-- CTA -->
-          <div class="space-y-3">
-            {% if current_user.is_authenticated %}
-              <a href="{{ url_for('student.buy_package', package_id=pkg.id) }}"
-                 class="w-full block text-center py-5 bg-primary hover:bg-primary-dark text-white font-black rounded-2xl shadow-xl shadow-primary/30 transition-all text-sm uppercase tracking-widest hover:-translate-y-1">
-                Buy This Package
-              </a>
-            {% else %}
-              <a href="{{ url_for('auth.register') }}"
-                 class="w-full block text-center py-5 bg-primary hover:bg-primary-dark text-white font-black rounded-2xl shadow-xl shadow-primary/30 transition-all text-sm uppercase tracking-widest hover:-translate-y-1">
-                Enroll Now
-              </a>
-              <a href="{{ url_for('auth.login') }}"
-                 class="w-full block text-center py-3 bg-slate-50 hover:bg-slate-100 text-slate-500 font-bold rounded-2xl transition-all text-xs border border-slate-200">
-                Existing User? Login
-              </a>
-            {% endif %}
-          </div>
-
-          <!-- Trust Badge -->
-          <div class="flex items-center justify-center gap-4 pt-4 opacity-50">
-            <svg class="w-8 h-8 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/></svg>
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Secure Payment<br>Verified Platform</p>
+            <!-- Trust Badge -->
+            <div class="flex items-center justify-center gap-3 pt-4 border-t border-slate-100">
+              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Secure &amp; Verified</p>
+            </div>
           </div>
         </div>
       </div>
@@ -224,3 +239,4 @@
   </div>
 </div>
 {% endblock %}
+

@@ -6,69 +6,149 @@
 
 {% block content %}
 {% include 'partials/navbar.html' %}
-<div class="auth-bg min-h-screen flex items-center justify-center p-4 pt-32">
-  <div class="auth-card bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
 
-    <!-- Logo -->
-    <div class="flex flex-col items-center mb-8">
-      <div class="w-20 h-20 rounded-2xl bg-white shadow-lg border border-primary/10 flex items-center justify-center mb-4 p-2">
-        <img src="{{ url_for('static', filename='img/zarni-logo.png') }}" alt="Zarni Skills" class="w-full h-auto object-contain" />
+<div class="auth-bg min-h-screen flex items-center justify-center p-4 pt-28 lg:pt-24 relative overflow-hidden">
+
+  <!-- Ambient decorative blobs -->
+  <div class="absolute -top-24 -left-24 w-80 h-80 bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
+  <div class="absolute -bottom-24 -right-24 w-80 h-80 bg-indigo-400/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+  <div class="auth-card relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl shadow-primary/10 overflow-hidden grid grid-cols-1 lg:grid-cols-2">
+
+    <!-- LEFT: Brand panel (desktop only) -->
+    <div class="hidden lg:flex flex-col justify-between relative p-10 bg-gradient-to-br from-primary via-primary to-indigo-700 overflow-hidden">
+      <!-- Decorative dot grid -->
+      <div class="absolute inset-0 opacity-10 pointer-events-none"
+        style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 20px 20px;"></div>
+      <!-- Glow blobs -->
+      <div class="absolute -top-16 -right-16 w-56 h-56 bg-white/10 rounded-full blur-[80px] pointer-events-none"></div>
+      <div class="absolute bottom-0 left-0 w-64 h-64 bg-indigo-300/20 rounded-full blur-[90px] pointer-events-none"></div>
+
+      <div class="relative z-10">
+        <a href="{{ url_for('main.index') }}" class="inline-flex items-center gap-2.5 mb-14">
+          <div class="w-11 h-11 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-lg">
+            <img src="{{ url_for('static', filename='img/zarni-logo.png') }}" alt="Zarni Skills" class="w-full h-auto object-contain" />
+          </div>
+          <span class="font-heading font-black text-white text-lg">Zarni Skills</span>
+        </a>
+
+        <h2 class="font-heading font-black text-3xl xl:text-4xl text-white leading-tight mb-4">
+          Learn Today.<br />Earn Tomorrow.
+        </h2>
+        <p class="text-white/80 text-sm leading-relaxed max-w-xs">
+          Sign in to continue your courses, track your progress, and grow your affiliate earnings.
+        </p>
       </div>
-      <h1 class="font-heading font-bold text-2xl text-gray-900">Welcome back</h1>
-      <p class="text-gray-500 text-sm mt-1">Sign in to your Zarni Skills account</p>
+
+      <div class="relative z-10 flex items-center gap-6 pt-10 border-t border-white/15">
+        <div>
+          <p class="text-white font-black text-xl leading-none">10K+</p>
+          <p class="text-white/60 text-[11px] font-semibold uppercase tracking-wider mt-1">Students</p>
+        </div>
+        <div class="w-px h-8 bg-white/20"></div>
+        <div>
+          <p class="text-white font-black text-xl leading-none">500+</p>
+          <p class="text-white/60 text-[11px] font-semibold uppercase tracking-wider mt-1">Courses</p>
+        </div>
+        <div class="w-px h-8 bg-white/20"></div>
+        <div>
+          <p class="text-white font-black text-xl leading-none">4.9★</p>
+          <p class="text-white/60 text-[11px] font-semibold uppercase tracking-wider mt-1">Rating</p>
+        </div>
+      </div>
     </div>
 
-    <form method="POST" action="{{ url_for('auth.login') }}" novalidate class="space-y-5">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <!-- RIGHT: Login form -->
+    <div class="p-8 sm:p-10 lg:p-12 flex flex-col justify-center">
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="email">Email</label>
-        <input id="email" name="email" type="email" autocomplete="email" required
-               value="{{ request.form.get('email', '') }}"
-               class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition" />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1.5" for="password">Password</label>
-        <div class="relative">
-          <input id="password" name="password" type="password" autocomplete="current-password" required
-                 class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition pr-10" />
-          <button type="button" onclick="togglePwd('password')"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-          </button>
+      <!-- Mobile logo (hidden on desktop, panel already shows it) -->
+      <div class="flex lg:hidden flex-col items-center mb-8">
+        <div class="w-16 h-16 rounded-2xl bg-white shadow-lg border border-primary/10 flex items-center justify-center mb-4 p-2">
+          <img src="{{ url_for('static', filename='img/zarni-logo.png') }}" alt="Zarni Skills" class="w-full h-auto object-contain" />
         </div>
       </div>
 
-      <button type="submit"
-              class="w-full py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition text-sm">
-        Sign In
-      </button>
-    </form>
+      <div class="mb-8">
+        <h1 class="font-heading font-black text-2xl sm:text-3xl text-slate-900">Welcome back</h1>
+        <p class="text-slate-500 text-sm mt-1.5">Sign in to your Zarni Skills account to continue</p>
+      </div>
 
-    <p class="text-center text-sm mt-4">
-      <a href="{{ url_for('auth.forgot_password') }}" class="text-gray-500 hover:text-primary transition">
-        Forgot your password?
-      </a>
-    </p>
+      <form method="POST" action="{{ url_for('auth.login') }}" novalidate class="space-y-5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
-    <p class="text-center text-sm text-gray-500 mt-2">
-      Don't have an account?
-      <a href="{{ url_for('auth.register') }}" class="text-primary font-medium hover:underline">Sign up</a>
-    </p>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5" for="email">Email</label>
+          <div class="relative">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0-.83.67-1.5 1.5-1.5h16.5c.83 0 1.5.67 1.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5V6.75z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.5 7l9.5 6.5L21.5 7" />
+            </svg>
+            <input id="email" name="email" type="email" autocomplete="email" required
+                   value="{{ request.form.get('email', '') }}" placeholder="you@example.com"
+                   class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5" for="password">Password</label>
+          <div class="relative">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            <input id="password" name="password" type="password" autocomplete="current-password" required
+                   placeholder="••••••••"
+                   class="w-full pl-10 pr-11 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition" />
+            <button type="button" onclick="togglePwd('password', this)"
+                    class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition">
+              <svg class="w-5 h-5 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <svg class="w-5 h-5 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c1.113 0 2.18-.174 3.181-.497M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-sm">
+          <label class="flex items-center gap-2 text-slate-600 font-medium cursor-pointer select-none">
+            <input type="checkbox" name="remember" class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/40" />
+            Remember me
+          </label>
+          <a href="{{ url_for('auth.forgot_password') }}" class="text-primary font-semibold hover:underline">
+            Forgot password?
+          </a>
+        </div>
+
+        <button type="submit"
+                class="group relative w-full py-3.5 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white font-bold rounded-xl transition-all duration-300 text-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 flex items-center justify-center gap-2 overflow-hidden">
+          <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+          Sign In
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </button>
+      </form>
+
+      <p class="text-center text-sm text-slate-500 mt-6">
+        Don't have an account?
+        <a href="{{ url_for('auth.register') }}" class="text-primary font-bold hover:underline">Sign up for free</a>
+      </p>
+    </div>
 
   </div>
 </div>
 
 <script>
-function togglePwd(id) {
+function togglePwd(id, btn) {
   const el = document.getElementById(id);
   el.type = el.type === 'password' ? 'text' : 'password';
+  btn.querySelector('.eye-open').classList.toggle('hidden');
+  btn.querySelector('.eye-closed').classList.toggle('hidden');
 }
 </script>
 {% endblock %}
