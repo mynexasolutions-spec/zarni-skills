@@ -7,8 +7,8 @@
   <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
     <!-- Avatar -->
     <div class="flex flex-col items-center mb-8">
-      <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-heading font-bold text-2xl mb-3">
-        {{ current_user.name[0].upper() }}
+      <div class="w-16 h-16 rounded-full overflow-hidden mb-3">
+        <img src="{{ current_user.profile_image_url }}" alt="{{ current_user.name }}" class="w-full h-full object-cover" />
       </div>
       <p class="font-semibold text-gray-900">{{ current_user.name }}</p>
       <p class="text-sm text-gray-400">{{ current_user.email }}</p>

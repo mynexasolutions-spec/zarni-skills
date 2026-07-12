@@ -8,42 +8,61 @@
     class="w-full flex items-center justify-between gap-4 lg:gap-8 xl:gap-12 py-2.5 lg:py-0 px-5 sm:px-8 lg:px-10 xl:px-14 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 shadow-[0_1px_20px_rgba(0,0,0,0.06)] transition-all duration-300">
 
     <!-- Logo -->
-    <a href="{{ url_for('main.index') }}" class="flex items-center flex-shrink-0 h-10 lg:h-[72px] overflow-hidden">
+    <a href="{{ url_for('main.index') }}" id="nav-logo" class="nav-height-el flex items-center flex-shrink-0 h-10 lg:h-[84px] overflow-hidden transition-[height] duration-300">
       <img src="{{ url_for('static', filename='img/zarni-logo.png') }}" alt="Zarni Skills"
-        class="h-full w-auto object-contain">
+        class="h-full w-auto object-contain scale-90">
     </a>
 
     <!-- Desktop Links -->
     <ul class="hidden lg:flex items-center gap-1 xl:gap-2 flex-1 justify-center">
       <li>
         <a href="{{ url_for('main.index') }}"
-          class="relative group flex items-center px-4 py-2 text-sm font-bold text-slate-600 hover:text-primary transition-colors duration-200 rounded-lg hover:bg-primary/5">
+          class="relative group flex items-center px-4 py-2 text-[15px] font-bold transition-colors duration-200 rounded-lg hover:bg-primary/5 {{ 'text-primary' if request.endpoint == 'main.index' else 'text-slate-600 hover:text-primary' }}">
           Home
-          <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-4 transition-all duration-300"></span>
+          <span class="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-primary rounded-full transition-all duration-300 {{ 'w-4' if request.endpoint == 'main.index' else 'w-0 group-hover:w-4' }}"></span>
         </a>
       </li>
 
       <!-- Packages Dropdown -->
       <li class="relative group">
         <button
-          class="relative flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-slate-600 hover:text-primary transition-colors duration-200 rounded-lg hover:bg-primary/5 focus:outline-none h-[72px]">
-          Packages
-          <svg class="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 opacity-60" fill="none"
-            stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-          <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-4 transition-all duration-300"></span>
+          class="nav-height-el flex items-center focus:outline-none h-[84px]">
+          <span class="relative flex items-center gap-1.5 px-4 py-2 rounded-lg text-[15px] font-bold transition-colors duration-200 hover:bg-primary/5 {{ 'text-primary' if request.endpoint in ('main.all_packages', 'main.package_detail') else 'text-slate-600 hover:text-primary' }}">
+            Packages
+            <svg class="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 opacity-60" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+            <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-primary rounded-full transition-all duration-300 {{ 'w-4' if request.endpoint in ('main.all_packages', 'main.package_detail') else 'w-0 group-hover:w-4' }}"></span>
+          </span>
         </button>
         <!-- Dropdown Panel -->
         <div
-          class="absolute top-full left-1/2 -translate-x-1/2 w-[340px] bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] border border-slate-100/80 p-4 opacity-0 scale-95 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-200 z-50">
+          class="absolute top-full left-1/2 -translate-x-1/2 w-[360px] bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.2)] ring-1 ring-slate-100/80 overflow-hidden opacity-0 scale-95 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-200 z-50">
           <!-- Arrow -->
           <div class="absolute -top-[6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-slate-100/80 rotate-45"></div>
-          <div class="flex flex-col gap-1.5">
+
+          <!-- Header -->
+          <div class="relative px-4 pt-4 pb-3 bg-gradient-to-br from-primary/5 via-white to-indigo-50/60 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-primary/25">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-heading font-black text-sm text-slate-900 leading-tight">Premium Bundles</p>
+                <p class="text-[11px] text-slate-400 font-semibold">{{ global_packages|length }} package{{ 's' if global_packages|length != 1 }} available</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1 p-3">
             {% for pkg in global_packages %}
+            {% set is_popular = (loop.index == 2) %}
             <a href="{{ url_for('main.package_detail', pkg_id=pkg.id) }}"
-              class="flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-xl transition-all duration-150 group/item">
-              <div class="w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-slate-100 border border-slate-100 shadow-sm">
+              class="relative flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 group/item hover:bg-gradient-to-r hover:from-primary/[0.06] hover:to-indigo-50/60 hover:shadow-[inset_2px_0_0_0_#2b80f0]">
+              <div class="w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-slate-100 border border-slate-100 shadow-sm transition-transform duration-300 group-hover/item:scale-105">
                 {% if pkg.thumbnail_display_url %}
                 <img src="{{ pkg.thumbnail_display_url }}" alt="{{ pkg.name }}" class="w-full h-full object-cover">
                 {% else %}
@@ -53,11 +72,16 @@
                 {% endif %}
               </div>
               <div class="overflow-hidden flex-1">
-                <p class="font-bold text-slate-800 text-sm group-hover/item:text-primary transition-colors truncate">{{
-                  pkg.name }}</p>
+                <div class="flex items-center gap-1.5">
+                  <p class="font-bold text-slate-800 text-sm group-hover/item:text-primary transition-colors truncate">{{
+                    pkg.name }}</p>
+                  {% if is_popular %}
+                  <span class="shrink-0 text-[8px] font-black uppercase tracking-wide text-white bg-gradient-to-r from-primary to-indigo-600 px-1.5 py-0.5 rounded-full">Popular</span>
+                  {% endif %}
+                </div>
                 <p class="text-xs text-primary font-bold mt-0.5">₹{{ '{:,.0f}'.format(pkg.price) }}/-</p>
               </div>
-              <svg class="w-4 h-4 text-slate-300 group-hover/item:text-primary transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <svg class="w-4 h-4 text-slate-300 group-hover/item:text-primary group-hover/item:translate-x-0.5 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <polyline points="9 18 15 12 9 6"/>
               </svg>
             </a>
@@ -78,25 +102,43 @@
       <!-- Courses Dropdown -->
       <li class="relative group">
         <button
-          class="relative flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-slate-600 hover:text-primary transition-colors duration-200 rounded-lg hover:bg-primary/5 focus:outline-none h-[72px]">
-          Courses
-          <svg class="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 opacity-60" fill="none"
-            stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-          <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-4 transition-all duration-300"></span>
+          class="nav-height-el flex items-center focus:outline-none h-[84px]">
+          <span class="relative flex items-center gap-1.5 px-4 py-2 rounded-lg text-[15px] font-bold transition-colors duration-200 hover:bg-primary/5 {{ 'text-primary' if request.endpoint in ('main.all_courses', 'main.course_detail') else 'text-slate-600 hover:text-primary' }}">
+            Courses
+            <svg class="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 opacity-60" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+            <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-primary rounded-full transition-all duration-300 {{ 'w-4' if request.endpoint in ('main.all_courses', 'main.course_detail') else 'w-0 group-hover:w-4' }}"></span>
+          </span>
         </button>
         <!-- Dropdown Panel (2 columns) -->
         <div
-          class="absolute top-full left-1/2 -translate-x-1/2 w-[580px] bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] border border-slate-100/80 p-5 opacity-0 scale-95 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-200 z-50">
+          class="absolute top-full left-1/2 -translate-x-1/2 w-[600px] bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.2)] ring-1 ring-slate-100/80 overflow-hidden opacity-0 scale-95 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-200 z-50">
           <!-- Arrow -->
           <div class="absolute -top-[6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-slate-100/80 rotate-45"></div>
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Popular Courses</p>
+
+          <!-- Header -->
+          <div class="relative px-5 pt-4 pb-3 bg-gradient-to-br from-sky-50 via-white to-primary/5 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-sky-500 flex items-center justify-center shrink-0 shadow-md shadow-primary/25">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-heading font-black text-sm text-slate-900 leading-tight">Popular Courses</p>
+                <p class="text-[11px] text-slate-400 font-semibold">Handpicked to get you started fast</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-5">
           <div class="grid grid-cols-2 gap-1.5">
             {% for course in global_courses[:6] %}
             <a href="{{ url_for('main.course_detail', course_id=course.id) }}"
-              class="flex items-center gap-2.5 p-2 hover:bg-slate-50 rounded-xl transition-all duration-150 group/item">
-              <div class="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-slate-100 border border-slate-100 shadow-sm">
+              class="flex items-center gap-2.5 p-2 rounded-xl transition-all duration-200 group/item hover:bg-gradient-to-r hover:from-primary/[0.06] hover:to-sky-50/60 hover:shadow-[inset_2px_0_0_0_#2b80f0]">
+              <div class="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-slate-100 border border-slate-100 shadow-sm transition-transform duration-300 group-hover/item:scale-105">
                 {% if course.thumbnail_display_url %}
                 <img src="{{ course.thumbnail_display_url }}" alt="{{ course.title }}"
                   class="w-full h-full object-cover">
@@ -110,7 +152,7 @@
                 <p
                   class="font-bold text-slate-700 text-xs truncate group-hover/item:text-primary transition-colors leading-snug">
                   {{ course.title }}</p>
-                <p class="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mt-0.5">Course</p>
+                <span class="inline-block text-[8px] font-black uppercase tracking-wide text-primary bg-primary/10 px-1.5 py-0.5 rounded-full mt-1">Course</span>
               </div>
             </a>
             {% endfor %}
@@ -127,21 +169,22 @@
               </svg>
             </a>
           </div>
+          </div>
         </div>
       </li>
 
       <li>
         <a href="{{ url_for('main.about') }}"
-          class="relative group flex items-center px-4 py-2 text-sm font-bold text-slate-600 hover:text-primary transition-colors duration-200 rounded-lg hover:bg-primary/5">
+          class="relative group flex items-center px-4 py-2 text-[15px] font-bold transition-colors duration-200 rounded-lg hover:bg-primary/5 {{ 'text-primary' if request.endpoint == 'main.about' else 'text-slate-600 hover:text-primary' }}">
           About
-          <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-4 transition-all duration-300"></span>
+          <span class="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-primary rounded-full transition-all duration-300 {{ 'w-4' if request.endpoint == 'main.about' else 'w-0 group-hover:w-4' }}"></span>
         </a>
       </li>
       <li>
         <a href="{{ url_for('main.contact') }}"
-          class="relative group flex items-center px-4 py-2 text-sm font-bold text-slate-600 hover:text-primary transition-colors duration-200 rounded-lg hover:bg-primary/5">
+          class="relative group flex items-center px-4 py-2 text-[15px] font-bold transition-colors duration-200 rounded-lg hover:bg-primary/5 {{ 'text-primary' if request.endpoint == 'main.contact' else 'text-slate-600 hover:text-primary' }}">
           Contact
-          <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-primary rounded-full group-hover:w-4 transition-all duration-300"></span>
+          <span class="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-primary rounded-full transition-all duration-300 {{ 'w-4' if request.endpoint == 'main.contact' else 'w-0 group-hover:w-4' }}"></span>
         </a>
       </li>
     </ul>
@@ -317,15 +360,28 @@
 <script>
   (function () {
     const nav = document.getElementById('nav-inner');
-    
-    // Scroll-aware background intensity
+    const heightEls = document.querySelectorAll('.nav-height-el');
+
+    // Scroll-aware background intensity + compact height
     window.addEventListener('scroll', function () {
       if (window.scrollY > 20) {
-        nav.classList.add('shadow-[0_4px_30px_rgba(0,0,0,0.1)]');
-        nav.classList.remove('shadow-[0_1px_20px_rgba(0,0,0,0.06)]');
+        nav.classList.add('shadow-[0_4px_30px_rgba(0,0,0,0.1)]', 'bg-white/98');
+        nav.classList.remove('shadow-[0_1px_20px_rgba(0,0,0,0.06)]', 'bg-white/90');
+        heightEls.forEach(function (el) {
+          el.classList.add('lg:h-[64px]');
+          el.classList.remove('lg:h-[84px]', 'h-[84px]');
+        });
       } else {
-        nav.classList.remove('shadow-[0_4px_30px_rgba(0,0,0,0.1)]');
-        nav.classList.add('shadow-[0_1px_20px_rgba(0,0,0,0.06)]');
+        nav.classList.remove('shadow-[0_4px_30px_rgba(0,0,0,0.1)]', 'bg-white/98');
+        nav.classList.add('shadow-[0_1px_20px_rgba(0,0,0,0.06)]', 'bg-white/90');
+        heightEls.forEach(function (el) {
+          el.classList.remove('lg:h-[64px]');
+          if (el.id === 'nav-logo') {
+            el.classList.add('lg:h-[84px]');
+          } else {
+            el.classList.add('h-[84px]');
+          }
+        });
       }
     }, { passive: true });
 

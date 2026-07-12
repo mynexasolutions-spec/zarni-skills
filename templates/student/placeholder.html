@@ -4,10 +4,25 @@
 {% block page_title %}{{ page_title }}{% endblock %}
 
 {% block body %}
-<div class="max-w-3xl">
-  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-    <h2 class="font-heading font-semibold text-gray-900 text-lg mb-2">{{ page_title }}</h2>
-    <p class="text-sm text-gray-500">This section is not configured yet.</p>
+<section>
+  <h2>{{ page_title }}</h2>
+
+  <div class="panel" style="min-height: 380px; display: flex; align-items: center; justify-content: center;">
+    <div class="empty-state">
+      <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+
+      <h3 class="empty-state__title">{{ page_title }}</h3>
+
+      <p class="empty-state__desc">
+        {{ page_description or 'This section is currently being configured. Check back soon for updates!' }}
+      </p>
+
+      <a href="{{ url_for('student.dashboard') }}" class="empty-state__cta">
+        Back to Dashboard
+      </a>
+    </div>
   </div>
-</div>
+</section>
 {% endblock %}

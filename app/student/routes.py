@@ -213,7 +213,10 @@ def _placeholder_page(title: str, description=None):
 @login_required
 def certificate():
     _student_required()
-    return _placeholder_page('Certificate')
+    return _placeholder_page(
+        'Certificate',
+        'Your course completion certificates will appear here once earned.',
+    )
 
 
 @student_bp.route('/offers')
@@ -241,7 +244,7 @@ def freelancing():
 def trip_plus():
     _student_required()
     return _placeholder_page(
-        'Trip +',
+        'Trip Achievement',
         'Travel rewards and trip benefits will appear here once configured.',
     )
 
@@ -267,14 +270,20 @@ def upgrade_panel():
 @login_required
 def achievements():
     _student_required()
-    return _placeholder_page('My Achievements')
+    return _placeholder_page(
+        'My Achievement',
+        'Badges and milestones you unlock will be displayed here.',
+    )
 
 
 @student_bp.route('/mentorship')
 @login_required
 def mentorship():
     _student_required()
-    return _placeholder_page('Mentorship')
+    return _placeholder_page(
+        'Manager',
+        'Connect with your assigned manager and get guidance on growing your business.',
+    )
 
 
 # @student_bp.route('/leaderboard')
@@ -295,28 +304,40 @@ def selection_form():
 @login_required
 def all_webinar():
     _student_required()
-    return _placeholder_page('All Webinar')
+    return _placeholder_page(
+        'Community',
+        'Community discussions, live webinars, and peer networking will appear here.',
+    )
 
 
 @student_bp.route('/support/affiliate-training')
 @login_required
 def affiliate_training():
     _student_required()
-    return _placeholder_page('Affiliate Training')
+    return _placeholder_page(
+        'Trainings',
+        'Training sessions and skill-building resources will appear here once configured.',
+    )
 
 
 @student_bp.route('/support/affiliate-tools')
 @login_required
 def affiliate_tools():
     _student_required()
-    return _placeholder_page('Affiliate Tools')
+    return _placeholder_page(
+        'Tools',
+        'Marketing tools and resources to help you grow your business will appear here.',
+    )
 
 
 @student_bp.route('/support/affiliate-offers')
 @login_required
 def affiliate_offers():
     _student_required()
-    return _placeholder_page('Affiliate Offers')
+    return _placeholder_page(
+        'Aflate Offers',
+        'Exclusive affiliate deals and member offers will appear here once configured.',
+    )
 
 
 import os
@@ -536,8 +557,9 @@ def leaderboard():
     monthly_top_3 = []
     for user, income in monthly_raw:
         monthly_top_3.append({
+            'id': user.id,
             'name': user.name,
-            'profile_pic_url': user.profile_image,  # Maps your model's 'profile_image' to template variable
+            'profile_pic_url': user.profile_image_url,
             'income': float(income or 0)
         })
 
@@ -566,16 +588,28 @@ def leaderboard():
     overall_top_10 = []
     for user, income in overall_raw:
         overall_top_10.append({
+            'id': user.id,
             'name': user.name,
-            'profile_pic_url': user.profile_image,
+            'profile_pic_url': user.profile_image_url,
             'income': float(income or 0)
         })
 
-    # ─── 3. RENDER TEMPLATE ──────────────────────────────────────────────
+    # ─── 3. CURRENT USER'S OWN RANK (for "Your Position" card) ───────────
+    my_earnings = current_user.total_earnings
+    higher_count = db.session.query(func.count()).select_from(overall_subquery).filter(
+        overall_subquery.c.total_income > float(my_earnings)
+    ).scalar() or 0
+    my_rank = int(higher_count) + 1
+    in_top_10 = any(row['id'] == current_user.id for row in overall_top_10)
+
+    # ─── 4. RENDER TEMPLATE ──────────────────────────────────────────────
     return render_template(
-        "student/leaderboard.html", 
-        monthly_top_3=monthly_top_3, 
-        overall_top_10=overall_top_10
+        "student/leaderboard.html",
+        monthly_top_3=monthly_top_3,
+        overall_top_10=overall_top_10,
+        my_rank=my_rank,
+        my_earnings=float(my_earnings or 0),
+        in_top_10=in_top_10
     )
 
 # ── Packages & Purchase ────────────────────────────────────────────────────
@@ -817,6 +851,16 @@ def read_all_notifications():
     from app.utils.notifications import mark_all_read
     mark_all_read(current_user.id)
     return {'status': 'success'}
+
+
+@student_bp.route('/registration-form')
+@login_required
+def registration_form():
+    _student_required()
+    return _placeholder_page(
+        'Registration Form',
+        'Register new team members and manage recruitment forms here.',
+    )
 
 
 @student_bp.route('/profile', methods=['GET', 'POST'])

@@ -41,6 +41,14 @@ class User(UserMixin, db.Model):
                                   foreign_keys='Withdrawal.user_id')
 
     @property
+    def profile_image_url(self):
+        if self.profile_image:
+            if self.profile_image.startswith('http'):
+                return self.profile_image
+            return f"/static/img/profile_uploads/{self.profile_image}"
+        return "/static/img/student_defulat_avatar.png"
+
+    @property
     def total_earnings(self):
         from sqlalchemy import func
         result = db.session.query(func.sum(WalletTransaction.amount)).filter(

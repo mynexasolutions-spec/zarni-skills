@@ -34,6 +34,13 @@
   transform: none !important;
 }
 
+/* Ambient blob motion (used by hero/decorative glow blurs) */
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+}
+
 /* ---- Dark starry hero background ---- */
 .hero-stars-bg {
   background: linear-gradient(180deg, #030712 0%, #0a1628 25%, #0d1b3a 55%, #061018 100%);

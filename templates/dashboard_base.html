@@ -15,54 +15,342 @@
 
   #student-layout {
     display: flex;
-    height: 100vh;
+    height: calc(100vh - 64px);
     overflow: hidden;
   }
 
+  /* ── Header ───────────────────────────── */
+  .dash-header {
+    height: 64px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 16px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+    box-shadow: 0 2px 12px rgba(30, 64, 175, 0.25);
+    position: relative;
+    z-index: 60;
+  }
+
+  @media (min-width: 640px) {
+    .dash-header {
+      padding: 0 24px;
+    }
+  }
+
+  .dash-header__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .dash-header__logo {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    padding: 6px 12px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+    transition: transform .2s ease;
+  }
+
+  .dash-header__logo:hover {
+    transform: translateY(-1px);
+  }
+
+  .dash-header__logo img {
+    height: 28px;
+    width: auto;
+  }
+
+  @media (min-width: 640px) {
+    .dash-header__logo img {
+      height: 32px;
+    }
+  }
+
+  .dash-header__right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: .875rem;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  /* ── Header icon buttons (notif bell, hamburger) ───────────────────────────── */
+  .dash-icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .1);
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all .2s ease;
+    flex-shrink: 0;
+  }
+
+  .dash-icon-btn:hover {
+    background: rgba(255, 255, 255, .2);
+    transform: translateY(-1px);
+  }
+
+  #sidebar-toggle-btn {
+    padding: 0;
+  }
+
+  @media (min-width: 1025px) {
+    #sidebar-toggle-btn {
+      display: none;
+    }
+  }
+
+  /* ── Header nav pill (Home / Dashboard / Courses) ───────────────────────────── */
+  .dash-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: rgba(255, 255, 255, .1);
+    padding: 4px;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+
+  .dash-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 9px;
+    color: rgba(255, 255, 255, .85);
+    text-decoration: none;
+    font-size: .82rem;
+    font-weight: 600;
+    transition: all .2s ease;
+    white-space: nowrap;
+  }
+
+  .dash-nav-link svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2;
+    flex-shrink: 0;
+  }
+
+  .dash-nav-link:hover {
+    background: rgba(255, 255, 255, .15);
+    color: #fff;
+  }
+
+  .dash-nav-link.active {
+    background: #fff;
+    color: #1e40af;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+  }
+
+  @media (max-width: 639px) {
+    .dash-nav-links {
+      display: none;
+    }
+  }
+
+  /* ── Sidebar ───────────────────────────── */
   #offcanvas-sidebar {
-    width: 0;
+    width: 280px;
+    min-width: 280px;
     flex-shrink: 0;
     overflow: hidden;
     background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
     border-right: 1px solid #e5e7eb;
-    transition: width .3s ease;
+    transition: transform .3s ease;
     display: flex;
     flex-direction: column;
     z-index: 50;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
   }
 
-  #offcanvas-sidebar.open {
-    width: 280px;
-    min-width: 280px;
+  #sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 64px 0 0 0;
+    background: rgba(15, 23, 42, .5);
+    z-index: 45;
+  }
+
+  #sidebar-backdrop.show {
+    display: block;
+  }
+
+  @media (max-width: 1024px) {
+    #offcanvas-sidebar {
+      position: fixed;
+      top: 64px;
+      left: 0;
+      height: calc(100vh - 64px);
+      transform: translateX(-100%);
+      box-shadow: 4px 0 24px rgba(0, 0, 0, .18);
+      z-index: 50;
+    }
+
+    #offcanvas-sidebar.mobile-open {
+      transform: translateX(0);
+    }
   }
 
   #sidebar-inner {
     width: 280px;
     flex-shrink: 0;
-    overflow-y: auto;
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0 12px;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
   }
 
-  #sidebar-inner::-webkit-scrollbar {
+  .sidebar-nav::-webkit-scrollbar {
     width: 6px;
   }
 
-  #sidebar-inner::-webkit-scrollbar-track {
+  .sidebar-nav::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  #sidebar-inner::-webkit-scrollbar-thumb {
+  .sidebar-nav::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 3px;
   }
 
-  #sidebar-inner::-webkit-scrollbar-thumb:hover {
+  .sidebar-nav::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+  }
+
+  /* ── Sidebar User Card ───────────────────────────── */
+  .sidebar-user-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: background .2s ease;
+  }
+
+  .sidebar-user-card:hover {
+    background: #f9fafb;
+  }
+
+  .sidebar-user-card__avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, .3);
+  }
+
+  .sidebar-user-card__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .sidebar-user-card__info {
+    min-width: 0;
+  }
+
+  .sidebar-user-card__name {
+    font-weight: 700;
+    font-size: .875rem;
+    color: #111;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-user-card__role {
+    font-size: .7rem;
+    color: #2563eb;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  /* ── Sidebar Footer ───────────────────────────── */
+  .sidebar-footer {
+    flex-shrink: 0;
+    padding: 12px;
+    border-top: 1px solid #f3f4f6;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sidebar-buy-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: .85rem;
+    border-radius: 10px;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .3);
+    transition: all .25s cubic-bezier(.16, 1, .3, 1);
+  }
+
+  .sidebar-buy-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, .4);
+  }
+
+  .sidebar-buy-cta svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sidebar-logout-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    color: #ef4444;
+    font-weight: 600;
+    font-size: .85rem;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all .2s ease;
+  }
+
+  .sidebar-logout-link:hover {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  .sidebar-logout-link svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
   }
 
   #student-main {
@@ -80,102 +368,104 @@
     background: #f3f4f6;
   }
 
-  .sidebar-logo-area {
-    height: 70px;
+  .oc-group-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 0 16px;
-    border-bottom: 1px solid #e5e7eb;
-    gap: 10px;
-    flex-shrink: 0;
-    background: linear-gradient(180deg, #fff 0%, #f9fafb 100%);
-  }
-
-  .sidebar-logo-area img {
-    transition: transform .2s;
-  }
-
-  .sidebar-logo-area:hover img {
-    transform: scale(1.05);
-  }
-
-  .oc-group-header {
+    gap: 8px;
     padding: 12px 16px;
     font-size: .65rem;
     font-weight: 800;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #6b7280;
+    color: #9ca3af;
     background: transparent;
-    margin-top: 16px;
-    margin-bottom: 4px;
-    border-top: 1px solid #f3f4f6;
+    margin-top: 12px;
+    margin-bottom: 2px;
+  }
+
+  .oc-group-header::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    flex-shrink: 0;
   }
 
   .oc-group-header:first-of-type {
-    border-top: none;
-    margin-top: 0;
+    margin-top: 4px;
   }
 
   .oc-link {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 11px 14px;
-    margin: 0 8px;
-    font-size: .875rem;
-    color: #6b7280;
+    gap: 11px;
+    padding: 9px 14px;
+    margin: 1px 8px;
+    font-size: .84rem;
+    color: #4b5563;
     text-decoration: none;
-    transition: all .2s;
+    transition: all .2s cubic-bezier(.16, 1, .3, 1);
     border-radius: 10px;
-    border-left: 3px solid transparent;
-    font-weight: 500;
+    font-weight: 600;
+    position: relative;
+  }
+
+  .oc-link::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    background: #2563eb;
+    border-radius: 0 4px 4px 0;
+    transition: height .2s ease;
   }
 
   .oc-link:hover {
     background: #f3f4f6;
     color: #111;
-    border-left-color: #2563eb;
+    transform: translateX(2px);
+  }
+
+  .oc-link:hover::before {
+    height: 14px;
   }
 
   .oc-link.active {
     background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
     color: #1e40af;
     font-weight: 700;
-    border-left-color: #2563eb;
-    box-shadow: inset 0 2px 8px rgba(37, 99, 235, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(37, 99, 235, .12);
   }
 
-  .oc-link.logout-link {
-    color: #ef4444;
-    margin-top: 8px;
-  }
-
-  .oc-link.logout-link:hover {
-    background: #fef2f2;
-    color: #dc2626;
-    border-left-color: #dc2626;
+  .oc-link.active::before {
+    height: 20px;
   }
 
   .oc-link svg {
-    width: 18px;
-    height: 18px;
+    width: 15px;
+    height: 15px;
+    padding: 7px;
+    box-sizing: content-box;
+    border-radius: 9px;
+    background: #f3f4f6;
     flex-shrink: 0;
     stroke: currentColor;
-    transition: all .2s;
+    transition: all .2s ease;
   }
 
   .oc-link:hover svg {
+    background: #dbeafe;
     stroke: #2563eb;
   }
 
   .oc-link.active svg {
-    stroke: #1e40af;
-  }
-
-  .oc-link.logout-link:hover svg {
-    stroke: #dc2626;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    stroke: #fff;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, .35);
   }
 
   #profile-dropdown {
@@ -299,34 +589,31 @@
 
 {# ═══════════════ STUDENT / MANAGER layout chrome ═══════════════ #}
 {% if is_student_area %}
-<header class="h-16 bg-primary text-white flex items-center px-4 sm:px-6 relative w-full" style="flex-shrink:0;">
-  <div style="display:flex;align-items:center;gap:12px;">
-    <img src="{{ url_for('static', filename='img/zarni-logo.png') }}" alt="Zarni Skills" style="height:36px;width:auto;"
-      style="height:36px;width:auto;filter:brightness(0) invert(1);" />
-    <span style="font-weight:800;font-size:1.1rem;letter-spacing:-.3px;" class="hidden sm:block"></span>
+<header class="dash-header">
+  <div class="dash-header__left">
+    <a href="{{ url_for('main.index') }}" class="dash-header__logo">
+      <img src="{{ url_for('static', filename='img/zarni-logo.png') }}" alt="Zarni Skills" />
+    </a>
   </div>
-  <div style="position:absolute;left:50%;transform:translateX(-50%);">
-    <h1 style="font-weight:700;font-size:1rem;white-space:nowrap;">
-      Welcome! {{ current_user.name }}
-      {% if current_user.role == 'manager' %}
-      <span
-        style="font-size:.75rem;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:20px;margin-left:6px;">Manager</span>
-      {% elif current_user.role == 'team_member' %}
-      <span
-        style="font-size:.75rem;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:20px;margin-left:6px;">Team</span>
-      {% endif %}
-    </h1>
-  </div>
-  <div style="margin-left:auto;display:flex;align-items:center;gap:16px;font-size:.875rem;font-weight:500;">
-    <a href="{{ url_for('main.index') }}" style="color:#fff;text-decoration:none;" class="hidden sm:block">Home</a>
-    <a href="{{ url_for('student.dashboard') }}" style="color:#fff;text-decoration:none;"
-      class="hidden sm:block">Dashboard</a>
-    <a href="{{ url_for('student.all_courses') }}" style="color:#fff;text-decoration:none;"
-      class="hidden sm:block">Courses</a>
+  <div class="dash-header__right">
+    <div class="dash-nav-links">
+      <a href="{{ url_for('main.index') }}" class="dash-nav-link{% if request.endpoint == 'main.index' %} active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+        Home
+      </a>
+      <a href="{{ url_for('student.dashboard') }}" class="dash-nav-link{% if request.endpoint == 'student.dashboard' %} active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l-2 2m2-2l2 2M15 19V10l-2 2m2-2l2 2M5 20h14" /></svg>
+        Dashboard
+      </a>
+      <a href="{{ url_for('student.all_courses') }}" class="dash-nav-link{% if request.endpoint in ('student.all_courses','student.my_courses') %} active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+        Courses
+      </a>
+    </div>
 
     <!-- Notification Bell -->
     <div style="position:relative;" id="notification-wrapper">
-      <button id="notification-btn" class="relative p-2 rounded-full hover:bg-white/10 transition-colors">
+      <button id="notification-btn" class="dash-icon-btn">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -410,33 +697,40 @@
 
     <div style="position:relative;" id="profile-icon-wrapper">
       <button id="profile-icon-btn"
-        style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5);color:#fff;font-weight:700;font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;">
-        {{ current_user.name[0].upper() }}
+        style="width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.5);cursor:pointer;overflow:hidden;padding:0;transition:all .2s;">
+        <img src="{{ current_user.profile_image_url }}" alt="{{ current_user.name }}" style="width:100%;height:100%;object-fit:cover;" />
       </button>
       <div id="profile-dropdown">
         {% include "partials/profile_dropdown.html" %}
       </div>
     </div>
-    <a href="{{ url_for('student.dashboard') }}" id="open-sidebar-btn"
-      style="background:none;border:none;cursor:pointer;padding:6px;color:#fff;display:flex;align-items:center;">
+    <button type="button" id="sidebar-toggle-btn" aria-label="Toggle menu" aria-expanded="false">
       <svg id="sidebar-hamburger" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
         stroke="currentColor" style="width:28px;height:28px;">
         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
       </svg>
-    </a>
+    </button>
   </div>
 </header>
 
-<div id="student-layout" style="display:flex;">
-  <aside id="offcanvas-sidebar" class="open" style="margin-top:0;">
-    <div id="sidebar-inner">
-      <!-- Sidebar Logo -->
-      <div class="sidebar-logo-area">
-        <img src="{{ url_for('static', filename='img/zarni-logo.png') }}" alt="Zarni Skills" style="height:32px;width:auto;" />
-        <span style="font-weight:800;font-size:.85rem;color:#1e40af;letter-spacing:-.3px;">Zarni</span>
-      </div>
+<div id="sidebar-backdrop"></div>
 
-      <nav style="flex:1;padding-bottom:16px;padding-top:8px;">
+<div id="student-layout" style="display:flex;">
+  <aside id="offcanvas-sidebar" style="margin-top:0;">
+    <div id="sidebar-inner">
+      <a href="{{ url_for('student.profile') }}" class="sidebar-user-card">
+        <div class="sidebar-user-card__avatar"><img src="{{ current_user.profile_image_url }}" alt="{{ current_user.name }}" /></div>
+        <div class="sidebar-user-card__info">
+          <div class="sidebar-user-card__name">{{ current_user.name }}</div>
+          <div class="sidebar-user-card__role">
+            {% if current_user.role == 'manager' %}Manager
+            {% elif current_user.role == 'team_member' %}Team Member
+            {% else %}Student{% endif %}
+          </div>
+        </div>
+      </a>
+
+      <nav class="sidebar-nav">
 
         {# ── Manager-specific section ── #}
         {% if is_manager %}
@@ -501,6 +795,18 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
               d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>My Courses</a>
+        <a href="{{ url_for('student.certificate') }}"
+          class="oc-link{% if request.endpoint == 'student.certificate' %} active{% endif %}"><svg viewBox="0 0 24 24"
+            fill="none">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M9 12l2 2 4-4M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>Certificate</a>
+        <a href="{{ url_for('student.trip_plus') }}"
+          class="oc-link{% if request.endpoint == 'student.trip_plus' %} active{% endif %}"><svg viewBox="0 0 24 24"
+            fill="none">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V6m0 12v-2m9-4a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>Trip Achievement</a>
 
         <div class="oc-group-header">Payout Details</div>
         <a href="{{ url_for('student.wallet') }}"
@@ -528,12 +834,18 @@
             fill="none">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
               d="M8 10h.01M12 10h.01M16 10h.01M9 16h6M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-3-.46L3 21l1.46-4A7.89 7.89 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>Support</a>
+          </svg>Manager</a>
         <a href="{{ url_for('student.affiliate_training') }}"
           class="oc-link{% if request.endpoint == 'student.affiliate_training' %} active{% endif %}"><svg
             viewBox="0 0 24 24" fill="none">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 14l9-5-9-5-9 5 9 5z" />
           </svg>Trainings</a>
+        <a href="{{ url_for('student.freelancing') }}"
+          class="oc-link{% if request.endpoint == 'student.freelancing' %} active{% endif %}"><svg
+            viewBox="0 0 24 24" fill="none">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0v6a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0V4" />
+          </svg>Freelancing</a>
         <a href="{{ url_for('student.affiliate_tools') }}"
           class="oc-link{% if request.endpoint == 'student.affiliate_tools' %} active{% endif %}"><svg
             viewBox="0 0 24 24" fill="none">
@@ -559,7 +871,13 @@
             viewBox="0 0 24 24" fill="none">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
               d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
-          </svg>Affiliate Offers</a>
+          </svg>Aflate Offers</a>
+        <a href="{{ url_for('student.registration_form') }}"
+          class="oc-link{% if request.endpoint == 'student.registration_form' %} active{% endif %}"><svg
+            viewBox="0 0 24 24" fill="none">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>Registration Form</a>
         <a href="{{ url_for('student.affiliate_panel') }}"
           class="oc-link{% if request.endpoint == 'student.affiliate_panel' %} active{% endif %}"><svg
             viewBox="0 0 24 24" fill="none">
@@ -578,20 +896,24 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
               d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>My Team Network</a>
-        <div style="height:1px;background:#f3f4f6;margin:8px 0;"></div>
-        <a href="{{ url_for('student.buy') }}"
-          class="oc-link{% if request.endpoint == 'student.buy' %} active{% endif %}"><svg viewBox="0 0 24 24"
-            fill="none">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="{{ url_for('student.buy') }}" class="sidebar-buy-cta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>Buy Package</a>
-        <div style="height:1px;background:#f3f4f6;margin:8px 0;"></div>
-        <a href="{{ url_for('auth.logout') }}" class="oc-link logout-link" style="color:#ef4444;"><svg
-            viewBox="0 0 24 24" fill="none">
+          </svg>
+          Buy Package
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-logout-link">
+          <svg viewBox="0 0 24 24" fill="none">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>Logout</a>
-      </nav>
+          </svg>
+          Logout
+        </a>
+      </div>
     </div>
   </aside>
 
@@ -720,6 +1042,46 @@
       </div><!-- /#student-layout -->
 
       <script>
+        // Mobile sidebar drawer
+        const sidebar = document.getElementById('offcanvas-sidebar');
+        const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+        const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+
+        function openMobileSidebar() {
+          sidebar.classList.add('mobile-open');
+          sidebarBackdrop.classList.add('show');
+          sidebarToggleBtn.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeMobileSidebar() {
+          sidebar.classList.remove('mobile-open');
+          sidebarBackdrop.classList.remove('show');
+          sidebarToggleBtn.setAttribute('aria-expanded', 'false');
+        }
+
+        sidebarToggleBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (sidebar.classList.contains('mobile-open')) {
+            closeMobileSidebar();
+          } else {
+            openMobileSidebar();
+          }
+        });
+
+        sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+
+        // Close drawer when a nav link is tapped on mobile
+        sidebar.querySelectorAll('.oc-link').forEach(function (link) {
+          link.addEventListener('click', function () {
+            if (window.innerWidth <= 1024) closeMobileSidebar();
+          });
+        });
+
+        // Reset drawer state when resizing back to desktop
+        window.addEventListener('resize', function () {
+          if (window.innerWidth > 1024) closeMobileSidebar();
+        });
+
         const profileBtn = document.getElementById('profile-icon-btn');
         const profileDropdown = document.getElementById('profile-dropdown');
         profileBtn.addEventListener('click', function (e) { e.stopPropagation(); profileDropdown.classList.toggle('open'); });

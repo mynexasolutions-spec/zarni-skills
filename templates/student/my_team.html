@@ -3,167 +3,174 @@
 {% block page_title %}My Team Network{% endblock %}
 
 {% block body %}
-<div class="max-w-6xl mx-auto space-y-8">
 
-  <!-- Network Summary Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-        </div>
-        <div>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Network</p>
-          <p class="text-2xl font-black text-gray-900">{{ stats.total_network }} Members</p>
-        </div>
-      </div>
-    </div>
-    
-    <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Active</p>
-          <p class="text-2xl font-black text-gray-900">{{ stats.l1_active }} / {{ stats.l1_total }} Paid</p>
-        </div>
-      </div>
+<!-- ══════════════════════════════════════════════
+     NETWORK SUMMARY KPI CARDS
+══════════════════════════════════════════════ -->
+<section class="mb-8">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
+
+    <div class="kpi-card kpi-card--blue">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Total Network
+      </p>
+      <p class="kpi-value">{{ stats.total_network }}</p>
+      <p class="kpi-subtext">Members across your network</p>
     </div>
 
-    <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-        </div>
-        <div>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Passive</p>
-          <p class="text-2xl font-black text-gray-900">{{ stats.l2_active }} / {{ stats.l2_total }} Paid</p>
-        </div>
-      </div>
+    <div class="kpi-card kpi-card--green">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Active (Level 1)
+      </p>
+      <p class="kpi-value">{{ stats.l1_active }} / {{ stats.l1_total }}</p>
+      <p class="kpi-subtext">Direct referrals paid</p>
     </div>
+
+    <div class="kpi-card kpi-card--purple">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        Active (Level 2)
+      </p>
+      <p class="kpi-value">{{ stats.l2_active }} / {{ stats.l2_total }}</p>
+      <p class="kpi-subtext">Indirect referrals paid</p>
+    </div>
+
   </div>
+</section>
 
-  <!-- Level 1 Table -->
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-      <h3 class="font-bold text-gray-800">Direct Referrals (Level 1)</h3>
-      <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black uppercase">Direct Payouts</span>
+<!-- ══════════════════════════════════════════════
+     LEVEL 1: DIRECT REFERRALS
+══════════════════════════════════════════════ -->
+<section style="margin-bottom:28px;">
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
+        Direct Referrals (Level 1)
+      </h2>
+      <span class="panel-badge panel-badge--blue">Direct Payouts</span>
     </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
+    <div style="overflow-x:auto;">
+      <table class="dashboard-table">
         <thead>
-          <tr class="text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-50">
-            <th class="px-6 py-4">Student</th>
-            <th class="px-6 py-4">Joined</th>
-            <th class="px-6 py-4">Status</th>
-            <th class="px-6 py-4">Level 2 Count</th>
+          <tr>
+            <th>Student</th>
+            <th>Joined</th>
+            <th>Status</th>
+            <th>Level 2 Count</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50">
+        <tbody>
           {% for u in level1 %}
-          <tr class="hover:bg-gray-50/50 transition-colors">
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden">
-                   {% if u.profile_image %}
-                    <img src="/static/img/profile_uploads/{{ u.profile_image }}" class="w-full h-full object-cover">
-                   {% else %}
-                    {{ u.name[0] }}
-                   {% endif %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;overflow:hidden;">
+                  <img src="{{ u.profile_image_url }}" style="width:100%;height:100%;object-fit:cover;" />
                 </div>
                 <div>
-                  <div class="text-sm font-bold text-gray-900">{{ u.name }}</div>
-                  <div class="text-[10px] text-gray-400 font-mono">{{ u.referral_code }}</div>
+                  <div class="font-weight-semi">{{ u.name }}</div>
+                  <div style="font-size:.7rem;color:#9ca3af;font-family:monospace;">{{ u.referral_code }}</div>
                 </div>
               </div>
             </td>
-            <td class="px-6 py-4 text-xs text-gray-500">
-              {{ u.created_at.strftime('%d %b %Y') }}
-            </td>
-            <td class="px-6 py-4">
+            <td class="text-secondary">{{ u.created_at.strftime('%d %b %Y') }}</td>
+            <td>
               {% set paid = u.orders.filter_by(payment_status='paid').first() %}
               {% if paid %}
-                <span class="px-2 py-1 bg-green-50 text-green-600 rounded-lg text-[10px] font-bold">Paid Account</span>
+              <span class="status-badge status-badge--paid">Paid</span>
               {% else %}
-                <span class="px-2 py-1 bg-gray-50 text-gray-400 rounded-lg text-[10px] font-bold">Unpaid</span>
+              <span class="status-badge status-badge--neutral">Unpaid</span>
               {% endif %}
             </td>
-            <td class="px-6 py-4 text-sm font-bold text-gray-600">
-              {{ u.referrals.count() }}
+            <td class="font-weight-semi">{{ u.referrals.count() }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" style="padding:0;">
+              <div class="wallet-empty">
+                <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                <p>No direct referrals yet. Start sharing your link!</p>
+              </div>
             </td>
           </tr>
           {% endfor %}
-          {% if not level1 %}
-          <tr>
-            <td colspan="4" class="px-6 py-12 text-center text-gray-400 text-sm italic">
-              No direct referrals yet. Start sharing your link!
-            </td>
-          </tr>
-          {% endif %}
         </tbody>
       </table>
     </div>
   </div>
+</section>
 
-  <!-- Level 2 Table -->
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-      <h3 class="font-bold text-gray-800">Indirect Referrals (Level 2)</h3>
-      <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-[10px] font-black uppercase">Network Payouts</span>
+<!-- ══════════════════════════════════════════════
+     LEVEL 2: INDIRECT REFERRALS
+══════════════════════════════════════════════ -->
+<section>
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        Indirect Referrals (Level 2)
+      </h2>
+      <span class="panel-badge panel-badge--purple">Network Payouts</span>
     </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
+    <div style="overflow-x:auto;">
+      <table class="dashboard-table">
         <thead>
-          <tr class="text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-50">
-            <th class="px-6 py-4">Student</th>
-            <th class="px-6 py-4">Referred By</th>
-            <th class="px-6 py-4">Joined</th>
-            <th class="px-6 py-4">Status</th>
+          <tr>
+            <th>Student</th>
+            <th>Referred By</th>
+            <th>Joined</th>
+            <th>Status</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50">
+        <tbody>
           {% for u in level2 %}
-          <tr class="hover:bg-gray-50/50 transition-colors">
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-400 overflow-hidden">
-                   {% if u.profile_image %}
-                    <img src="/static/img/profile_uploads/{{ u.profile_image }}" class="w-full h-full object-cover">
-                   {% else %}
-                    {{ u.name[0] }}
-                   {% endif %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;overflow:hidden;">
+                  <img src="{{ u.profile_image_url }}" style="width:100%;height:100%;object-fit:cover;" />
                 </div>
-                <div class="text-sm font-bold text-gray-700">{{ u.name }}</div>
+                <div class="font-weight-semi">{{ u.name }}</div>
               </div>
             </td>
-            <td class="px-6 py-4 text-xs font-medium text-blue-600">
-              {{ u.referrer.name }}
-            </td>
-            <td class="px-6 py-4 text-xs text-gray-500">
-              {{ u.created_at.strftime('%d %b %Y') }}
-            </td>
-            <td class="px-6 py-4">
+            <td style="color:#2563eb;font-weight:600;">{{ u.referrer.name }}</td>
+            <td class="text-secondary">{{ u.created_at.strftime('%d %b %Y') }}</td>
+            <td>
               {% set paid = u.orders.filter_by(payment_status='paid').first() %}
               {% if paid %}
-                <span class="px-2 py-1 bg-green-50 text-green-600 rounded-lg text-[10px] font-bold">Paid</span>
+              <span class="status-badge status-badge--paid">Paid</span>
               {% else %}
-                <span class="px-2 py-1 bg-gray-50 text-gray-400 rounded-lg text-[10px] font-bold">Unpaid</span>
+              <span class="status-badge status-badge--neutral">Unpaid</span>
               {% endif %}
             </td>
           </tr>
-          {% endfor %}
-          {% if not level2 %}
+          {% else %}
           <tr>
-            <td colspan="4" class="px-6 py-12 text-center text-gray-400 text-sm italic">
-              Your network hasn't grown to Level 2 yet. Help your direct referrals succeed!
+            <td colspan="4" style="padding:0;">
+              <div class="wallet-empty">
+                <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                <p>Your network hasn't grown to Level 2 yet. Help your direct referrals succeed!</p>
+              </div>
             </td>
           </tr>
-          {% endif %}
+          {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
+</section>
 
-</div>
 {% endblock %}

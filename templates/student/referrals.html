@@ -1,67 +1,87 @@
 {% extends "dashboard_base.html" %}
-{% block title %}Referrals – Zarni Skills{% endblock %}
+{% block title %}My Referrals – Zarni Skills{% endblock %}
 {% block page_title %}My Referrals{% endblock %}
 
 {% block body %}
-<!-- Referral link banner -->
-<div class="bg-gradient-to-r from-primary/10 to-primary-light/10 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-  <div>
-    <p class="font-semibold text-gray-800 mb-0.5">Share your referral link</p>
-    <p class="text-sm text-gray-500">Earn commissions when your referrals purchase a package.</p>
-  </div>
-  <div class="flex gap-2 w-full sm:w-auto">
-    <input id="ref-link" type="text" readonly
-           value="{{ request.host_url }}auth/register?ref={{ current_user.referral_code }}"
-           class="flex-1 sm:w-72 text-sm px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 outline-none" />
-    <button onclick="copyRef()" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-dark transition whitespace-nowrap">
-      Copy
-    </button>
+
+<!-- ══════════════════════════════════════════════
+     REFERRAL LINK HERO
+══════════════════════════════════════════════ -->
+<div class="referral-hero">
+  <div class="referral-hero__glow"></div>
+  <div class="referral-hero__content">
+    <h2 class="referral-hero__title">Share your referral link</h2>
+    <p class="referral-hero__subtitle">Earn commissions when your referrals purchase a package.</p>
+    <div class="link-copy-box">
+      <input id="ref-link" type="text" readonly
+             value="{{ request.host_url }}auth/register?ref={{ current_user.referral_code }}" />
+      <button onclick="copyRef()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+        Copy
+      </button>
+    </div>
   </div>
 </div>
 
-<!-- Referral table -->
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-  <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-    <h2 class="font-semibold text-gray-800 text-sm">People You Referred</h2>
-    <span class="text-xs text-gray-400">{{ referrals|length }} total</span>
+<!-- ══════════════════════════════════════════════
+     REFERRAL LIST
+══════════════════════════════════════════════ -->
+<section>
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        People You Referred
+      </h2>
+      <span class="panel-badge panel-badge--blue">{{ referrals|length }} total</span>
+    </div>
+
+    {% if referrals %}
+    <div style="overflow-x:auto;">
+      <table class="dashboard-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Joined</th>
+            <th>Purchases</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in referrals %}
+          <tr>
+            <td class="font-weight-semi">{{ r.name }}</td>
+            <td class="text-secondary">{{ r.email }}</td>
+            <td class="text-secondary">{{ r.created_at.strftime('%d %b %Y') }}</td>
+            <td class="font-weight-semi">{{ r.orders.filter_by(payment_status='paid').count() }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="wallet-empty">
+      <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+      <p>No referrals yet. Share your link to start earning!</p>
+    </div>
+    {% endif %}
   </div>
-  {% if referrals %}
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-        <tr>
-          <th class="px-5 py-3 text-left">Name</th>
-          <th class="px-5 py-3 text-left">Email</th>
-          <th class="px-5 py-3 text-left">Joined</th>
-          <th class="px-5 py-3 text-left">Purchases</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-50">
-        {% for r in referrals %}
-        <tr>
-          <td class="px-5 py-3 font-medium text-gray-800">{{ r.name }}</td>
-          <td class="px-5 py-3 text-gray-500">{{ r.email }}</td>
-          <td class="px-5 py-3 text-gray-500">{{ r.created_at.strftime('%d %b %Y') }}</td>
-          <td class="px-5 py-3">{{ r.orders.filter_by(payment_status='paid').count() }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-  <p class="px-5 py-12 text-sm text-gray-400 text-center">
-    No referrals yet. Share your link to start earning!
-  </p>
-  {% endif %}
-</div>
+</section>
 
 <script>
 function copyRef() {
   const el = document.getElementById('ref-link');
+  const btn = el.nextElementSibling;
   navigator.clipboard.writeText(el.value).then(() => {
-    const btn = el.nextElementSibling;
-    btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = 'Copy', 2000);
+    const originalHtml = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.innerHTML = '<span>Copied!</span>';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = originalHtml;
+    }, 2000);
   });
 }
 </script>

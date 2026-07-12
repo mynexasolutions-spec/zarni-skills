@@ -1,91 +1,164 @@
 {% extends "dashboard_base.html" %}
-{% block title %}Wallet – Zarni Skills{% endblock %}
-{% block page_title %}Wallet{% endblock %}
+{% block title %}My Earning – Zarni Skills{% endblock %}
+{% block page_title %}My Earning{% endblock %}
 
 {% block body %}
-<!-- Balance cards -->
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Earned</p>
-    <p class="font-heading font-bold text-2xl text-green-600">₹{{ '%.2f'|format(current_user.total_earnings) }}</p>
-  </div>
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Available Balance</p>
-    <p class="font-heading font-bold text-2xl text-primary">₹{{ '%.2f'|format(current_user.available_balance) }}</p>
-  </div>
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Pending</p>
-    <p class="font-heading font-bold text-2xl text-yellow-600">₹{{ '%.2f'|format(current_user.pending_earnings) }}</p>
-  </div>
-</div>
 
-<!-- Withdraw form -->
+<!-- ══════════════════════════════════════════════
+     SECTION 1: BALANCE KPI CARDS
+══════════════════════════════════════════════ -->
+<section class="mb-8">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
+
+    <div class="kpi-card kpi-card--green">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V6m0 12v-2m9-4a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Total Earned
+      </p>
+      <p class="kpi-value">₹ {{ '%.0f'|format(current_user.total_earnings) }}</p>
+      <p class="kpi-subtext">Lifetime commission earnings</p>
+    </div>
+
+    <div class="kpi-card kpi-card--blue">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        </svg>
+        Available Balance
+      </p>
+      <p class="kpi-value">₹ {{ '%.0f'|format(current_user.available_balance) }}</p>
+      <p class="kpi-subtext">Ready to withdraw</p>
+    </div>
+
+    <div class="kpi-card kpi-card--purple">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Pending
+      </p>
+      <p class="kpi-value">₹ {{ '%.0f'|format(current_user.pending_earnings) }}</p>
+      <p class="kpi-subtext">Awaiting processing</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SECTION 2: WITHDRAW FORM
+══════════════════════════════════════════════ -->
 {% if current_user.available_balance > 0 %}
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
-  <h2 class="font-semibold text-gray-800 mb-4">Request Withdrawal</h2>
-  <form method="POST" action="{{ url_for('student.withdraw') }}" class="flex flex-col sm:flex-row gap-3">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-    <input type="number" name="amount" placeholder="Amount (₹)" min="1"
-           max="{{ current_user.available_balance }}" step="0.01"
-           class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" required />
-    <input type="text" name="upi_id" placeholder="UPI ID (e.g. name@upi)"
-           class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" required />
-    <button type="submit"
-            class="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl text-sm hover:bg-primary-dark transition whitespace-nowrap">
-      Request
-    </button>
-  </form>
-</div>
+<section style="margin-bottom:32px;">
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a4 4 0 00-8 0v2M5 9h14l1 12H4L5 9z" />
+        </svg>
+        Request Withdrawal
+      </h2>
+    </div>
+    <div class="panel-content">
+      <form method="POST" action="{{ url_for('student.withdraw') }}" class="withdraw-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="withdraw-form__field">
+          <label class="withdraw-form__label">Amount</label>
+          <input type="number" name="amount" placeholder="Enter amount" min="1"
+                 max="{{ current_user.available_balance }}" step="0.01"
+                 class="withdraw-form__input" required />
+        </div>
+        <div class="withdraw-form__field">
+          <label class="withdraw-form__label">UPI ID</label>
+          <input type="text" name="upi_id" placeholder="name@upi"
+                 class="withdraw-form__input" required />
+        </div>
+        <button type="submit" class="withdraw-form__submit">
+          <svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8L5.257 19.293A2 2 0 005 18.414V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-.257.914l-7.743-7.743" />
+          </svg>
+          Request
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
 {% endif %}
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-  <!-- Transaction history -->
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-    <div class="px-5 py-4 border-b border-gray-100">
-      <h2 class="font-semibold text-gray-800 text-sm">Transaction History</h2>
+<!-- ══════════════════════════════════════════════
+     SECTION 3: TRANSACTION HISTORY + WITHDRAWAL REQUESTS
+══════════════════════════════════════════════ -->
+<section class="two-col-grid">
+
+  <!-- Transaction History -->
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+        Transaction History
+      </h2>
     </div>
-    <div class="divide-y divide-gray-50">
+    <div class="tx-list">
       {% for tx in transactions %}
-      <div class="px-5 py-3 flex items-center justify-between text-sm">
-        <div>
-          <p class="font-medium text-gray-800 capitalize">{{ tx.type }}</p>
-          <p class="text-xs text-gray-400">{{ tx.created_at.strftime('%d %b %Y, %H:%M') }}</p>
-          {% if tx.note %}<p class="text-xs text-gray-400">{{ tx.note }}</p>{% endif %}
+      <div class="tx-row">
+        <div class="tx-row__icon {{ 'tx-row__icon--in' if tx.type == 'commission' else 'tx-row__icon--out' }}">
+          {% if tx.type == 'commission' %}
+          <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 0l-6 6m6-6l6 6" /></svg>
+          {% else %}
+          <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m0 0l-6-6m6 6l6-6" /></svg>
+          {% endif %}
         </div>
-        <span class="font-semibold {{ 'text-green-600' if tx.type == 'commission' else 'text-red-500' }}">
+        <div class="tx-row__info">
+          <p class="tx-row__type">{{ tx.type|capitalize }}</p>
+          <p class="tx-row__date">{{ tx.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+          {% if tx.note %}<p class="tx-row__note">{{ tx.note }}</p>{% endif %}
+        </div>
+        <span class="tx-row__amount {{ 'tx-row__amount--in' if tx.type == 'commission' else 'tx-row__amount--out' }}">
           {{ '+' if tx.type == 'commission' else '-' }}₹{{ '%.2f'|format(tx.amount) }}
         </span>
       </div>
       {% else %}
-      <p class="px-5 py-6 text-sm text-gray-400 text-center">No transactions yet.</p>
+      <div class="wallet-empty">
+        <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+        <p>No transactions yet</p>
+      </div>
       {% endfor %}
     </div>
   </div>
 
-  <!-- Withdrawal requests -->
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-    <div class="px-5 py-4 border-b border-gray-100">
-      <h2 class="font-semibold text-gray-800 text-sm">Withdrawal Requests</h2>
+  <!-- Withdrawal Requests -->
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a4 4 0 00-8 0v2M5 9h14l1 12H4L5 9z" />
+        </svg>
+        Withdrawal Requests
+      </h2>
     </div>
-    <div class="divide-y divide-gray-50">
+    <div class="tx-list">
       {% for wd in withdrawals %}
-      <div class="px-5 py-3 flex items-center justify-between text-sm">
-        <div>
-          <p class="font-medium text-gray-800">₹{{ '%.2f'|format(wd.amount) }}</p>
-          <p class="text-xs text-gray-400">{{ wd.upi_id }} · {{ wd.created_at.strftime('%d %b %Y') }}</p>
+      <div class="tx-row">
+        <div class="tx-row__icon tx-row__icon--out">
+          <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a4 4 0 00-8 0v2M5 9h14l1 12H4L5 9z" /></svg>
         </div>
-        {% if wd.status == 'requested' %}{% set sc = 'bg-yellow-100 text-yellow-700' %}
-        {% elif wd.status == 'approved' %}{% set sc = 'bg-blue-100 text-blue-700' %}
-        {% elif wd.status == 'paid' %}{% set sc = 'bg-green-100 text-green-700' %}
-        {% else %}{% set sc = 'bg-red-100 text-red-700' %}{% endif %}
-        <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ sc }}">
-          {{ wd.status|capitalize }}
-        </span>
+        <div class="tx-row__info">
+          <p class="tx-row__type">₹{{ '%.2f'|format(wd.amount) }}</p>
+          <p class="tx-row__date">{{ wd.upi_id }} · {{ wd.created_at.strftime('%d %b %Y') }}</p>
+        </div>
+        <span class="status-badge status-badge--{{ wd.status }}">{{ wd.status|capitalize }}</span>
       </div>
       {% else %}
-      <p class="px-5 py-6 text-sm text-gray-400 text-center">No withdrawal requests yet.</p>
+      <div class="wallet-empty">
+        <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a4 4 0 00-8 0v2M5 9h14l1 12H4L5 9z" /></svg>
+        <p>No withdrawal requests yet</p>
+      </div>
       {% endfor %}
     </div>
   </div>
-</div>
+
+</section>
 {% endblock %}

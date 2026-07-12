@@ -3,83 +3,122 @@
 {% block title %}About Us - Zarni Skills{% endblock %}
 
 {% block content %}
-<!-- Full Page Dark Container to hold everything uniformly -->
+<!-- Full Page Container -->
 <div class="bg-slate-50 min-h-screen text-slate-800 -mt-24 pt-24 overflow-hidden relative selection:bg-blue-500 selection:text-white">
-  
-  <!-- Ambient background glow elements fixed for light mode -->
+
+  <!-- Ambient background glow elements -->
   <div class="absolute top-[20%] left-1/4 w-[600px] h-[600px] bg-blue-500/5 blur-[150px] rounded-full pointer-events-none z-0"></div>
   <div class="absolute bottom-[25%] right-1/4 w-[500px] h-[500px] bg-indigo-500/5 blur-[130px] rounded-full pointer-events-none z-0"></div>
 
   <!-- Soft light grid pattern overlaying the header -->
   <div class="absolute inset-0 z-0 opacity-[0.25] pointer-events-none" style="background-image: radial-gradient(#3b82f6 1px, transparent 1px); background-size: 40px 40px;"></div>
-  <!-- ==========================================
-       1. HERO HEADER 
-  =========================================== -->
- <section class="relative py-20 md:py-28 flex items-center justify-center border-b border-slate-200/60 z-10">
-    <div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none z-0"></div>
-  <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite] z-0"></div>
-  <div class="absolute right-0 bottom-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse] z-0"></div>
 
-  <div class="max-w-7xl mx-auto px-6 relative z-10 w-full">
-    <div class="text-center px-4 max-w-4xl mx-auto w-full">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 mb-4 shadow-sm">
-        <span class="text-[10px] font-black tracking-[0.25em] text-blue-600 uppercase">The Story Behind Zarni Skills</span>
+  <!-- ==========================================
+       1. HERO HEADER
+  =========================================== -->
+  <section class="relative py-20 md:py-28 flex items-center justify-center border-b border-slate-200/60 z-10">
+    <div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none z-0"></div>
+    <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite] z-0"></div>
+    <div class="absolute right-0 bottom-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse] z-0"></div>
+
+    <div class="max-w-7xl mx-auto px-6 relative z-10 w-full">
+      <div class="text-center px-4 max-w-4xl mx-auto w-full">
+        <div class="reveal-on-scroll inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 mb-4 shadow-sm">
+          <span class="text-[10px] font-black tracking-[0.25em] text-blue-600 uppercase">The Story Behind Zarni Skills</span>
+        </div>
+        <!-- Premium Multi-Color Gradient Headline -->
+        <h1 class="reveal-on-scroll text-3xl sm:text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-none mb-6" style="transition-delay:.1s;">
+          Empowering <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500">The Next</span> Generation
+        </h1>
+        <p class="reveal-on-scroll text-slate-500 text-base sm:text-lg font-medium max-w-2xl mx-auto mb-8" style="transition-delay:.2s;">
+          We're on a mission to turn ambition into income — equipping learners with skills that pay, not just certificates that sit in a drawer.
+        </p>
+        <div class="reveal-on-scroll flex flex-col sm:flex-row items-center justify-center gap-3" style="transition-delay:.3s;">
+          <a href="{{ url_for('auth.register') }}"
+            class="w-full sm:w-auto px-8 py-3.5 bg-primary hover:bg-primary-dark text-white font-bold text-sm rounded-full shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-0.5">
+            Get Started Free
+          </a>
+          <a href="{{ url_for('main.all_packages') }}"
+            class="w-full sm:w-auto px-8 py-3.5 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm rounded-full border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+            Explore Packages
+          </a>
+        </div>
       </div>
-      <!-- Premium Multi-Color Gradient Headline -->
-      <h1 class="text-2xl sm:text-3xl md:text-5xl  font-black text-slate-900 tracking-tight leading-none">
-        Empowering <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500">The Next</span> Generation
-      </h1>
-    </div>
-  </section>
-  <!-- ==========================================
-       2. WIDE STORY LINE (Left to Right)
-  =========================================== -->
-  <section >
-    <div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none z-0"></div>
-  <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite] z-0"></div>
-  <div class="absolute right-0 bottom-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse] z-0"></div>
-
-  <div class="max-w-7xl mx-auto px-6 relative z-10 w-full">
-    <div class="w-full px-6 md:px-12 lg:px-24">
-      <p class="text-slate-900 text-base sm:text-xl md:text-2xl lg:text-2.75xl font-medium tracking-wide leading-relaxed text-center lg:text-justify max-w-7xl mx-auto">
-        Zarni Skills was founded with a single mission: to bridge the gap between academic learning and real-world success. In a rapidly evolving digital economy, traditional degrees are no longer enough. We empower our students with high-income skills that are in demand right now. Beyond education — we are building tomorrow's world leaders.
-      </p>
     </div>
   </section>
 
-  
+  <!-- ==========================================
+       2. WIDE STORY LINE
+  =========================================== -->
+  <section class="relative py-16 z-10">
+    <div class="max-w-7xl mx-auto px-6 relative z-10 w-full">
+      <div class="w-full px-6 md:px-12 lg:px-24">
+        <p class="reveal-on-scroll text-slate-900 text-base sm:text-xl md:text-2xl lg:text-3xl font-medium tracking-wide leading-relaxed text-center lg:text-justify max-w-7xl mx-auto">
+          Zarni Skills was founded with a single mission: to bridge the gap between academic learning and real-world success. In a rapidly evolving digital economy, traditional degrees are no longer enough. We empower our students with high-income skills that are in demand right now. Beyond education — we are building tomorrow's world leaders.
+        </p>
+      </div>
+    </div>
+  </section>
 
   <!-- ==========================================
-       4. WHY ZARNI SKILLS & 3 DARK BOXES
+       3. TRUST STATS BAR
   =========================================== -->
-<section class="relative py-24 border-t border-slate-200/60 bg-white/20 z-10">
-    <div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none z-0"></div>
-  <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite] z-0"></div>
-  <div class="absolute right-0 bottom-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse] z-0"></div>
+  <section class="relative z-10 pb-4">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="reveal-on-scroll bg-white border border-slate-100 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.05)] grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-slate-100 overflow-hidden">
+        {% set stats = [
+        ("50+", "Expert Mentors", "#3b82f6", "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"),
+        ("10K+", "Students Guided", "#f59e0b", "M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"),
+        ("95%", "Success Rate", "#10b981", "M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"),
+        ("4.8/5", "Learner Rating", "#f59e0b", "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z")
+        ] %}
+        {% for value, label, color, icon_path in stats %}
+        <div class="flex items-center gap-4 px-6 py-6 group hover:bg-slate-50 transition-colors duration-200">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style="background-color: {{ color }}1a;">
+            <svg class="w-5 h-5" fill="none" stroke="{{ color }}" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="{{ icon_path }}" />
+            </svg>
+          </div>
+          <div>
+            <div class="text-xl font-black text-slate-900 leading-none mb-1">{{ value }}</div>
+            <div class="text-[12px] font-bold leading-tight" style="color: {{ color }};">{{ label }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
 
-  <div class="max-w-7xl mx-auto px-6 relative z-10 w-full">
-    <div class="max-w-7xl mx-auto px-6">
-      
+  <!-- ==========================================
+       4. WHY ZARNI SKILLS & 3 BOXES
+  =========================================== -->
+  <section class="relative py-24 border-t border-slate-200/60 bg-white/20 z-10">
+    <div class="absolute top-0 right-0 w-full h-[600px] bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none z-0"></div>
+    <div class="absolute -left-32 top-32 w-96 h-96 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite] z-0"></div>
+    <div class="absolute right-0 bottom-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none animate-[blob_7s_infinite_reverse] z-0"></div>
+
+    <div class="max-w-7xl mx-auto px-6 relative z-10 w-full">
+
       <!-- Section Premium Header -->
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-5xl  font-black text-slate-900 mb-4 tracking-wider">
+      <div class="reveal-on-scroll text-center mb-16">
+        <h2 class="text-3xl md:text-5xl font-black text-slate-900 mb-4 tracking-wider">
           Why Zarni Skills?
         </h2>
         <div class="w-16 h-[3px] bg-gradient-to-r from-blue-600 to-indigo-600 mx-auto rounded-full"></div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-       <!-- Box 1 -->
-        <div class="bg-white border border-slate-200 p-8 rounded-[2rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:-translate-y-2 hover:shadow-[0_12px_35px_rgba(59,130,246,0.15)] hover:border-blue-200 transition-all duration-300 group">
+        <!-- Box 1 -->
+        <div class="reveal-on-scroll bg-white border border-slate-200 p-8 rounded-[2rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:-translate-y-2 hover:shadow-[0_12px_35px_rgba(59,130,246,0.15)] hover:border-blue-200 transition-all duration-300 group" style="transition-delay:0s;">
           <div class="w-14 h-14 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm0 0V20"/></svg>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm0 0V20"/></svg>
           </div>
           <h3 class="text-lg font-heading font-extrabold text-slate-900 mb-3 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Expert Design</h3>
           <p class="text-slate-600 text-sm font-medium leading-relaxed">Our courses are designed by industry veterans who have already achieved what they teach.</p>
         </div>
 
         <!-- Box 2 -->
-        <div class="bg-white border border-slate-200 p-8 rounded-[2rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:-translate-y-2 hover:shadow-[0_12px_35px_rgba(59,130,246,0.15)] hover:border-blue-200 transition-all duration-300 group">
+        <div class="reveal-on-scroll bg-white border border-slate-200 p-8 rounded-[2rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:-translate-y-2 hover:shadow-[0_12px_35px_rgba(59,130,246,0.15)] hover:border-blue-200 transition-all duration-300 group" style="transition-delay:.15s;">
           <div class="w-14 h-14 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           </div>
@@ -88,7 +127,7 @@
         </div>
 
         <!-- Box 3 -->
-         <div class="bg-white border border-slate-200 p-8 rounded-[2rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:-translate-y-2 hover:shadow-[0_12px_35px_rgba(59,130,246,0.15)] hover:border-blue-200 transition-all duration-300 group">
+        <div class="reveal-on-scroll bg-white border border-slate-200 p-8 rounded-[2rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:-translate-y-2 hover:shadow-[0_12px_35px_rgba(59,130,246,0.15)] hover:border-blue-200 transition-all duration-300 group" style="transition-delay:.3s;">
           <div class="w-14 h-14 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
           </div>
@@ -97,6 +136,105 @@
         </div>
       </div>
 
+    </div>
+  </section>
+
+  <!-- ==========================================
+       4b. HOW IT WORKS (LEARN -> PRACTICE -> EARN)
+  =========================================== -->
+  <section class="relative py-24 z-10">
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+
+      <div class="reveal-on-scroll text-center mb-20">
+        <h2 class="text-3xl md:text-5xl font-black text-slate-900 mb-4 tracking-wider">
+          How It Works
+        </h2>
+        <div class="w-16 h-[3px] bg-gradient-to-r from-blue-600 to-indigo-600 mx-auto rounded-full"></div>
+      </div>
+
+      <div class="relative grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
+        <!-- Connecting line (desktop only) -->
+        <div class="hidden md:block absolute top-8 left-[16.66%] right-[16.66%] h-[2px] bg-gradient-to-r from-blue-200 via-indigo-200 to-blue-200"></div>
+
+        <!-- Step 1 -->
+        <div class="reveal-on-scroll relative text-center" style="transition-delay:0s;">
+          <div class="relative z-10 w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/25">
+            01
+          </div>
+          <h3 class="text-lg font-heading font-extrabold text-slate-900 mb-2">Learn</h3>
+          <p class="text-slate-500 text-sm font-medium leading-relaxed max-w-[220px] mx-auto">Master in-demand skills through expert-led courses built for the real world.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="reveal-on-scroll relative text-center" style="transition-delay:.15s;">
+          <div class="relative z-10 w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/25">
+            02
+          </div>
+          <h3 class="text-lg font-heading font-extrabold text-slate-900 mb-2">Practice</h3>
+          <p class="text-slate-500 text-sm font-medium leading-relaxed max-w-[220px] mx-auto">Apply what you learn with mentorship, community support, and real projects.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="reveal-on-scroll relative text-center" style="transition-delay:.3s;">
+          <div class="relative z-10 w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/25">
+            03
+          </div>
+          <h3 class="text-lg font-heading font-extrabold text-slate-900 mb-2">Earn</h3>
+          <p class="text-slate-500 text-sm font-medium leading-relaxed max-w-[220px] mx-auto">Turn your new skills into income — through jobs, freelancing, or referrals.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==========================================
+       5. MISSION QUOTE
+  =========================================== -->
+  <section class="relative py-24 z-10">
+    <div class="max-w-5xl mx-auto px-6 relative z-10">
+      <div class="reveal-on-scroll relative bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 rounded-[2.5rem] px-8 py-16 md:px-16 md:py-20 text-center overflow-hidden shadow-[0_20px_60px_rgba(37,99,235,0.3)]">
+        <!-- Decorative glow -->
+        <div class="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-16 w-72 h-72 bg-sky-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <svg class="w-10 h-10 text-white/30 mx-auto mb-6" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179z" />
+        </svg>
+
+        <p class="text-white text-xl sm:text-2xl md:text-3xl font-bold leading-snug max-w-3xl mx-auto">
+          Our mission is simple: turn ambition into income. Not through empty promises — through real skills, real mentorship, and a community that grows together.
+        </p>
+
+        <div class="mt-8 flex items-center justify-center gap-2">
+          <div class="w-8 h-[2px] bg-white/40 rounded-full"></div>
+          <span class="text-blue-100 text-xs font-black uppercase tracking-[0.2em]">Team Zarni Skills</span>
+          <div class="w-8 h-[2px] bg-white/40 rounded-full"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       6. FINAL CTA
+  =========================================== -->
+  <section class="relative py-20 border-t border-slate-200/60 z-10">
+    <div class="reveal-on-scroll max-w-4xl mx-auto px-6 text-center relative z-10">
+      <h2 class="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 mb-4 tracking-tight">
+        Ready to Start Earning While You Learn?
+      </h2>
+      <p class="text-slate-500 text-base font-medium max-w-xl mx-auto mb-8">
+        Join thousands of students already building real, in-demand skills — and real income — with Zarni Skills.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a href="{{ url_for('auth.register') }}"
+          class="w-full sm:w-auto px-9 py-4 bg-primary hover:bg-primary-dark text-white font-bold text-sm rounded-full shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-0.5">
+          Create Your Free Account
+        </a>
+        <a href="{{ url_for('main.contact') }}"
+          class="w-full sm:w-auto px-9 py-4 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm rounded-full border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+          Contact Us
+        </a>
+      </div>
     </div>
   </section>
 
