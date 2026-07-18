@@ -231,12 +231,12 @@
   }
 
   .sidebar-nav::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
+    background: #93c5fd;
+    border-radius: 999px;
   }
 
   .sidebar-nav::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #60a5fa;
   }
 
   /* ── Sidebar User Card ───────────────────────────── */
@@ -474,6 +474,7 @@
     right: 0;
     top: calc(100% + 8px);
     min-width: 280px;
+    max-width: calc(100vw - 2rem);
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 16px;
@@ -579,6 +580,253 @@
     background: #f3f4f6;
     margin: 4px 0;
   }
+
+  /* ── Admin Header ───────────────────────────── */
+  .admin-header {
+    height: 64px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+  }
+
+  .admin-header__title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .admin-header__accent {
+    width: 4px;
+    height: 26px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #3b82f6 0%, #dc2626 100%);
+    flex-shrink: 0;
+  }
+
+  .admin-header__eyebrow {
+    font-size: .65rem;
+    font-weight: 800;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin: 0 0 2px;
+  }
+
+  .admin-header__title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #111;
+    margin: 0;
+  }
+
+  .admin-header__right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .admin-header__view-site {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-decoration: none;
+    padding: 9px 14px;
+    border-radius: 9px;
+    transition: all .2s ease;
+  }
+
+  .admin-header__view-site:hover {
+    background: #f3f4f6;
+    color: #111;
+  }
+
+  .admin-header__view-site svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .admin-profile-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px 10px 5px 5px;
+    border-radius: 999px;
+    transition: background .2s ease;
+  }
+
+  .admin-profile-btn:hover {
+    background: #f3f4f6;
+  }
+
+  .admin-profile-btn img {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 3px #e5e7eb;
+  }
+
+  .admin-profile-btn__name {
+    font-size: .85rem;
+    font-weight: 700;
+    color: #111;
+  }
+
+  .admin-profile-btn svg {
+    width: 14px;
+    height: 14px;
+    color: #9ca3af;
+    transition: transform .2s ease;
+  }
+
+  .admin-profile-btn[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+
+  .admin-profile-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    min-width: 200px;
+    max-width: calc(100vw - 2rem);
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .12);
+    overflow: hidden;
+    z-index: 500;
+    display: none;
+    padding: 6px;
+  }
+
+  .admin-profile-menu.open {
+    display: block;
+    animation: slideDown .2s ease-out;
+  }
+
+  .admin-profile-menu a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #374151;
+    text-decoration: none;
+    border-radius: 9px;
+    transition: background .15s ease;
+  }
+
+  .admin-profile-menu a:hover {
+    background: #f9fafb;
+    color: #111;
+  }
+
+  .admin-profile-menu a svg {
+    width: 16px;
+    height: 16px;
+    color: #9ca3af;
+  }
+
+  .admin-profile-menu a.logout {
+    color: #dc2626;
+  }
+
+  .admin-profile-menu a.logout svg {
+    color: #fca5a5;
+  }
+
+  .admin-profile-menu a.logout:hover {
+    background: #fef2f2;
+  }
+
+  /* ── Admin Mobile Sidebar Drawer ───────────────────────────── */
+  .admin-sidebar-toggle {
+    display: none;
+  }
+
+  #admin-sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .5);
+    z-index: 998;
+  }
+
+  #admin-sidebar-backdrop.show {
+    display: block;
+  }
+
+  @media (max-width: 1023px) {
+    .admin-sidebar-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #f3f4f6;
+      border: none;
+      color: #374151;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background .2s ease;
+    }
+
+    .admin-sidebar-toggle:hover {
+      background: #e5e7eb;
+    }
+
+    .admin-sidebar-toggle svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    #admin-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      transform: translateX(-100%);
+      transition: transform .3s ease;
+      z-index: 999;
+      box-shadow: 4px 0 24px rgba(0, 0, 0, .18);
+    }
+
+    #admin-sidebar.mobile-open {
+      transform: translateX(0);
+    }
+  }
+
+  /* ── Admin Responsive Content ───────────────────────────── */
+  @media (max-width: 640px) {
+    .admin-header {
+      padding: 0 14px;
+    }
+
+    .admin-header__eyebrow {
+      display: none;
+    }
+
+    .admin-header__title {
+      font-size: 1rem;
+    }
+
+    main.flex-1.overflow-y-auto.p-6 {
+      padding: 14px !important;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -628,7 +876,7 @@
       </button>
 
       <div id="notification-dropdown"
-        class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 hidden overflow-hidden z-[1000] animate-in fade-in zoom-in duration-200">
+        class="absolute right-0 mt-3 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 hidden overflow-hidden z-[1000] animate-in fade-in zoom-in duration-200">
         <div class="px-5 py-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
           <span class="text-xs font-black text-gray-800 uppercase tracking-widest">Notifications</span>
           <button onclick="markAllAsRead()" class="text-[10px] font-bold text-primary hover:underline">Mark all as
@@ -923,94 +1171,129 @@
       {% else %}
       {# ═══════════════ ADMIN layout chrome ═══════════════ #}
       <div class="flex h-screen overflow-hidden bg-gray-50">
-        <aside class="flex-shrink-0 w-64 bg-white border-r border-gray-200 flex flex-col">
-          <div class="px-4 py-3 sm:px-6" style="display:flex;align-items:center;gap:12px;">
-            <img src="{{ url_for('static', filename='img/zarni-logo.png') }}" alt="Zarni Skills"
-              style="height:36px;width:auto;" />
-          </div>
+        <div id="admin-sidebar-backdrop"></div>
+        <aside id="admin-sidebar" class="flex-shrink-0 border-r border-gray-200 flex flex-col" style="width:280px;background:linear-gradient(180deg, #fff 0%, #fafafa 100%);">
+          <a href="{{ url_for('admin.dashboard') }}" class="sidebar-user-card" style="border-bottom:1px solid #e5e7eb;">
+            <div class="sidebar-user-card__avatar" style="box-shadow:0 4px 10px rgba(220,38,38,.25);"><img src="{{ current_user.profile_image_url }}" alt="{{ current_user.name }}" /></div>
+            <div class="sidebar-user-card__info">
+              <div class="sidebar-user-card__name">{{ current_user.name }}</div>
+              <div class="sidebar-user-card__role" style="color:#dc2626;">Administrator</div>
+            </div>
+          </a>
 
+          <nav class="sidebar-nav" style="padding:12px;">
+            {% set icon_dashboard = 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' %}
+            {% set icon_users = 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' %}
+            {% set icon_shield = 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' %}
+            {% set icon_team = 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' %}
+            {% set icon_package = 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' %}
+            {% set icon_course = 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' %}
+            {% set icon_commission = 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z' %}
+            {% set icon_wallet = 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' %}
+            {% set icon_kyc = 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' %}
+            {% set icon_settings = 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' %}
+            {% set icon_bolt = 'M13 10V3L4 14h7v7l9-11h-7z' %}
+            {% set icon_link = 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' %}
+            {% set icon_banner = 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' %}
+            {% set icon_orders = 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z' %}
+            {% set icon_referral = 'M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z' %}
+            {% set icon_mail = 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' %}
+            {% set icon_star = 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' %}
+            {% set icon_cart = 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z' %}
+            {% set icon_plus = 'M12 4v16m8-8H4' %}
 
-          <nav class="flex-1 overflow-y-auto py-4 px-3 text-sm">
-            {% set links = [
-            ('admin.dashboard', 'Dashboard', 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1
-            1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', false),
-            ('admin.users', 'Users', 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7
-            20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0
-            3 3 0 016 0z', false),
-            ('admin.managers', 'Managers', 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0
-            01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622
-            0-1.042-.133-2.052-.382-3.016z', false),
-            ('admin.team_members', 'Team Members', 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0
-            00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', false),
-            ('admin.packages', 'Packages', 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', false),
-            ('admin.courses', 'Courses', 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168
-            18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5
-            1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', false),
-            ('admin.commissions', 'Commissions', 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2
-            2v16l3.5-2 3.5 2 3.5-2 3.5 2z', false),
-            ('admin.withdrawals', 'Withdrawals', 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3
-            3v8a3 3 0 003 3z', false),
-            ('admin.kyc_list', 'KYC Requests', 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0
-            01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', false),
-            ('admin.settings', 'Settings', 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573
-            1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0
-            00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35
-            0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0
-            00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31
-            2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', false),
+            {% set overview_links = [
+              ('admin.dashboard', 'Dashboard', icon_dashboard, false),
             ] %}
-            {% set feature_links = [
-            ('admin.freelancing', 'Freelancing', 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2
-            2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0v6a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0V4', true),
-            ('admin.community_link', 'Community Link', 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10
-            0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002
-            5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z', true),
-            ('admin.training', 'Training', 'M12 14l9-5-9-5-9 5 9 5z', true),
-            ('admin.offers', 'Offers', 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5
-            2 3.5-2 3.5 2z', true),
-            ('admin.banner', 'Banner', 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20
-            14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z', true),
-            ('admin.certificate_plus','Certificate+', 'M9 12l2 2 4-4M7 21h10a2 2 0 002-2V9.414a1 1 0
-            00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z', true),
+            {% set people_links = [
+              ('admin.commissions', 'Commission', icon_commission, false),
+              ('admin.managers', 'Manager', icon_shield, false),
+              ('admin.users', 'All Users', icon_users, false),
+              ('admin.team_members', 'Team Members', icon_team, false),
             ] %}
-            <div class="space-y-1">
-              {% for endpoint, label, icon_d, soon in links %}
-              {% set active = (request.endpoint == endpoint or
+            {% set earning_links = [
+              ('admin.manager_earning', 'Manager Earning', icon_orders, true),
+              ('admin.users_earning', 'Users Earning', icon_orders, true),
+              ('admin.earning_target', 'Earning Target', icon_settings, true),
+            ] %}
+            {% set request_links = [
+              ('admin.manager_requests', 'Manager Request', icon_shield, true),
+              ('admin.kyc_list', 'KYC Request', icon_kyc, false),
+              ('admin.withdrawals', 'Payout Request', icon_wallet, false),
+              ('admin.achievement_requests', 'Achievement Request', icon_star, true),
+            ] %}
+            {% set catalog_links = [
+              ('admin.packages', 'Package', icon_package, false),
+              ('admin.package_upgrade_requests', 'Package Upgrade', icon_bolt, true),
+              ('admin.courses', 'Course', icon_course, false),
+              ('admin.course_link', 'Course Link', icon_link, true),
+              ('admin.banner', 'Banner', icon_banner, false),
+            ] %}
+            {% set records_links = [
+              ('admin.all_orders', 'All Orders', icon_orders, false),
+              ('admin.wallet_details', 'Payout Details', icon_wallet, false),
+              ('admin.wallet_details', 'Wallet Details', icon_wallet, false),
+              ('admin.all_referrals', 'All Reference', icon_referral, false),
+            ] %}
+            {% set support_links = [
+              ('admin.freelancing', 'Freelancing', 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0H8m8 0v6a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0V4', false),
+              ('admin.community_link', 'Community Link', icon_link, false),
+              ('admin.training', 'Training', 'M12 14l9-5-9-5-9 5 9 5z', false),
+              ('admin.offers', 'Offers', icon_commission, false),
+              ('admin.certificate_plus', 'Certificate+', 'M9 12l2 2 4-4M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z', false),
+            ] %}
+            {% set form_links = [
+              ('admin.registration_details', 'Registration Details', icon_kyc, true),
+              ('admin.connect_form', 'Connect Form', icon_mail, true),
+              ('admin.reviews', 'Reviews', icon_star, true),
+            ] %}
+            {% set product_links = [
+              ('admin.new_product', 'Add Product', icon_plus, true),
+              ('admin.products', 'Product Details', icon_cart, true),
+            ] %}
+            {% set system_links = [
+              ('admin.settings', 'Settings', icon_settings, false),
+            ] %}
+
+            {% macro nav_group(title, items, first=false) %}
+            <div class="oc-group-header"{% if first %} style="margin-top:0;"{% endif %}>{{ title }}</div>
+            {% for endpoint, label, icon_d, soon in items %}
+            {% set active = (request.endpoint == endpoint or
               (endpoint == 'admin.courses' and request.endpoint in
               ('admin.course_chapters','admin.new_chapter','admin.edit_chapter'))) %}
-              <a href="{{ url_for(endpoint) }}"
-                class="flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors {{ 'bg-primary/10 text-primary' if active else 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="{{ url_for(endpoint) }}" class="oc-link{% if active %} active{% endif %}"{% if soon %} style="justify-content:space-between;"{% endif %}>
+              {% if soon %}
+              <span style="display:flex;align-items:center;gap:11px;">
+                <svg viewBox="0 0 24 24" fill="none">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ icon_d }}" />
                 </svg>
-                <span class="flex-1">{{ label }}</span>
-                {% if soon %}<span
-                  class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">Soon</span>{%
-                endif %}
-              </a>
-              {% endfor %}
-            </div>
+                {{ label }}
+              </span>
+              <span class="status-badge status-badge--requested" style="flex-shrink:0;">Soon</span>
+              {% else %}
+              <svg viewBox="0 0 24 24" fill="none">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ icon_d }}" />
+              </svg>
+              {{ label }}
+              {% endif %}
+            </a>
+            {% endfor %}
+            {% endmacro %}
 
-            <div class="space-y-1">
-              {% for endpoint, label, icon_d, soon in feature_links %}
-              {% set active = request.endpoint == endpoint %}
-              <a href="{{ url_for(endpoint) }}"
-                class="flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors {{ 'bg-primary/10 text-primary' if active else 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ icon_d }}" />
-                </svg>
-                <span class="flex-1">{{ label }}</span>
-                {% if soon %}<span
-                  class="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">Soon</span>{%
-                endif %}
-              </a>
-              {% endfor %}
-            </div>
+            {{ nav_group('Overview', overview_links, first=true) }}
+            {{ nav_group('People', people_links) }}
+            {{ nav_group('Earning', earning_links) }}
+            {{ nav_group('Requests', request_links) }}
+            {{ nav_group('Catalog', catalog_links) }}
+            {{ nav_group('Records', records_links) }}
+            {{ nav_group('Support Features', support_links) }}
+            {{ nav_group('Forms', form_links) }}
+            {{ nav_group('Products', product_links) }}
+            {{ nav_group('System', system_links) }}
           </nav>
-          <div class="p-3 border-t border-gray-100">
-            <a href="{{ url_for('auth.logout') }}"
-              class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="sidebar-logout-link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
@@ -1019,14 +1302,39 @@
           </div>
         </aside>
         <div class="flex-1 flex flex-col overflow-hidden">
-          <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6"
-            style="flex-shrink:0;">
-            <h1 class="font-heading font-semibold text-gray-900 text-lg">{% block page_title %}{% endblock %}</h1>
-            <div class="flex items-center gap-3">
-              <span class="text-sm text-gray-500 hidden sm:block">{{ current_user.name }}</span>
-              <div
-                class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-                {{ current_user.name[0].upper() }}</div>
+          <header class="admin-header">
+            <div class="admin-header__title-wrap">
+              <button type="button" id="admin-sidebar-toggle" class="admin-sidebar-toggle" aria-label="Toggle menu" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+              </button>
+              <div class="admin-header__accent"></div>
+              <div>
+                <p class="admin-header__eyebrow">Admin</p>
+                <h1 class="admin-header__title">{% block page_title %}{% endblock %}</h1>
+              </div>
+            </div>
+            <div class="admin-header__right">
+              <a href="{{ url_for('main.index') }}" target="_blank" class="admin-header__view-site hidden sm:flex">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                View Site
+              </a>
+              <div style="position:relative;">
+                <button type="button" id="admin-profile-btn" class="admin-profile-btn" aria-expanded="false">
+                  <img src="{{ current_user.profile_image_url }}" alt="{{ current_user.name }}" />
+                  <span class="admin-profile-btn__name hidden sm:block">{{ current_user.name }}</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="admin-profile-menu" class="admin-profile-menu">
+                  <a href="{{ url_for('admin.settings') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Settings
+                  </a>
+                  <a href="{{ url_for('auth.logout') }}" class="logout">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Logout
+                  </a>
+                </div>
+              </div>
             </div>
           </header>
           <main class="flex-1 overflow-y-auto p-6">
@@ -1099,7 +1407,12 @@
         }
 
         function markAllAsRead() {
-          fetch('{{ url_for("student.read_all_notifications") }}', { method: 'POST' })
+          fetch('{{ url_for("student.read_all_notifications") }}', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': '{{ csrf_token() }}'
+            }
+          })
             .then(res => res.json())
             .then(data => {
               if (data.status === 'success') {
@@ -1126,6 +1439,68 @@
     </main>
   </div><!-- /.flex-1.admin-main -->
 </div><!-- /.flex.admin-wrapper -->
+
+<script>
+  (function () {
+    const btn = document.getElementById('admin-profile-btn');
+    const menu = document.getElementById('admin-profile-menu');
+    if (!btn || !menu) return;
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const isOpen = menu.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', function () {
+      menu.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+
+    menu.addEventListener('click', function (e) { e.stopPropagation(); });
+  })();
+
+  // Mobile sidebar drawer
+  (function () {
+    const sidebar = document.getElementById('admin-sidebar');
+    const backdrop = document.getElementById('admin-sidebar-backdrop');
+    const toggleBtn = document.getElementById('admin-sidebar-toggle');
+    if (!sidebar || !backdrop || !toggleBtn) return;
+
+    function openSidebar() {
+      sidebar.classList.add('mobile-open');
+      backdrop.classList.add('show');
+      toggleBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('mobile-open');
+      backdrop.classList.remove('show');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    toggleBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (sidebar.classList.contains('mobile-open')) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
+    });
+
+    backdrop.addEventListener('click', closeSidebar);
+
+    sidebar.querySelectorAll('.oc-link').forEach(function (link) {
+      link.addEventListener('click', function () {
+        if (window.innerWidth <= 1023) closeSidebar();
+      });
+    });
+
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 1023) closeSidebar();
+    });
+  })();
+</script>
 {% endif %}
 
 {% endblock %}

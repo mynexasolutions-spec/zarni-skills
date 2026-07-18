@@ -33,6 +33,7 @@ class Config:
     WTF_CSRF_ENABLED = True
     VIDEO_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'video_uploads')
     THUMBNAIL_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'img', 'uploads')
+    KYC_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'kyc_uploads')
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # 500 MB max upload
 
     # ── Flask-Mail defaults (overridden at runtime via SiteSettings) ──────

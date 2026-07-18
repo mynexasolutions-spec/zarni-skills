@@ -132,6 +132,128 @@ def certificate_plus():
     )
 
 
+# ── Not yet scoped — placeholder until business rules are defined ─────────
+
+@admin_bp.route('/manager-earning')
+@login_required
+@admin_required
+def manager_earning():
+    return _placeholder_page(
+        'Manager Earning',
+        'A manager-wise earning report will appear here once this feature is scoped.',
+    )
+
+
+@admin_bp.route('/users-earning')
+@login_required
+@admin_required
+def users_earning():
+    return _placeholder_page(
+        'Users Earning',
+        'A student-wise earning report will appear here once this feature is scoped.',
+    )
+
+
+@admin_bp.route('/earning-target')
+@login_required
+@admin_required
+def earning_target():
+    return _placeholder_page(
+        'Earning Target',
+        'Earning goals/targets will be configured here once this feature is scoped.',
+    )
+
+
+@admin_bp.route('/manager-requests')
+@login_required
+@admin_required
+def manager_requests():
+    return _placeholder_page(
+        'Manager Request',
+        'Requests to become a manager will appear here once this workflow is scoped.',
+    )
+
+
+@admin_bp.route('/achievement-requests')
+@login_required
+@admin_required
+def achievement_requests():
+    return _placeholder_page(
+        'Achievement Request',
+        'Student achievement submissions will appear here once this feature is scoped.',
+    )
+
+
+@admin_bp.route('/package-upgrade-requests')
+@login_required
+@admin_required
+def package_upgrade_requests():
+    return _placeholder_page(
+        'Package Upgrade',
+        'Package upgrade requests will appear here once this workflow is scoped.',
+    )
+
+
+@admin_bp.route('/course-link')
+@login_required
+@admin_required
+def course_link():
+    return _placeholder_page(
+        'Course Link',
+        'Shareable course links will be managed here once this feature is scoped.',
+    )
+
+
+@admin_bp.route('/registration-details')
+@login_required
+@admin_required
+def registration_details():
+    return _placeholder_page(
+        'Registration Details',
+        'Registration form submissions will appear here once this feature is scoped.',
+    )
+
+
+@admin_bp.route('/connect-form')
+@login_required
+@admin_required
+def connect_form():
+    return _placeholder_page(
+        'Connect Form',
+        'Contact form submissions will appear here once saving them to the database is set up.',
+    )
+
+
+@admin_bp.route('/reviews')
+@login_required
+@admin_required
+def reviews():
+    return _placeholder_page(
+        'Reviews',
+        'Student/course reviews will be managed here once this feature is scoped.',
+    )
+
+
+@admin_bp.route('/products')
+@login_required
+@admin_required
+def products():
+    return _placeholder_page(
+        'Products',
+        'A product catalog will be managed here once this feature is scoped.',
+    )
+
+
+@admin_bp.route('/products/new')
+@login_required
+@admin_required
+def new_product():
+    return _placeholder_page(
+        'Add Product',
+        'Product creation will be available here once this feature is scoped.',
+    )
+
+
 # ── Users ──────────────────────────────────────────────────────────────────
 
 @admin_bp.route('/users')
@@ -143,7 +265,14 @@ def users():
     if role_filter in ('student', 'manager', 'team_member', 'admin'):
         query = query.filter_by(role=role_filter)
     all_users = query.all()
-    return render_template('admin/users.html', users=all_users, role_filter=role_filter)
+    role_counts = {
+        'student': User.query.filter_by(role='student').count(),
+        'manager': User.query.filter_by(role='manager').count(),
+        'team_member': User.query.filter_by(role='team_member').count(),
+        'admin': User.query.filter_by(role='admin').count(),
+    }
+    role_counts[''] = sum(role_counts.values())
+    return render_template('admin/users.html', users=all_users, role_filter=role_filter, role_counts=role_counts)
 
 
 @admin_bp.route('/users/<int:user_id>/toggle', methods=['POST'])
@@ -432,6 +561,13 @@ def courses():
 @admin_required
 def new_course():
     if request.method == 'POST':
+        price_val = request.form.get('price', '').strip()
+        price = float(price_val) if price_val else None
+        l1_val = request.form.get('level1_pct', '').strip()
+        level1_pct = float(l1_val) if l1_val else None
+        l2_val = request.form.get('level2_pct', '').strip()
+        level2_pct = float(l2_val) if l2_val else None
+
         course = Course(
             title=request.form['title'].strip(),
             description=request.form.get('description', '').strip(),
@@ -443,6 +579,9 @@ def new_course():
             what_you_learn=request.form.get('what_you_learn', '').strip() or None,
             certificate=bool(request.form.get('certificate')),
             is_active=bool(request.form.get('is_active')),
+            price=price,
+            level1_commission_percent=level1_pct,
+            level2_commission_percent=level2_pct,
         )
         db.session.add(course)
         db.session.flush()
@@ -465,6 +604,13 @@ def new_course():
 def edit_course(course_id):
     course = Course.query.get_or_404(course_id)
     if request.method == 'POST':
+        price_val = request.form.get('price', '').strip()
+        price = float(price_val) if price_val else None
+        l1_val = request.form.get('level1_pct', '').strip()
+        level1_pct = float(l1_val) if l1_val else None
+        l2_val = request.form.get('level2_pct', '').strip()
+        level2_pct = float(l2_val) if l2_val else None
+
         course.title = request.form['title'].strip()
         course.description = request.form.get('description', '').strip()
         course.thumbnail_url = request.form.get('thumbnail_url', '').strip() or None
@@ -475,6 +621,10 @@ def edit_course(course_id):
         course.what_you_learn = request.form.get('what_you_learn', '').strip() or None
         course.certificate = bool(request.form.get('certificate'))
         course.is_active = bool(request.form.get('is_active'))
+        course.price = price
+        course.level1_commission_percent = level1_pct
+        course.level2_commission_percent = level2_pct
+
         thumb = _save_thumbnail(request.files.get('thumbnail_file'), course.thumbnail_filename)
         if thumb is False:
             flash(f'Invalid image format. Allowed: {", ".join(ALLOWED_IMAGE_EXTS)}', 'danger')
@@ -617,7 +767,20 @@ def commissions():
     if status in ('pending', 'approved', 'paid'):
         query = query.filter_by(status=status)
     all_commissions = query.all()
-    return render_template('admin/commissions.html', commissions=all_commissions, current_status=status)
+    status_counts = {
+        'pending': Commission.query.filter_by(status='pending').count(),
+        'approved': Commission.query.filter_by(status='approved').count(),
+        'paid': Commission.query.filter_by(status='paid').count(),
+    }
+    pending_total = db.session.query(db.func.sum(Commission.commission_amount)) \
+        .filter_by(status='pending').scalar() or 0
+    return render_template(
+        'admin/commissions.html',
+        commissions=all_commissions,
+        current_status=status,
+        status_counts=status_counts,
+        pending_total=pending_total,
+    )
 
 
 @admin_bp.route('/commissions/<int:commission_id>/approve', methods=['POST'])
@@ -655,7 +818,21 @@ def withdrawals():
     if status in ('requested', 'approved', 'rejected', 'paid'):
         query = query.filter_by(status=status)
     all_withdrawals = query.all()
-    return render_template('admin/withdrawals.html', withdrawals=all_withdrawals, current_status=status)
+    status_counts = {
+        'requested': Withdrawal.query.filter_by(status='requested').count(),
+        'approved': Withdrawal.query.filter_by(status='approved').count(),
+        'paid': Withdrawal.query.filter_by(status='paid').count(),
+        'rejected': Withdrawal.query.filter_by(status='rejected').count(),
+    }
+    requested_total = db.session.query(db.func.sum(Withdrawal.amount)) \
+        .filter_by(status='requested').scalar() or 0
+    return render_template(
+        'admin/withdrawals.html',
+        withdrawals=all_withdrawals,
+        current_status=status,
+        status_counts=status_counts,
+        requested_total=requested_total,
+    )
 
 
 @admin_bp.route('/withdrawals/<int:wd_id>/process', methods=['POST'])
@@ -673,6 +850,77 @@ def process_withdrawal(wd_id):
     return redirect(url_for('admin.withdrawals'))
 
 
+# ── All Orders ───────────────────────────────────────────────────────────────
+
+@admin_bp.route('/orders')
+@login_required
+@admin_required
+def all_orders():
+    status = request.args.get('status', '')
+    query = Order.query.order_by(Order.created_at.desc())
+    if status in ('paid', 'pending', 'failed'):
+        query = query.filter_by(payment_status=status)
+    orders = query.all()
+    status_counts = {
+        'paid': Order.query.filter_by(payment_status='paid').count(),
+        'pending': Order.query.filter_by(payment_status='pending').count(),
+        'failed': Order.query.filter_by(payment_status='failed').count(),
+    }
+    status_counts[''] = sum(status_counts.values())
+    total_revenue = db.session.query(db.func.sum(Order.amount_paid)) \
+        .filter_by(payment_status='paid').scalar() or 0
+    return render_template(
+        'admin/orders.html',
+        orders=orders,
+        current_status=status,
+        status_counts=status_counts,
+        total_revenue=total_revenue,
+    )
+
+
+# ── Wallet Details ───────────────────────────────────────────────────────────
+
+@admin_bp.route('/wallet-details')
+@login_required
+@admin_required
+def wallet_details():
+    type_filter = request.args.get('type', '')
+    query = WalletTransaction.query.order_by(WalletTransaction.created_at.desc())
+    if type_filter in ('commission', 'withdrawal'):
+        query = query.filter_by(type=type_filter)
+    transactions = query.limit(300).all()
+    total_commissions = db.session.query(db.func.sum(WalletTransaction.amount)) \
+        .filter_by(type='commission', status='completed').scalar() or 0
+    total_withdrawals = db.session.query(db.func.sum(WalletTransaction.amount)) \
+        .filter_by(type='withdrawal', status='completed').scalar() or 0
+    net_balance = total_commissions - total_withdrawals
+    return render_template(
+        'admin/wallet_details.html',
+        transactions=transactions,
+        current_type=type_filter,
+        total_commissions=total_commissions,
+        total_withdrawals=total_withdrawals,
+        net_balance=net_balance,
+    )
+
+
+# ── All Referrals ────────────────────────────────────────────────────────────
+
+@admin_bp.route('/referrals')
+@login_required
+@admin_required
+def all_referrals():
+    referred_users = User.query.filter(User.referred_by.isnot(None)) \
+        .order_by(User.created_at.desc()).all()
+    total_referrers = db.session.query(User.referred_by).filter(User.referred_by.isnot(None)) \
+        .distinct().count()
+    return render_template(
+        'admin/all_referrals.html',
+        referred_users=referred_users,
+        total_referrers=total_referrers,
+    )
+
+
 # ── KYC Management ─────────────────────────────────────────────────────────
 
 @admin_bp.route('/kyc')
@@ -685,7 +933,17 @@ def kyc_list():
     if status in ('pending', 'approved', 'rejected'):
         query = query.filter_by(status=status)
     all_kyc = query.all()
-    return render_template('admin/kyc_list.html', kyc_list=all_kyc, current_status=status)
+    status_counts = {
+        'pending': KYC.query.filter_by(status='pending').count(),
+        'approved': KYC.query.filter_by(status='approved').count(),
+        'rejected': KYC.query.filter_by(status='rejected').count(),
+    }
+    return render_template(
+        'admin/kyc_list.html',
+        kyc_list=all_kyc,
+        current_status=status,
+        status_counts=status_counts,
+    )
 
 
 @admin_bp.route('/kyc/<int:kyc_id>/process', methods=['POST'])
@@ -726,6 +984,7 @@ _SETTING_KEYS = [
     'razorpay_enabled', 'razorpay_key_id', 'razorpay_key_secret',
     'mail_server', 'mail_port', 'mail_use_tls', 'mail_username',
     'mail_password', 'mail_from', 'min_withdrawal_amount',
+    'global_level1_commission_percent', 'global_level2_commission_percent',
 ]
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])

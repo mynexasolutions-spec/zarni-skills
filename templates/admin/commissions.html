@@ -3,82 +3,141 @@
 {% block page_title %}Commissions{% endblock %}
 
 {% block body %}
-<!-- Filter tabs -->
-<div class="flex gap-2 mb-6 flex-wrap">
-  {% for tab in ['pending', 'approved', 'paid'] %}
-  <a href="{{ url_for('admin.commissions', status=tab) }}"
-     class="px-4 py-2 rounded-xl text-sm font-medium transition
-            {{ 'bg-primary text-white' if current_status == tab else 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50' }}">
-    {{ tab|capitalize }}
-  </a>
-  {% endfor %}
+
+<!-- ══════════════════════════════════════════════
+     SUMMARY KPI CARDS
+══════════════════════════════════════════════ -->
+<section class="mb-8">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;">
+
+    <div class="kpi-card">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Pending
+      </p>
+      <p class="kpi-value">{{ status_counts.pending }}</p>
+      <p class="kpi-subtext">₹{{ '{:,.0f}'.format(pending_total) }} awaiting approval</p>
+    </div>
+
+    <div class="kpi-card kpi-card--blue">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Approved
+      </p>
+      <p class="kpi-value">{{ status_counts.approved }}</p>
+      <p class="kpi-subtext">Ready to be paid</p>
+    </div>
+
+    <div class="kpi-card kpi-card--green">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+        </svg>
+        Paid
+      </p>
+      <p class="kpi-value">{{ status_counts.paid }}</p>
+      <p class="kpi-subtext">Fully settled</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     FILTER TABS + BULK ACTION
+══════════════════════════════════════════════ -->
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+  <div class="filter-tabs" style="margin-bottom:0;">
+    {% for tab in ['pending', 'approved', 'paid'] %}
+    <a href="{{ url_for('admin.commissions', status=tab) }}" class="filter-tab{{ ' active' if current_status == tab else '' }}">
+      {{ tab|capitalize }}
+      <span class="filter-tab__count">{{ status_counts[tab] }}</span>
+    </a>
+    {% endfor %}
+  </div>
 
   {% if current_status == 'pending' and commissions %}
-  <form method="POST" action="{{ url_for('admin.approve_all_commissions') }}" class="ml-auto">
+  <form method="POST" action="{{ url_for('admin.approve_all_commissions') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-    <button type="submit"
-            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-xl transition">
+    <button type="submit" class="btn-gradient btn-gradient--green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
       Approve All
     </button>
   </form>
   {% endif %}
 </div>
 
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-        <tr>
-          <th class="px-5 py-3 text-left">Date</th>
-          <th class="px-5 py-3 text-left">Earner</th>
-          <th class="px-5 py-3 text-left">Buyer</th>
-          <th class="px-5 py-3 text-left">Package</th>
-          <th class="px-5 py-3 text-center">Level</th>
-          <th class="px-5 py-3 text-right">Amount</th>
-          <th class="px-5 py-3 text-left">Status</th>
-          {% if current_status == 'pending' %}<th class="px-5 py-3 text-left">Action</th>{% endif %}
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-50">
-        {% for c in commissions %}
-        <tr>
-          <td class="px-5 py-3 text-gray-500">{{ c.created_at.strftime('%d %b %Y') }}</td>
-          <td class="px-5 py-3 font-medium text-gray-800">{{ c.earner.name }}</td>
-          <td class="px-5 py-3 text-gray-600">{{ c.buyer.name }}</td>
-          <td class="px-5 py-3 text-gray-600">{{ c.order.package.name }}</td>
-          <td class="px-5 py-3 text-center">
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">L{{ c.level }}</span>
-          </td>
-          <td class="px-5 py-3 text-right font-semibold text-green-600">₹{{ '%.2f'|format(c.commission_amount) }}</td>
-          <td class="px-5 py-3">
-            {% if c.status == 'approved' %}{% set sc = 'bg-blue-100 text-blue-700' %}
-            {% elif c.status == 'paid' %}{% set sc = 'bg-green-100 text-green-700' %}
-            {% else %}{% set sc = 'bg-yellow-100 text-yellow-700' %}{% endif %}
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ sc }}">
-              {{ c.status|capitalize }}
-            </span>
-          </td>
-          {% if current_status == 'pending' %}
-          <td class="px-5 py-3">
-            <form method="POST" action="{{ url_for('admin.approve_commission_route', commission_id=c.id) }}">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-              <button type="submit"
-                      class="px-3 py-1 text-xs bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition font-medium">
-                Approve
-              </button>
-            </form>
-          </td>
-          {% endif %}
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="{{ 8 if current_status == 'pending' else 7 }}" class="px-5 py-8 text-center text-gray-400">
-            No {{ current_status }} commissions.
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+<!-- ══════════════════════════════════════════════
+     COMMISSIONS TABLE
+══════════════════════════════════════════════ -->
+<section>
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+        </svg>
+        {{ current_status|capitalize }} Commissions
+      </h2>
+      <span class="panel-badge panel-badge--blue">{{ commissions|length }} record{{ 's' if commissions|length != 1 else '' }}</span>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table class="dashboard-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Earner</th>
+            <th>Buyer</th>
+            <th>Package</th>
+            <th>Level</th>
+            <th>Amount</th>
+            <th>Status</th>
+            {% if current_status == 'pending' %}<th>Action</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in commissions %}
+          <tr>
+            <td class="text-secondary">{{ c.created_at.strftime('%d %b %Y') }}</td>
+            <td class="font-weight-semi">{{ c.earner.name }}</td>
+            <td class="text-secondary">{{ c.buyer.name }}</td>
+            <td class="text-secondary">{{ c.order.package.name }}</td>
+            <td><span class="role-badge role-badge--purple">L{{ c.level }}</span></td>
+            <td class="font-weight-semi" style="color:#16a34a;">₹{{ '%.2f'|format(c.commission_amount) }}</td>
+            <td>
+              <span class="status-badge {{ 'status-badge--approved' if c.status == 'approved' else 'status-badge--paid' if c.status == 'paid' else 'status-badge--requested' }}">
+                {{ c.status|capitalize }}
+              </span>
+            </td>
+            {% if current_status == 'pending' %}
+            <td>
+              <form method="POST" action="{{ url_for('admin.approve_commission_route', commission_id=c.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button type="submit" class="status-badge status-badge--paid" style="border:none;cursor:pointer;">
+                  Approve
+                </button>
+              </form>
+            </td>
+            {% endif %}
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="{{ 8 if current_status == 'pending' else 7 }}" style="padding:0;">
+              <div class="wallet-empty">
+                <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" /></svg>
+                <p>No {{ current_status }} commissions</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
+</section>
+
 {% endblock %}

@@ -13,9 +13,22 @@ def process_commissions(order: Order):
                  was referred through a manager's chain, manager earns their %.
                  (handled: manager IS the level-1 referrer with role='manager')
     """
+    from app.models import SiteSettings
     buyer = order.buyer
-    package = order.package
     amount_paid = float(order.amount_paid)
+
+    if order.package:
+        l1_default = float(order.package.level1_commission_percent or 10.0)
+        l2_default = float(order.package.level2_commission_percent or 5.0)
+        min_threshold = float(order.package.min_income_for_level2 or 0.0)
+    elif order.course:
+        l1_default = float(order.course.level1_commission_percent) if order.course.level1_commission_percent is not None else float(SiteSettings.get('global_level1_commission_percent', 10.0))
+        l2_default = float(order.course.level2_commission_percent) if order.course.level2_commission_percent is not None else float(SiteSettings.get('global_level2_commission_percent', 5.0))
+        min_threshold = 0.0
+    else:
+        l1_default = float(SiteSettings.get('global_level1_commission_percent', 10.0))
+        l2_default = float(SiteSettings.get('global_level2_commission_percent', 5.0))
+        min_threshold = 0.0
 
     # ── Level 1 ──────────────────────────────────────────────
     l1_referrer = buyer.referrer
@@ -27,7 +40,7 @@ def process_commissions(order: Order):
     if l1_referrer.role == 'manager' and l1_referrer.manager_commission_percent is not None:
         l1_percent = float(l1_referrer.manager_commission_percent)
     else:
-        l1_percent = float(package.level1_commission_percent)
+        l1_percent = l1_default
 
     l1_amount = round(amount_paid * l1_percent / 100, 2)
 
@@ -58,9 +71,8 @@ def process_commissions(order: Order):
         db.session.commit()
         return
 
-    min_threshold = float(package.min_income_for_level2)
     if l2_referrer.total_earnings >= min_threshold:
-        l2_percent = float(package.level2_commission_percent)
+        l2_percent = l2_default
         l2_amount = round(amount_paid * l2_percent / 100, 2)
 
         l2_commission = Commission(

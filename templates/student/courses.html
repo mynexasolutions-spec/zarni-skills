@@ -88,14 +88,24 @@
         <p class="content-card__desc">{{ course.description }}</p>
 
         {% set pkg = available_courses_packages[course.id] if available_courses_packages and course.id in available_courses_packages else None %}
-        {% if pkg %}
-        <a href="{{ url_for('student.packages') }}" class="content-card__cta">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M6.3 2.84A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.27l9.344-5.891a1.5 1.5 0 000-2.54L6.3 2.84z" />
-          </svg>
-          Unlock via {{ pkg.name }}
-        </a>
-        {% endif %}
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:auto; width:100%;">
+          {% if course.price %}
+          <a href="{{ url_for('student.buy_course', course_id=course.id) }}" class="content-card__cta" style="background:#10b981; border-color:#10b981; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Buy Course — ₹{{ '{:,.0f}'.format(course.price) }}
+          </a>
+          {% endif %}
+          {% if pkg %}
+          <a href="{{ url_for('student.packages') }}" class="content-card__cta" style="display:flex; align-items:center; justify-content:center; gap:6px;">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px;">
+              <path d="M6.3 2.84A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.27l9.344-5.891a1.5 1.5 0 000-2.54L6.3 2.84z" />
+            </svg>
+            Unlock via {{ pkg.name }}
+          </a>
+          {% endif %}
+        </div>
       </div>
     </div>
     {% endfor %}

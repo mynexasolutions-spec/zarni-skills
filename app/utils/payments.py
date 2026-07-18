@@ -53,6 +53,21 @@ def create_razorpay_order(amount_inr: float, receipt: str) -> dict | None:
         return None
 
 
+def fetch_razorpay_order(razorpay_order_id: str) -> dict | None:
+    """
+    Fetch a Razorpay order by ID so the caller can confirm what was actually
+    paid for (amount, receipt) instead of trusting client-submitted values.
+    """
+    client, _, _ = _get_razorpay_client()
+    if client is None:
+        return None
+    try:
+        return client.order.fetch(razorpay_order_id)
+    except Exception as e:
+        current_app.logger.error(f'Razorpay order fetch failed: {e}')
+        return None
+
+
 def verify_razorpay_signature(razorpay_order_id: str,
                               razorpay_payment_id: str,
                               razorpay_signature: str) -> bool:

@@ -32,7 +32,7 @@
 <!-- Flash messages -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-    <div class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm w-full">
+    <div class="fixed top-4 right-4 left-4 sm:left-auto sm:w-full sm:max-w-sm z-[9999] flex flex-col gap-2">
       {% for category, message in messages %}
         {% if category == 'success' %}{% set color = 'bg-green-50 border-green-400 text-green-800' %}
         {% elif category == 'danger' %}{% set color = 'bg-red-50 border-red-400 text-red-800' %}

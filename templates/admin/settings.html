@@ -3,63 +3,64 @@
 {% block page_title %}Platform Settings{% endblock %}
 
 {% block body %}
+
+<div class="form-page-header">
+  <div>
+    <h1>Platform Settings</h1>
+    <p>Payment gateway, withdrawals, and email delivery configuration</p>
+  </div>
+</div>
+
 <form method="POST" action="{{ url_for('admin.settings') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
-  <div class="space-y-6 max-w-3xl">
+  <div class="stack-gap" style="max-width:760px;">
 
     <!-- ── Razorpay ─────────────────────────────────────────────────────── -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
-          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+    <div class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
           </svg>
-        </div>
-        <div>
-          <h2 class="font-semibold text-gray-900 text-sm">Razorpay Payment Gateway</h2>
-          <p class="text-xs text-gray-500">Enter your Razorpay API credentials from the Razorpay Dashboard</p>
-        </div>
+          Razorpay Payment Gateway
+        </h2>
       </div>
-      <div class="p-6 space-y-4">
+      <div class="panel-content">
+        <p style="font-size:.8rem;color:#9ca3af;margin:-8px 0 20px;">Enter your Razorpay API credentials from the Razorpay Dashboard</p>
 
-        <label class="flex items-center gap-3 cursor-pointer select-none group">
-          <div class="relative">
-            <input type="checkbox" id="razorpay_enabled" name="razorpay_enabled"
-                   class="sr-only peer" {{ 'checked' if s.razorpay_enabled == 'true' }}>
-            <div class="w-11 h-6 bg-gray-200 peer-checked:bg-blue-600 rounded-full transition-colors"></div>
-            <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
-          </div>
-          <span class="text-sm font-medium text-gray-700">Enable Razorpay (Live Payments)</span>
-          <span id="rz-badge" class="px-2 py-0.5 rounded-full text-xs font-semibold {{ 'bg-green-100 text-green-700' if s.razorpay_enabled == 'true' else 'bg-gray-100 text-gray-500' }}">
-            {{ 'LIVE' if s.razorpay_enabled == 'true' else 'SIMULATED' }}
+        <div class="toggle-row" style="margin-bottom:24px;">
+          <span class="toggle-row__label" style="display:flex;align-items:center;gap:10px;">
+            Enable Razorpay (Live Payments)
+            <span id="rz-badge" class="status-badge {{ 'status-badge--paid' if s.razorpay_enabled == 'true' else 'status-badge--neutral' }}">
+              {{ 'LIVE' if s.razorpay_enabled == 'true' else 'SIMULATED' }}
+            </span>
           </span>
-        </label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="razorpay_enabled" name="razorpay_enabled" {{ 'checked' if s.razorpay_enabled == 'true' }}>
+            <span class="toggle-switch__slider"></span>
+          </label>
+        </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
-              Key ID <span class="text-red-400">*</span>
-            </label>
+        <div class="kyc-grid">
+          <div class="kyc-field">
+            <label class="kyc-label">Key ID <span style="color:#ef4444;">*</span></label>
             <input type="text" name="razorpay_key_id" id="razorpay_key_id"
                    value="{{ s.razorpay_key_id or '' }}"
                    placeholder="rzp_live_xxxxxxxxxxxxx"
-                   class="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition" />
-            <p class="text-xs text-gray-400 mt-1">Find this in your Razorpay Dashboard → Settings → API Keys</p>
+                   class="kyc-input" style="font-family:monospace;" />
+            <p style="font-size:.7rem;color:#9ca3af;margin-top:4px;">Find this in your Razorpay Dashboard → Settings → API Keys</p>
           </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
-              Key Secret <span class="text-red-400">*</span>
-            </label>
-            <div class="relative">
+          <div class="kyc-field">
+            <label class="kyc-label">Key Secret <span style="color:#ef4444;">*</span></label>
+            <div style="position:relative;">
               <input type="password" name="razorpay_key_secret" id="razorpay_key_secret"
                      value="{{ s.razorpay_key_secret or '' }}"
                      placeholder="••••••••••••••••••••"
-                     class="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition pr-10" />
+                     class="kyc-input" style="font-family:monospace;padding-right:42px;" />
               <button type="button" onclick="toggleSecret('razorpay_key_secret')"
-                      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#9ca3af;cursor:pointer;display:flex;">
+                <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                 </svg>
@@ -68,128 +69,148 @@
           </div>
         </div>
 
-        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
-          <strong>⚠ Important:</strong> When Razorpay is <strong>enabled</strong>, real money will be charged from customers.
-          Make sure to use <strong>Test keys</strong> (rzp_test_*) while testing and switch to Live keys only for production.
+        <div class="status-banner status-banner--warning" style="margin:20px 0 0;">
+          <div class="status-banner__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+          </div>
+          <div>
+            <h3 class="status-banner__title" style="font-size:.85rem;">Important</h3>
+            <p class="status-banner__desc">When Razorpay is enabled, real money will be charged from customers. Use <strong>Test keys</strong> (rzp_test_*) while testing and switch to Live keys only for production.</p>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- ── Withdrawal Settings ──────────────────────────────────────────── -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
-          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V6m0 12v-2m9-4a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    <!-- ── Referral & Commission ──────────────────────────────────────── -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
           </svg>
-        </div>
-        <div>
-          <h2 class="font-semibold text-gray-900 text-sm">Withdrawal Settings</h2>
-          <p class="text-xs text-gray-500">Control minimum withdrawal thresholds for affiliates</p>
+          Referral & Commission Settings
+        </h2>
+      </div>
+      <div class="panel-content">
+        <p style="font-size:.8rem;color:#9ca3af;margin:-8px 0 20px;">Configure the default commission percentages for each referral level. These can be overridden on individual courses or packages.</p>
+        <div class="kyc-grid">
+          <div class="kyc-field">
+            <label class="kyc-label">Global Level 1 Commission (%)</label>
+            <input type="number" name="global_level1_commission_percent" min="0" max="100" step="0.01"
+                   value="{{ s.global_level1_commission_percent or '10.0' }}" class="kyc-input" />
+            <p style="font-size:.7rem;color:#9ca3af;margin-top:4px;">Percentage paid to the direct referrer.</p>
+          </div>
+          <div class="kyc-field">
+            <label class="kyc-label">Global Level 2 Commission (%)</label>
+            <input type="number" name="global_level2_commission_percent" min="0" max="100" step="0.01"
+                   value="{{ s.global_level2_commission_percent or '5.0' }}" class="kyc-input" />
+            <p style="font-size:.7rem;color:#9ca3af;margin-top:4px;">Percentage paid to the indirect (level 2) referrer.</p>
+          </div>
         </div>
       </div>
-      <div class="p-6">
-        <div class="max-w-xs">
-          <label class="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
-            Minimum Withdrawal Amount (₹)
-          </label>
+    </div>
+
+    <!-- ── Withdrawal Settings ────────────────────────────────────────── -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V6m0 12v-2m9-4a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Withdrawal Settings
+        </h2>
+      </div>
+      <div class="panel-content">
+        <p style="font-size:.8rem;color:#9ca3af;margin:-8px 0 20px;">Control minimum withdrawal thresholds for affiliates</p>
+        <div class="kyc-field" style="max-width:260px;">
+          <label class="kyc-label">Minimum Withdrawal Amount (₹)</label>
           <input type="number" name="min_withdrawal_amount" min="0" step="1"
-                 value="{{ s.min_withdrawal_amount or '500' }}"
-                 class="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition" />
-          <p class="text-xs text-gray-400 mt-1">Users cannot request withdrawals below this amount.</p>
+                 value="{{ s.min_withdrawal_amount or '500' }}" class="kyc-input" />
+          <p style="font-size:.7rem;color:#9ca3af;margin-top:4px;">Users cannot request withdrawals below this amount.</p>
         </div>
       </div>
     </div>
 
     <!-- ── Email / SMTP ────────────────────────────────────────────────── -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center">
-          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+    <div class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
           </svg>
-        </div>
-        <div>
-          <h2 class="font-semibold text-gray-900 text-sm">Email / SMTP Settings</h2>
-          <p class="text-xs text-gray-500">Configure your SMTP server to send emails (welcome, receipts, commission alerts)</p>
-        </div>
+          Email / SMTP Settings
+        </h2>
       </div>
-      <div class="p-6 space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">SMTP Server</label>
+      <div class="panel-content">
+        <p style="font-size:.8rem;color:#9ca3af;margin:-8px 0 20px;">Configure your SMTP server to send emails (welcome, receipts, commission alerts)</p>
+
+        <div class="kyc-grid">
+          <div class="kyc-field">
+            <label class="kyc-label">SMTP Server</label>
             <input type="text" name="mail_server" value="{{ s.mail_server or 'smtp.gmail.com' }}"
-                   placeholder="smtp.gmail.com"
-                   class="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition" />
+                   placeholder="smtp.gmail.com" class="kyc-input" />
           </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">SMTP Port</label>
+          <div class="kyc-field">
+            <label class="kyc-label">SMTP Port</label>
             <input type="number" name="mail_port" value="{{ s.mail_port or '587' }}"
-                   placeholder="587"
-                   class="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition" />
+                   placeholder="587" class="kyc-input" />
           </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">SMTP Username (Email)</label>
+          <div class="kyc-field">
+            <label class="kyc-label">SMTP Username (Email)</label>
             <input type="email" name="mail_username" value="{{ s.mail_username or '' }}"
-                   placeholder="your@gmail.com"
-                   class="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition" />
+                   placeholder="your@gmail.com" class="kyc-input" />
           </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">SMTP Password / App Password</label>
-            <div class="relative">
+          <div class="kyc-field">
+            <label class="kyc-label">SMTP Password / App Password</label>
+            <div style="position:relative;">
               <input type="password" name="mail_password" id="mail_password"
                      value="{{ s.mail_password or '' }}"
                      placeholder="••••••••••••••••"
-                     class="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition pr-10" />
+                     class="kyc-input" style="font-family:monospace;padding-right:42px;" />
               <button type="button" onclick="toggleSecret('mail_password')"
-                      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#9ca3af;cursor:pointer;display:flex;">
+                <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                 </svg>
               </button>
             </div>
           </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">From Email (Display)</label>
+          <div class="kyc-field">
+            <label class="kyc-label">From Email (Display)</label>
             <input type="email" name="mail_from" value="{{ s.mail_from or '' }}"
-                   placeholder="noreply@zarni.com"
-                   class="w-full px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition" />
+                   placeholder="noreply@zarni.com" class="kyc-input" />
           </div>
-          <div class="flex items-end pb-1">
-            <label class="flex items-center gap-3 cursor-pointer select-none">
-              <div class="relative">
-                <input type="checkbox" name="mail_use_tls" class="sr-only peer"
-                       {{ 'checked' if s.mail_use_tls != 'false' }}>
-                <div class="w-11 h-6 bg-gray-200 peer-checked:bg-blue-600 rounded-full transition-colors"></div>
-                <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
-              </div>
-              <span class="text-sm font-medium text-gray-700">Use TLS (recommended)</span>
-            </label>
+          <div class="kyc-field" style="justify-content:flex-end;">
+            <div class="toggle-row">
+              <span class="toggle-row__label">Use TLS (recommended)</span>
+              <label class="toggle-switch">
+                <input type="checkbox" name="mail_use_tls" {{ 'checked' if s.mail_use_tls != 'false' }}>
+                <span class="toggle-switch__slider"></span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700">
-          <strong>💡 Gmail Tip:</strong> Enable 2FA on your Google account, then generate an
-          <a href="https://myaccount.google.com/apppasswords" target="_blank" class="underline">App Password</a>
-          and use that as your SMTP password instead of your normal Gmail password.
+        <div class="status-banner status-banner--info" style="margin:20px 0 0;">
+          <div class="status-banner__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <div>
+            <h3 class="status-banner__title" style="font-size:.85rem;">Gmail Tip</h3>
+            <p class="status-banner__desc">Enable 2FA on your Google account, then generate an <a href="https://myaccount.google.com/apppasswords" target="_blank" style="text-decoration:underline;">App Password</a> and use that as your SMTP password instead of your normal Gmail password.</p>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Save button -->
-    <div class="flex items-center gap-4">
-      <button type="submit"
-              class="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition text-sm">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <button type="submit" class="kyc-submit-btn" style="width:auto;padding:14px 32px;">
         Save Settings
       </button>
-      <p class="text-xs text-gray-400">Changes take effect immediately — no server restart required.</p>
+      <p style="font-size:.78rem;color:#9ca3af;">Changes take effect immediately — no server restart required.</p>
     </div>
 
   </div>
@@ -201,15 +222,14 @@ function toggleSecret(id) {
   el.type = el.type === 'password' ? 'text' : 'password';
 }
 
-// Update badge live when toggle changes
 document.getElementById('razorpay_enabled').addEventListener('change', function () {
   const badge = document.getElementById('rz-badge');
   if (this.checked) {
     badge.textContent = 'LIVE';
-    badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700';
+    badge.className = 'status-badge status-badge--paid';
   } else {
     badge.textContent = 'SIMULATED';
-    badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500';
+    badge.className = 'status-badge status-badge--neutral';
   }
 });
 </script>

@@ -125,7 +125,7 @@ def register():
             from app.utils.notifications import add_notification
             add_notification(
                 user_id=user.referred_by,
-                title="New Referral! 👥",
+                title="New Referral!",
                 message=f"{user.name} just signed up using your link.",
                 type="referral"
             )

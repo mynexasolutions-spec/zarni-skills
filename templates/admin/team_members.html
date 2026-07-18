@@ -3,73 +3,135 @@
 {% block page_title %}Team Members{% endblock %}
 
 {% block body %}
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-  <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-    <h2 class="font-semibold text-gray-800 text-sm">All Team Members</h2>
-    <div class="flex items-center gap-3">
-      <span class="text-xs text-gray-400">{{ members|length }} member(s)</span>
-      <a href="{{ url_for('admin.users') }}"
-         class="px-3 py-1.5 text-xs bg-primary text-white rounded-lg hover:bg-primary-dark font-medium transition">
-        + Add via Users
-      </a>
+
+<!-- ══════════════════════════════════════════════
+     SUMMARY KPI CARDS
+══════════════════════════════════════════════ -->
+<section class="mb-8">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;">
+
+    <div class="kpi-card">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        Total Team Members
+      </p>
+      <p class="kpi-value">{{ members|length }}</p>
+      <p class="kpi-subtext">All team accounts</p>
     </div>
+
+    <div class="kpi-card kpi-card--green">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Active
+      </p>
+      <p class="kpi-value">{{ members|selectattr('is_active')|list|length }}</p>
+      <p class="kpi-subtext">Currently active</p>
+    </div>
+
+    <div class="kpi-card kpi-card--blue">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Inactive
+      </p>
+      <p class="kpi-value">{{ members|rejectattr('is_active')|list|length }}</p>
+      <p class="kpi-subtext">Deactivated accounts</p>
+    </div>
+
   </div>
-  {% if not members %}
-  <div class="px-5 py-12 text-center text-gray-400 text-sm">
-    No team members yet. Assign a user the <strong>Team Member</strong> role from the
-    <a href="{{ url_for('admin.users') }}" class="text-primary hover:underline">Users</a> page.
+</section>
+
+<!-- ══════════════════════════════════════════════
+     TEAM MEMBERS TABLE
+══════════════════════════════════════════════ -->
+<section>
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        All Team Members
+      </h2>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="panel-badge panel-badge--blue">{{ members|length }} member{{ 's' if members|length != 1 else '' }}</span>
+        <a href="{{ url_for('admin.users') }}" class="pill-link" style="margin-top:0;">
+          Add via Users
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        </a>
+      </div>
+    </div>
+
+    {% if not members %}
+    <div class="wallet-empty">
+      <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+      <p>No team members yet. Assign a user the <strong>Team Member</strong> role from the <a href="{{ url_for('admin.users') }}" style="color:#2563eb;font-weight:600;">Users</a> page.</p>
+    </div>
+    {% else %}
+    <div style="overflow-x:auto;">
+      <table class="dashboard-table">
+        <thead>
+          <tr>
+            <th>Team Member</th>
+            <th>Phone</th>
+            <th>Joined</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in members %}
+          <tr{% if not m.is_active %} style="opacity:.55;"{% endif %}>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;overflow:hidden;">
+                  <img src="{{ m.profile_image_url }}" alt="{{ m.name }}" style="width:100%;height:100%;object-fit:cover;" />
+                </div>
+                <div style="min-width:0;">
+                  <div class="font-weight-semi">{{ m.name }}</div>
+                  <div style="font-size:.75rem;color:#9ca3af;">{{ m.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="text-secondary">{{ m.phone or '—' }}</td>
+            <td class="text-secondary">{{ m.created_at.strftime('%d %b %Y') }}</td>
+            <td>
+              <span class="status-badge {{ 'status-badge--paid' if m.is_active else 'status-badge--neutral' }}">
+                {{ 'Active' if m.is_active else 'Inactive' }}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <form method="POST" action="{{ url_for('admin.set_user_role', user_id=m.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <input type="hidden" name="role" value="student" />
+                  <button type="submit" class="status-badge status-badge--requested" style="border:none;cursor:pointer;"
+                          onclick="return confirm('Remove {{ m.name }} from team?')">
+                    Remove
+                  </button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.toggle_user', user_id=m.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <button type="submit"
+                          class="status-badge {{ 'status-badge--rejected' if m.is_active else 'status-badge--paid' }}"
+                          style="border:none;cursor:pointer;">
+                    {{ 'Deactivate' if m.is_active else 'Activate' }}
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
   </div>
-  {% else %}
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-        <tr>
-          <th class="px-5 py-3 text-left">Name</th>
-          <th class="px-5 py-3 text-left">Email</th>
-          <th class="px-5 py-3 text-left">Phone</th>
-          <th class="px-5 py-3 text-left">Joined</th>
-          <th class="px-5 py-3 text-left">Status</th>
-          <th class="px-5 py-3 text-left">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-50">
-        {% for m in members %}
-        <tr class="{{ 'opacity-50' if not m.is_active }}">
-          <td class="px-5 py-3 font-medium text-gray-800">{{ m.name }}</td>
-          <td class="px-5 py-3 text-gray-500">{{ m.email }}</td>
-          <td class="px-5 py-3 text-gray-500">{{ m.phone or '—' }}</td>
-          <td class="px-5 py-3 text-gray-500">{{ m.created_at.strftime('%d %b %Y') }}</td>
-          <td class="px-5 py-3">
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ 'bg-green-100 text-green-700' if m.is_active else 'bg-gray-100 text-gray-500' }}">
-              {{ 'Active' if m.is_active else 'Inactive' }}
-            </span>
-          </td>
-          <td class="px-5 py-3">
-            <div class="flex gap-2">
-              <form method="POST" action="{{ url_for('admin.set_user_role', user_id=m.id) }}" class="inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                <input type="hidden" name="role" value="student" />
-                <button type="submit"
-                        class="text-xs px-3 py-1 rounded-lg font-medium bg-orange-50 text-orange-600 hover:bg-orange-100 transition"
-                        onclick="return confirm('Remove {{ m.name }} from team?')">
-                  Remove
-                </button>
-              </form>
-              <form method="POST" action="{{ url_for('admin.toggle_user', user_id=m.id) }}" class="inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                <button type="submit"
-                        class="text-xs px-3 py-1 rounded-lg font-medium transition
-                               {{ 'bg-red-50 text-red-600 hover:bg-red-100' if m.is_active else 'bg-green-50 text-green-600 hover:bg-green-100' }}">
-                  {{ 'Deactivate' if m.is_active else 'Activate' }}
-                </button>
-              </form>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% endif %}
-</div>
+</section>
+
 {% endblock %}

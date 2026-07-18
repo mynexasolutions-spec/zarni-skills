@@ -202,6 +202,28 @@
               <p class="text-xs text-slate-500 font-medium uppercase tracking-wider mt-2">Purchase to unlock all chapters</p>
             </div>
 
+            {% if course.price %}
+            <div class="border-2 border-emerald-100 bg-emerald-50/20 rounded-2xl p-4 hover:border-emerald-300 transition-colors">
+              <p class="font-bold text-slate-800 text-sm mb-1">Buy Course Individually</p>
+              <p class="text-2xl font-heading font-black text-emerald-600 mb-3">₹{{ '{:,.0f}'.format(course.price) }}</p>
+              {% if current_user.is_authenticated %}
+                {% if current_user.has_access_to_course(course.id) %}
+                  <span class="w-full py-2 bg-slate-100 text-slate-500 font-bold rounded-xl text-sm inline-flex items-center justify-center">You Own This Course</span>
+                {% else %}
+                  <a href="{{ url_for('student.buy_course', course_id=course.id) }}"
+                     class="group/btn relative w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/20 inline-flex items-center justify-center overflow-hidden">
+                    Buy Course
+                  </a>
+                {% endif %}
+              {% else %}
+                <a href="{{ url_for('auth.register') }}"
+                   class="group/btn relative w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/20 inline-flex items-center justify-center overflow-hidden">
+                  Enroll & Buy
+                </a>
+              {% endif %}
+            </div>
+            {% endif %}
+
             {% if packages %}
             <div class="space-y-3">
               {% for p in packages %}

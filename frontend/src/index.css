@@ -1,0 +1,214 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+}
+
+@keyframes dot-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.animate-dot-progress {
+  animation: dot-progress linear forwards;
+  transform-origin: left;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 6s ease-in-out infinite 3s;
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animate-marquee {
+  animation: marquee 75s linear infinite;
+}
+
+.hover-pause:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Slim, rounded, brand-neutral scrollbar for scrollable panels/modals */
+.pretty-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.pretty-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.pretty-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.pretty-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.pretty-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Hide the browser's built-in password reveal/clear icon (Edge/Chromium) so only our custom eye toggle shows */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+html,
+body {
+  scrollbar-width: thin;
+  scrollbar-color: #2b80f0 transparent;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 12px;
+}
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background-image: linear-gradient(180deg, #7cb4fb 0%, #2b80f0 50%, #1a4fa0 100%);
+  border-radius: 9999px;
+  border: 2.5px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 0 0 1px rgba(43, 128, 240, 0.06);
+  transition: box-shadow 0.2s ease;
+}
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background-image: linear-gradient(180deg, #5b9df5 0%, #1a6fcf 50%, #12376f 100%);
+  box-shadow: 0 0 8px rgba(43, 128, 240, 0.45);
+}
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Admin dashboard — gradient scrollbar matching the red/rose admin theme */
+.admin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #f43f5e transparent;
+}
+.admin-scrollbar::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+.admin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-scrollbar::-webkit-scrollbar-thumb {
+  background-image: linear-gradient(180deg, #f87171 0%, #dc2626 50%, #9f1239 100%);
+  border-radius: 9999px;
+  border: 2.5px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.06);
+  transition: box-shadow 0.2s ease;
+}
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-image: linear-gradient(180deg, #ef4444 0%, #be123c 50%, #881337 100%);
+  box-shadow: 0 0 8px rgba(225, 29, 72, 0.4);
+}
+.admin-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Manager dashboard — gradient scrollbar matching the violet manager theme */
+.manager-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #8b5cf6 transparent;
+}
+.manager-scrollbar::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+.manager-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.manager-scrollbar::-webkit-scrollbar-thumb {
+  background-image: linear-gradient(180deg, #a78bfa 0%, #7c3aed 50%, #4c1d95 100%);
+  border-radius: 9999px;
+  border: 2.5px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.06);
+  transition: box-shadow 0.2s ease;
+}
+.manager-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-image: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 50%, #3730a3 100%);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
+}
+.manager-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Student dashboard — gradient scrollbar matching the blue student theme */
+.student-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 transparent;
+}
+.student-scrollbar::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+.student-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.student-scrollbar::-webkit-scrollbar-thumb {
+  background-image: linear-gradient(180deg, #60a5fa 0%, #2563eb 50%, #1e3a8a 100%);
+  border-radius: 9999px;
+  border: 2.5px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.06);
+  transition: box-shadow 0.2s ease;
+}
+.student-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-image: linear-gradient(180deg, #3b82f6 0%, #1e40af 50%, #172554 100%);
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+}
+.student-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}

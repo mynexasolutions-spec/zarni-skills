@@ -208,9 +208,9 @@
                 Verified
               </span>
               {% endif %}
-              <img src="/static/img/kyc_uploads/{{ kyc.id_proof_filename }}" alt="ID Proof" />
+              <img src="{{ url_for('student.serve_kyc_file', kyc_id=kyc.id, field='id_proof') }}" alt="ID Proof" />
               <div class="kyc-upload-preview__overlay">
-                <a href="/static/img/kyc_uploads/{{ kyc.id_proof_filename }}" target="_blank">View Full Image</a>
+                <a href="{{ url_for('student.serve_kyc_file', kyc_id=kyc.id, field='id_proof') }}" target="_blank">View Full Image</a>
               </div>
             </div>
             {% endif %}
@@ -234,9 +234,9 @@
                 Verified
               </span>
               {% endif %}
-              <img src="/static/img/kyc_uploads/{{ kyc.bank_proof_filename }}" alt="Bank Proof" />
+              <img src="{{ url_for('student.serve_kyc_file', kyc_id=kyc.id, field='bank_proof') }}" alt="Bank Proof" />
               <div class="kyc-upload-preview__overlay">
-                <a href="/static/img/kyc_uploads/{{ kyc.bank_proof_filename }}" target="_blank">View Full Image</a>
+                <a href="{{ url_for('student.serve_kyc_file', kyc_id=kyc.id, field='bank_proof') }}" target="_blank">View Full Image</a>
               </div>
             </div>
             {% endif %}

@@ -3,64 +3,150 @@
 {% block page_title %}Packages{% endblock %}
 
 {% block body %}
-<div class="flex justify-between items-center mb-6">
-  <p class="text-sm text-gray-500">{{ packages|length }} package(s)</p>
-  <a href="{{ url_for('admin.new_package') }}"
-     class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-dark transition">
-    + New Package
-  </a>
-</div>
 
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-        <tr>
-          <th class="px-5 py-3 text-left">Name</th>
-          <th class="px-5 py-3 text-right">Price</th>
-          <th class="px-5 py-3 text-center">L1 %</th>
-          <th class="px-5 py-3 text-center">L2 %</th>
-          <th class="px-5 py-3 text-right">Min L2 Income</th>
-          <th class="px-5 py-3 text-center">Courses</th>
-          <th class="px-5 py-3 text-center">Status</th>
-          <th class="px-5 py-3 text-left">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-50">
-        {% for pkg in packages %}
-        <tr class="{{ 'opacity-50' if not pkg.is_active else '' }}">
-          <td class="px-5 py-3 font-medium text-gray-800">{{ pkg.name }}</td>
-          <td class="px-5 py-3 text-right font-semibold">₹{{ '{:,.0f}'.format(pkg.price) }}</td>
-          <td class="px-5 py-3 text-center text-green-600 font-medium">{{ pkg.level1_commission_percent }}%</td>
-          <td class="px-5 py-3 text-center text-blue-600 font-medium">{{ pkg.level2_commission_percent }}%</td>
-          <td class="px-5 py-3 text-right text-gray-500">₹{{ '{:,.0f}'.format(pkg.min_income_for_level2) }}</td>
-          <td class="px-5 py-3 text-center text-gray-600">{{ pkg.courses|length }}</td>
-          <td class="px-5 py-3 text-center">
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ 'bg-green-100 text-green-700' if pkg.is_active else 'bg-gray-100 text-gray-500' }}">
-              {{ 'Active' if pkg.is_active else 'Inactive' }}
-            </span>
-          </td>
-          <td class="px-5 py-3 flex gap-2">
-            <a href="{{ url_for('admin.edit_package', pkg_id=pkg.id) }}"
-               class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium">
-              Edit
-            </a>
-            {% if pkg.is_active %}
-            <form method="POST" action="{{ url_for('admin.delete_package', pkg_id=pkg.id) }}">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-              <button type="submit"
-                      class="px-3 py-1 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition font-medium">
-                Deactivate
-              </button>
-            </form>
-            {% endif %}
-          </td>
-        </tr>
-        {% else %}
-        <tr><td colspan="8" class="px-5 py-8 text-center text-gray-400">No packages yet.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+<!-- ══════════════════════════════════════════════
+     SUMMARY KPI CARDS
+══════════════════════════════════════════════ -->
+<section class="mb-8">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;">
+
+    <div class="kpi-card kpi-card--blue">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+        Total Packages
+      </p>
+      <p class="kpi-value">{{ packages|length }}</p>
+      <p class="kpi-subtext">All package bundles</p>
+    </div>
+
+    <div class="kpi-card kpi-card--green">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Active
+      </p>
+      <p class="kpi-value">{{ packages|selectattr('is_active')|list|length }}</p>
+      <p class="kpi-subtext">Available for purchase</p>
+    </div>
+
+    <div class="kpi-card">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Inactive
+      </p>
+      <p class="kpi-value">{{ packages|rejectattr('is_active')|list|length }}</p>
+      <p class="kpi-subtext">Deactivated bundles</p>
+    </div>
+
+    <div class="kpi-card kpi-card--purple">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+        Avg. Price
+      </p>
+      <p class="kpi-value">₹{{ '{:,.0f}'.format((packages|sum(attribute='price')) / packages|length) if packages else 0 }}</p>
+      <p class="kpi-subtext">Across all packages</p>
+    </div>
+
   </div>
-</div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     PACKAGES TABLE
+══════════════════════════════════════════════ -->
+<section>
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+        All Packages
+      </h2>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="panel-badge panel-badge--blue">{{ packages|length }} package{{ 's' if packages|length != 1 else '' }}</span>
+        <a href="{{ url_for('admin.new_package') }}" class="btn-gradient">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
+          New Package
+        </a>
+      </div>
+    </div>
+
+    {% if not packages %}
+    <div class="wallet-empty">
+      <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+      <p>No packages yet. Create your first one to get started.</p>
+    </div>
+    {% else %}
+    <div style="overflow-x:auto;">
+      <table class="dashboard-table">
+        <thead>
+          <tr>
+            <th>Package</th>
+            <th>Price</th>
+            <th>L1 %</th>
+            <th>L2 %</th>
+            <th>Min L2 Income</th>
+            <th>Courses</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pkg in packages %}
+          <tr{% if not pkg.is_active %} style="opacity:.55;"{% endif %}>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:40px;height:40px;border-radius:10px;flex-shrink:0;overflow:hidden;background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);display:flex;align-items:center;justify-content:center;">
+                  {% if pkg.thumbnail_display_url %}
+                  <img src="{{ pkg.thumbnail_display_url }}" alt="{{ pkg.name }}" style="width:100%;height:100%;object-fit:cover;" />
+                  {% else %}
+                  <svg style="width:18px;height:18px;color:#93c5fd;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  {% endif %}
+                </div>
+                <div class="font-weight-semi">{{ pkg.name }}</div>
+              </div>
+            </td>
+            <td class="font-weight-semi">₹{{ '{:,.0f}'.format(pkg.price) }}</td>
+            <td><span class="role-badge role-badge--green">{{ pkg.level1_commission_percent }}%</span></td>
+            <td><span class="role-badge role-badge--blue">{{ pkg.level2_commission_percent }}%</span></td>
+            <td class="text-secondary">₹{{ '{:,.0f}'.format(pkg.min_income_for_level2) }}</td>
+            <td class="text-secondary">{{ pkg.courses|length }}</td>
+            <td>
+              <span class="status-badge {{ 'status-badge--paid' if pkg.is_active else 'status-badge--neutral' }}">
+                {{ 'Active' if pkg.is_active else 'Inactive' }}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <a href="{{ url_for('admin.edit_package', pkg_id=pkg.id) }}" class="status-badge status-badge--approved" style="text-decoration:none;">
+                  Edit
+                </a>
+                {% if pkg.is_active %}
+                <form method="POST" action="{{ url_for('admin.delete_package', pkg_id=pkg.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <button type="submit" class="status-badge status-badge--rejected" style="border:none;cursor:pointer;">
+                    Deactivate
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
 {% endblock %}

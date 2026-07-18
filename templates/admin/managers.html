@@ -3,86 +3,155 @@
 {% block page_title %}Managers{% endblock %}
 
 {% block body %}
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-  <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-    <h2 class="font-semibold text-gray-800 text-sm">All Managers</h2>
-    <span class="text-xs text-gray-400">{{ managers|length }} manager(s)</span>
+
+<!-- ══════════════════════════════════════════════
+     SUMMARY KPI CARDS
+══════════════════════════════════════════════ -->
+<section class="mb-8">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;">
+
+    <div class="kpi-card kpi-card--purple">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+        Total Managers
+      </p>
+      <p class="kpi-value">{{ managers|length }}</p>
+      <p class="kpi-subtext">All manager accounts</p>
+    </div>
+
+    <div class="kpi-card kpi-card--green">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Active
+      </p>
+      <p class="kpi-value">{{ managers|selectattr('is_active')|list|length }}</p>
+      <p class="kpi-subtext">Currently active</p>
+    </div>
+
+    <div class="kpi-card kpi-card--blue">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Total Team Size
+      </p>
+      <p class="kpi-value">{{ managers|sum(attribute='team_count') }}</p>
+      <p class="kpi-subtext">Members under management</p>
+    </div>
+
+    <div class="kpi-card">
+      <p class="kpi-label">
+        <svg class="kpi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V6m0 12v-2m9-4a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Total Earnings
+      </p>
+      <p class="kpi-value">₹{{ '{:,.0f}'.format(managers|sum(attribute='total_earnings')) }}</p>
+      <p class="kpi-subtext">Combined manager earnings</p>
+    </div>
+
   </div>
-  {% if not managers %}
-  <div class="px-5 py-12 text-center text-gray-400 text-sm">
-    No managers yet. Promote a student to manager from the
-    <a href="{{ url_for('admin.users') }}" class="text-primary hover:underline">Users</a> page.
-  </div>
-  {% else %}
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-        <tr>
-          <th class="px-5 py-3 text-left">Name</th>
-          <th class="px-5 py-3 text-left">Email</th>
-          <th class="px-5 py-3 text-right">Team Size</th>
-          <th class="px-5 py-3 text-right">Commission %</th>
-          <th class="px-5 py-3 text-right">Total Earnings</th>
-          <th class="px-5 py-3 text-left">Status</th>
-          <th class="px-5 py-3 text-left">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-50">
-        {% for m in managers %}
-        <tr class="{{ 'opacity-50' if not m.is_active }}">
-          <td class="px-5 py-3 font-medium text-gray-800">
-            <div>{{ m.name }}</div>
-            <div class="text-xs text-gray-400 font-mono">{{ m.referral_code }}</div>
-          </td>
-          <td class="px-5 py-3 text-gray-500">{{ m.email }}</td>
-          <td class="px-5 py-3 text-right font-semibold text-gray-700">{{ m.team_count }}</td>
-          <td class="px-5 py-3 text-right">
-            <form method="POST" action="{{ url_for('admin.set_manager_commission', user_id=m.id) }}"
-                  class="flex items-center justify-end gap-2">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-              <input type="number" name="commission_percent" step="0.01" min="0" max="100"
-                     value="{{ '%.2f'|format(m.manager_commission_percent) if m.manager_commission_percent else '' }}"
-                     placeholder="0.00"
-                     class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
-              <span class="text-gray-500 text-xs">%</span>
-              <button type="submit"
-                      class="px-2 py-1 bg-primary/10 text-primary text-xs rounded-lg hover:bg-primary/20 font-medium transition">
-                Set
-              </button>
-            </form>
-          </td>
-          <td class="px-5 py-3 text-right font-medium text-green-600">₹{{ '%.2f'|format(m.total_earnings) }}</td>
-          <td class="px-5 py-3">
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ 'bg-green-100 text-green-700' if m.is_active else 'bg-gray-100 text-gray-500' }}">
-              {{ 'Active' if m.is_active else 'Inactive' }}
-            </span>
-          </td>
-          <td class="px-5 py-3">
-            <div class="flex gap-2">
-              <form method="POST" action="{{ url_for('admin.set_user_role', user_id=m.id) }}" class="inline">
+</section>
+
+<!-- ══════════════════════════════════════════════
+     MANAGERS TABLE
+══════════════════════════════════════════════ -->
+<section>
+  <div class="panel">
+    <div class="panel-header">
+      <h2 class="panel-title">
+        <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+        All Managers
+      </h2>
+      <span class="panel-badge panel-badge--purple">{{ managers|length }} manager{{ 's' if managers|length != 1 else '' }}</span>
+    </div>
+
+    {% if not managers %}
+    <div class="wallet-empty">
+      <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+      <p>No managers yet. Promote a student to manager from the <a href="{{ url_for('admin.users') }}" style="color:#2563eb;font-weight:600;">Users</a> page.</p>
+    </div>
+    {% else %}
+    <div style="overflow-x:auto;">
+      <table class="dashboard-table">
+        <thead>
+          <tr>
+            <th>Manager</th>
+            <th>Team Size</th>
+            <th>Commission %</th>
+            <th>Total Earnings</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in managers %}
+          <tr{% if not m.is_active %} style="opacity:.55;"{% endif %}>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;overflow:hidden;">
+                  <img src="{{ m.profile_image_url }}" alt="{{ m.name }}" style="width:100%;height:100%;object-fit:cover;" />
+                </div>
+                <div style="min-width:0;">
+                  <div class="font-weight-semi">{{ m.name }}</div>
+                  <div style="font-size:.75rem;color:#9ca3af;">{{ m.email }}</div>
+                  <div style="font-size:.7rem;color:#c4c9d2;font-family:monospace;">{{ m.referral_code }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="font-weight-semi">{{ m.team_count }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('admin.set_manager_commission', user_id=m.id) }}"
+                    style="display:flex;align-items:center;gap:6px;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                <input type="hidden" name="role" value="student" />
-                <button type="submit"
-                        class="text-xs px-3 py-1 rounded-lg font-medium bg-orange-50 text-orange-600 hover:bg-orange-100 transition"
-                        onclick="return confirm('Demote {{ m.name }} back to student?')">
-                  Demote
+                <input type="number" name="commission_percent" step="0.01" min="0" max="100"
+                       value="{{ '%.2f'|format(m.manager_commission_percent) if m.manager_commission_percent else '' }}"
+                       placeholder="0.00" class="kyc-input" style="width:80px;padding:6px 10px;font-size:.8rem;" />
+                <span style="color:#9ca3af;font-size:.8rem;">%</span>
+                <button type="submit" class="status-badge status-badge--approved" style="border:none;cursor:pointer;">
+                  Set
                 </button>
               </form>
-              <form method="POST" action="{{ url_for('admin.toggle_user', user_id=m.id) }}" class="inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                <button type="submit"
-                        class="text-xs px-3 py-1 rounded-lg font-medium transition
-                               {{ 'bg-red-50 text-red-600 hover:bg-red-100' if m.is_active else 'bg-green-50 text-green-600 hover:bg-green-100' }}">
-                  {{ 'Deactivate' if m.is_active else 'Activate' }}
-                </button>
-              </form>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            </td>
+            <td class="font-weight-semi" style="color:#16a34a;">₹{{ '%.2f'|format(m.total_earnings) }}</td>
+            <td>
+              <span class="status-badge {{ 'status-badge--paid' if m.is_active else 'status-badge--neutral' }}">
+                {{ 'Active' if m.is_active else 'Inactive' }}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <form method="POST" action="{{ url_for('admin.set_user_role', user_id=m.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <input type="hidden" name="role" value="student" />
+                  <button type="submit" class="status-badge status-badge--requested" style="border:none;cursor:pointer;"
+                          onclick="return confirm('Demote {{ m.name }} back to student?')">
+                    Demote
+                  </button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.toggle_user', user_id=m.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <button type="submit"
+                          class="status-badge {{ 'status-badge--rejected' if m.is_active else 'status-badge--paid' }}"
+                          style="border:none;cursor:pointer;">
+                    {{ 'Deactivate' if m.is_active else 'Activate' }}
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
   </div>
-  {% endif %}
-</div>
+</section>
+
 {% endblock %}

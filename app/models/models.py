@@ -86,12 +86,15 @@ class User(UserMixin, db.Model):
         return self.orders.filter_by(package_id=package_id, payment_status='paid').first() is not None
 
     def has_access_to_course(self, course_id):
-        """Check if user has purchased any package that includes this course."""
+        """Check if user has purchased any package that includes this course, or purchased the course itself."""
+        if self.orders.filter_by(course_id=course_id, payment_status='paid').first() is not None:
+            return True
         paid_orders = self.orders.filter_by(payment_status='paid').all()
         for order in paid_orders:
-            for course in order.package.courses:
-                if course.id == course_id:
-                    return True
+            if order.package:
+                for course in order.package.courses:
+                    if course.id == course_id:
+                        return True
         return False
 
     @property
@@ -165,6 +168,14 @@ class Course(db.Model):
             return f"/static/img/uploads/{self.thumbnail_filename}"
         return self.thumbnail_url or None
 
+    @property
+    def instructor_image_display_url(self):
+        if self.instructor_image_filename:
+            if self.instructor_image_filename.startswith('http'):
+                return self.instructor_image_filename
+            return f"/static/img/uploads/{self.instructor_image_filename}"
+        return self.instructor_image_url or None
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text)
@@ -178,9 +189,17 @@ class Course(db.Model):
     what_you_learn = db.Column(db.Text, nullable=True)
     certificate = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
+    price = db.Column(db.Numeric(10, 2), nullable=True)
+    level1_commission_percent = db.Column(db.Numeric(5, 2), nullable=True)
+    level2_commission_percent = db.Column(db.Numeric(5, 2), nullable=True)
+    instructor_name = db.Column(db.String(150), nullable=True)
+    instructor_image_url = db.Column(db.String(500), nullable=True)
+    instructor_image_filename = db.Column(db.String(256), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
                            onupdate=lambda: datetime.now(timezone.utc))
+
+    orders = db.relationship('Order', backref='course', lazy='dynamic')
 
     def __repr__(self):
         return f'<Course {self.title}>'
@@ -214,7 +233,8 @@ class Order(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    package_id = db.Column(db.Integer, db.ForeignKey('packages.id'), nullable=False)
+    package_id = db.Column(db.Integer, db.ForeignKey('packages.id'), nullable=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=True)
     amount_paid = db.Column(db.Numeric(10, 2), nullable=False)
     payment_status = db.Column(
         db.Enum('pending', 'paid', 'failed', name='payment_status'), default='pending')

@@ -81,8 +81,14 @@
 .hero-circle-glow {
   box-shadow:
     0 0 0 4px rgba(255, 255, 255, 0.08),
-    0 0 40px rgba(43, 128, 240, 0.35),
-    
+    0 0 40px rgba(43, 128, 240, 0.35);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 /* Wave animations */
@@ -106,6 +112,34 @@
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #93c5fd #f1f5f9;
+}
+
+/* ── Global Scrollbar (Chrome, Safari, Edge) ───────────────────────────── */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%);
+  border-radius: 999px;
+  border: 2px solid #f1f5f9;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: #f1f5f9;
 }
 
 /* Selection highlight */

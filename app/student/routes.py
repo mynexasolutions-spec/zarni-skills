@@ -5,7 +5,8 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import Package, Order, Commission, WalletTransaction, Withdrawal, User, Chapter, Course
 from app.utils import process_commissions
-from app.utils.payments import is_razorpay_enabled, create_razorpay_order, verify_razorpay_signature, get_razorpay_key_id
+from app.utils.payments import is_razorpay_enabled, create_razorpay_order, verify_razorpay_signature, get_razorpay_key_id, fetch_razorpay_order
+import re
 from app.utils.email import send_purchase_confirmation
 from datetime import datetime, timezone, timedelta
 import uuid
@@ -369,14 +370,20 @@ def edit_kyc():
         kyc.upi_id = request.form.get('upi_id')
         kyc.status = 'pending'  # Reset to pending on edit
         
-        # Handle File Uploads
-        upload_folder = os.path.join(current_app.root_path, 'static', 'img', 'kyc_uploads')
+        # Handle File Uploads — stored outside static/ (served only via the
+        # authenticated serve_kyc_file route) with an extension allow-list so
+        # this can't be used to host and publicly serve arbitrary file types.
+        upload_folder = current_app.config['KYC_UPLOAD_FOLDER']
         os.makedirs(upload_folder, exist_ok=True)
-        
+        allowed_exts = {'jpg', 'jpeg', 'png', 'pdf'}
+
         for field in ['id_proof', 'bank_proof']:
             file = request.files.get(field)
             if file and file.filename:
-                ext = file.filename.rsplit('.', 1)[1].lower()
+                ext = file.filename.rsplit('.', 1)[-1].lower()
+                if ext not in allowed_exts:
+                    flash(f'Invalid file type for {field.replace("_", " ")}. Allowed: JPG, PNG, PDF.', 'danger')
+                    continue
                 filename = secure_filename(f"kyc_{current_user.id}_{field}.{ext}")
                 file.save(os.path.join(upload_folder, filename))
                 if field == 'id_proof':
@@ -402,7 +409,7 @@ def nominee_detail():
 
 def get_courses_context(show_empty_message=True):
     paid_orders = current_user.orders.filter_by(payment_status='paid').all()
-    purchased_packages = [o.package for o in paid_orders]
+    purchased_packages = [o.package for o in paid_orders if o.package]
     owned_course_ids = set()
     courses = []
     for pkg in purchased_packages:
@@ -410,6 +417,12 @@ def get_courses_context(show_empty_message=True):
             if course.id not in owned_course_ids and course.is_active:
                 courses.append(course)
                 owned_course_ids.add(course.id)
+
+    purchased_courses = [o.course for o in paid_orders if o.course]
+    for course in purchased_courses:
+        if course.id not in owned_course_ids and course.is_active:
+            courses.append(course)
+            owned_course_ids.add(course.id)
 
     available_courses = []
     available_courses_packages = {}
@@ -519,6 +532,31 @@ def serve_video(chapter_id):
         abort(404)
 
     return send_file(video_path, conditional=True)
+
+
+@student_bp.route('/kyc-file/<int:kyc_id>/<field>')
+@login_required
+def serve_kyc_file(kyc_id, field):
+    """Serve a KYC identity/bank-proof document — owner or admin only.
+    Files are stored outside the public static/ tree specifically so a
+    predictable filename alone can't be used to pull someone else's ID docs."""
+    from app.models import KYC
+    if field not in ('id_proof', 'bank_proof'):
+        abort(404)
+
+    kyc = KYC.query.get_or_404(kyc_id)
+    if current_user.id != kyc.user_id and current_user.role != 'admin':
+        abort(403)
+
+    filename = kyc.id_proof_filename if field == 'id_proof' else kyc.bank_proof_filename
+    if not filename:
+        abort(404)
+
+    file_path = os.path.join(current_app.config['KYC_UPLOAD_FOLDER'], filename)
+    if not os.path.exists(file_path):
+        abort(404)
+
+    return send_file(file_path, conditional=True)
 
 #leaderboard
 
@@ -684,36 +722,143 @@ def buy_package(package_id):
     return render_template('student/buy.html', package=package, use_razorpay=use_razorpay)
 
 
+@student_bp.route('/courses/<int:course_id>/buy', methods=['GET', 'POST'])
+@login_required
+def buy_course(course_id):
+    _student_required()
+    course = Course.query.get_or_404(course_id)
+
+    if not course.price:
+        flash('This course is not available for individual purchase.', 'warning')
+        return redirect(url_for('student.all_courses'))
+
+    if current_user.has_access_to_course(course_id):
+        flash('You already own this course.', 'info')
+        return redirect(url_for('student.my_courses'))
+
+    use_razorpay = is_razorpay_enabled()
+
+    if request.method == 'POST':
+        if use_razorpay:
+            # Create a Razorpay order
+            rz_order = create_razorpay_order(
+                amount_inr=float(course.price),
+                receipt=f'crs_{course_id}_u{current_user.id}_{uuid.uuid4().hex[:8]}'
+            )
+            if rz_order is None:
+                flash('Payment gateway error. Please try again or contact support.', 'danger')
+                return redirect(url_for('student.all_courses'))
+            return render_template(
+                'student/checkout.html',
+                course=course,
+                rz_order=rz_order,
+                rz_key_id=get_razorpay_key_id(),
+                user=current_user,
+            )
+        else:
+            # Simulated payment
+            transaction_id = str(uuid.uuid4())
+            order = Order(
+                user_id=current_user.id,
+                course_id=course.id,
+                amount_paid=course.price,
+                payment_status='paid',
+                payment_method='simulated',
+                transaction_id=transaction_id,
+            )
+            db.session.add(order)
+            db.session.flush()
+            process_commissions(order)
+            db.session.commit()
+            try:
+                send_purchase_confirmation(current_user, order)
+            except Exception:
+                pass
+            flash(f'Purchase successful! You now have access to {course.title}.', 'success')
+            return redirect(url_for('student.my_courses'))
+
+    return render_template('student/buy.html', course=course, use_razorpay=use_razorpay)
+
+
 @student_bp.route('/payment/verify', methods=['POST'])
 @login_required
 def verify_payment():
     """Verify Razorpay payment signature and create the order."""
     _student_required()
     package_id = request.form.get('package_id', type=int)
+    course_id = request.form.get('course_id', type=int)
     razorpay_order_id = request.form.get('razorpay_order_id', '')
     razorpay_payment_id = request.form.get('razorpay_payment_id', '')
     razorpay_signature = request.form.get('razorpay_signature', '')
-
-    package = Package.query.get_or_404(package_id)
-
-    if current_user.has_purchased(package_id):
-        flash('You already own this package.', 'info')
-        return redirect(url_for('student.packages'))
 
     # ── Security: verify HMAC signature ───────────────────────────────────
     if not verify_razorpay_signature(razorpay_order_id, razorpay_payment_id, razorpay_signature):
         flash('Payment verification failed. If money was deducted, contact support with your payment ID.', 'danger')
         return redirect(url_for('student.packages'))
 
-    # Signature valid — create order
-    order = Order(
-        user_id=current_user.id,
-        package_id=package.id,
-        amount_paid=package.price,
-        payment_status='paid',
-        payment_method='razorpay',
-        transaction_id=razorpay_payment_id,
-    )
+    # The signature only proves Razorpay signed this order/payment pair — it says
+    # nothing about what the client now claims it paid for. Re-fetch the order and
+    # cross-check its receipt (item type/id/user, embedded at creation time) and
+    # amount against what's being requested here, so a payment for a cheap item
+    # can't be replayed to unlock an expensive one.
+    rz_order = fetch_razorpay_order(razorpay_order_id)
+    if rz_order is None:
+        flash('Could not confirm payment with the gateway. If money was deducted, contact support with your payment ID.', 'danger')
+        return redirect(url_for('student.packages'))
+
+    receipt_match = re.match(r'^(pkg|crs)_(\d+)_u(\d+)_[0-9a-fA-F]{8}$', rz_order.get('receipt') or '')
+    if not receipt_match:
+        flash('Payment record could not be verified. Contact support with your payment ID.', 'danger')
+        return redirect(url_for('student.packages'))
+
+    receipt_type, receipt_item_id, receipt_user_id = receipt_match.group(1), int(receipt_match.group(2)), int(receipt_match.group(3))
+    if receipt_user_id != current_user.id:
+        flash('Payment verification failed. This payment does not belong to your account.', 'danger')
+        return redirect(url_for('student.packages'))
+
+    if course_id:
+        if receipt_type != 'crs' or receipt_item_id != course_id:
+            flash('Payment does not match the requested course.', 'danger')
+            return redirect(url_for('student.packages'))
+        course = Course.query.get_or_404(course_id)
+        if current_user.has_access_to_course(course_id):
+            flash('You already own this course.', 'info')
+            return redirect(url_for('student.my_courses'))
+        if rz_order.get('amount') != int(round(float(course.price) * 100)):
+            flash('Paid amount does not match the course price. Contact support with your payment ID.', 'danger')
+            return redirect(url_for('student.packages'))
+
+        order = Order(
+            user_id=current_user.id,
+            course_id=course.id,
+            amount_paid=course.price,
+            payment_status='paid',
+            payment_method='razorpay',
+            transaction_id=razorpay_payment_id,
+        )
+        msg = f'Payment successful! 🎉 You now have access to {course.title}.'
+    else:
+        if receipt_type != 'pkg' or receipt_item_id != package_id:
+            flash('Payment does not match the requested package.', 'danger')
+            return redirect(url_for('student.packages'))
+        package = Package.query.get_or_404(package_id)
+        if current_user.has_purchased(package_id):
+            flash('You already own this package.', 'info')
+            return redirect(url_for('student.packages'))
+        if rz_order.get('amount') != int(round(float(package.price) * 100)):
+            flash('Paid amount does not match the package price. Contact support with your payment ID.', 'danger')
+            return redirect(url_for('student.packages'))
+
+        order = Order(
+            user_id=current_user.id,
+            package_id=package.id,
+            amount_paid=package.price,
+            payment_status='paid',
+            payment_method='razorpay',
+            transaction_id=razorpay_payment_id,
+        )
+        msg = f'Payment successful! 🎉 You now have access to {package.name}.'
+
     db.session.add(order)
     db.session.flush()
     process_commissions(order)
@@ -724,7 +869,7 @@ def verify_payment():
     except Exception:
         pass
 
-    flash(f'Payment successful! 🎉 You now have access to {package.name}.', 'success')
+    flash(msg, 'success')
     return redirect(url_for('student.my_courses'))
 
 

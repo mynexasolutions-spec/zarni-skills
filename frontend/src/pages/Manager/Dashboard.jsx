@@ -1,0 +1,205 @@
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import {
+  Users, IndianRupee, TrendingUp, Wallet, Clock, ArrowRight, Sparkles,
+  Copy, Check, Percent, Briefcase
+} from 'lucide-react';
+import api from '../../utils/api';
+
+export default function ManagerDashboard() {
+  const { user } = useAuth();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const response = await api.get('/manager/dashboard-data');
+        setData(response.data || {});
+      } catch (err) {
+        console.error('Error fetching manager dashboard', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
+
+  if (loading || !data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-violet-600"></div>
+      </div>
+    );
+  }
+
+  const refLink = `${window.location.origin}/register?ref=${data.referral_code || ''}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(refLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const kpis = [
+    { label: 'Your Team', value: data.total_team ?? 0, sub: `${data.active_team ?? 0} active`, icon: Users, color: 'from-violet-500 to-purple-600' },
+    { label: 'Team Revenue', value: `₹${(data.team_revenue || 0).toLocaleString('en-IN')}`, sub: 'from team purchases', icon: TrendingUp, color: 'from-blue-500 to-indigo-600' },
+    { label: 'All-Time Earnings', value: `₹${(data.all_time_earnings || 0).toLocaleString('en-IN')}`, sub: 'approved commissions', icon: IndianRupee, color: 'from-emerald-500 to-green-600' },
+    { label: 'Available Balance', value: `₹${(data.available_balance || 0).toLocaleString('en-IN')}`, sub: `₹${(data.pending_earnings || 0).toLocaleString('en-IN')} pending`, icon: Wallet, color: 'from-amber-500 to-orange-600' },
+  ];
+
+  return (
+    <div className="text-slate-800">
+
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-[2.5rem] p-6 sm:p-10 text-white mb-6"
+        style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #4c1d95 55%, #7c3aed 100%)' }}>
+        <div className="absolute inset-0 opacity-[0.15] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)', backgroundSize: '22px 22px' }}></div>
+        <div className="absolute -top-16 -right-10 w-72 h-72 bg-violet-500/30 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute -bottom-20 -left-10 w-64 h-64 bg-fuchsia-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[10px] font-black uppercase tracking-widest text-violet-200 mb-4">
+              <Briefcase className="w-3.5 h-3.5" /> Manager Hub
+            </div>
+            <h1 className="text-2xl sm:text-4xl font-black mb-2">Welcome back, {user?.name?.split(' ')[0]} 👋</h1>
+            <p className="text-slate-300 text-sm">{user?.email}</p>
+          </div>
+
+          {/* Commission rate spotlight */}
+          <div className="shrink-0 bg-white/10 backdrop-blur-sm border border-white/15 rounded-3xl px-6 py-5 min-w-[220px]">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-300 mb-2">
+              <Percent className="w-3.5 h-3.5" /> Your Commission Rate
+            </div>
+            {data.manager_commission_percent ? (
+              <p className="text-3xl sm:text-4xl font-black leading-none">{data.manager_commission_percent}%</p>
+            ) : (
+              <p className="text-sm text-white/70 font-medium">Not set — contact admin</p>
+            )}
+            <p className="text-[11px] text-white/60 mt-2">on every sale from your team</p>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {kpis.map((kpi, idx) => (
+          <div
+            key={kpi.label}
+            className={`group relative overflow-hidden rounded-3xl p-5 text-white bg-gradient-to-br ${kpi.color} shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in-up`}
+            style={{ animationDelay: `${idx * 60}ms` }}
+          >
+            <kpi.icon className="absolute -right-4 -bottom-4 w-24 h-24 text-white/10 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500" strokeWidth={1.5} />
+            <div className="relative z-10">
+              <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center mb-4">
+                <kpi.icon className="w-5 h-5" />
+              </div>
+              <p className="text-2xl sm:text-3xl font-black leading-none">{kpi.value}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/75 mt-2">{kpi.label}</p>
+              <p className="text-[10px] text-white/60 mt-0.5">{kpi.sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+        {/* Recent Commissions */}
+        <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+            <h3 className="font-bold text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-violet-600" /> Recent Commissions
+            </h3>
+            <Link to="/manager/commissions" className="text-xs font-bold text-violet-600 hover:text-violet-700 flex items-center gap-1 group">
+              View All <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </div>
+          {(data.recent_commissions || []).length > 0 ? (
+            <div className="divide-y divide-slate-50">
+              {data.recent_commissions.map(c => (
+                <div key={c.id} className="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50/70 transition-colors">
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">From {c.buyer_name}</p>
+                    <p className="text-xs text-slate-400">{c.created_at}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-sm font-black ${c.status === 'approved' || c.status === 'paid' ? 'text-emerald-600' : 'text-amber-500'}`}>
+                      ₹{c.commission_amount.toLocaleString('en-IN')}
+                    </p>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                      c.status === 'approved' || c.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                    }`}>{c.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="px-6 py-10 text-center text-sm text-slate-400">No commissions yet.</p>
+          )}
+        </div>
+
+        {/* Recent Team */}
+        <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+            <h3 className="font-bold text-slate-900 flex items-center gap-2">
+              <Users className="w-4 h-4 text-violet-600" /> Recent Team Members
+            </h3>
+            <Link to="/manager/team" className="text-xs font-bold text-violet-600 hover:text-violet-700 flex items-center gap-1 group">
+              View All <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </div>
+          {(data.recent_team || []).length > 0 ? (
+            <div className="divide-y divide-slate-50">
+              {data.recent_team.map(m => {
+                const initial = m.name?.[0]?.toUpperCase() || '?';
+                return (
+                  <div key={m.id} className="flex items-center gap-3 px-6 py-3.5 hover:bg-slate-50/70 transition-colors">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 to-purple-600 text-white text-xs font-black flex items-center justify-center shrink-0 shadow-sm">
+                      {initial}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{m.name}</p>
+                      <p className="text-xs text-slate-400">{m.created_at}</p>
+                    </div>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 ${
+                      m.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                    }`}>{m.is_active ? 'Active' : 'Inactive'}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="px-6 py-10 text-center text-sm text-slate-400">No team members yet. Share your referral link to grow your team.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Referral link banner */}
+      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 text-white"
+        style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)' }}>
+        <div className="absolute -top-10 -right-10 w-56 h-56 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="font-black text-lg mb-1">Your Referral Link</h3>
+            <p className="text-violet-100 text-sm">Share this link to grow your team and earn commissions</p>
+          </div>
+          <div className="flex items-center gap-2 bg-white/10 border border-white/15 rounded-xl px-4 py-2.5 backdrop-blur">
+            <code className="text-sm font-mono text-white truncate max-w-[220px] sm:max-w-xs">{refLink}</code>
+            <button
+              onClick={handleCopy}
+              className="shrink-0 ml-2 px-3 py-1.5 bg-white text-violet-700 text-xs font-bold rounded-lg hover:bg-violet-50 transition flex items-center gap-1.5"
+            >
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
