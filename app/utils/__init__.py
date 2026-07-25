@@ -12,6 +12,10 @@ from app.utils.payments import (
     is_razorpay_enabled, create_razorpay_order,
     verify_razorpay_signature, get_razorpay_key_id,
 )
+from app.utils.pricing import compute_checkout_price, validate_coupon
+from app.utils.progress import (
+    completed_chapter_ids, course_progress, is_course_completed, mark_chapter_complete,
+)
 
 __all__ = [
     'process_commissions', 'approve_commission', 'approve_withdrawal',
@@ -21,4 +25,6 @@ __all__ = [
     'send_password_reset_email',
     'is_razorpay_enabled', 'create_razorpay_order',
     'verify_razorpay_signature', 'get_razorpay_key_id',
+    'compute_checkout_price', 'validate_coupon',
+    'completed_chapter_ids', 'course_progress', 'is_course_completed', 'mark_chapter_complete',
 ]

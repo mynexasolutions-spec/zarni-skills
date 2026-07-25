@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CreditCard, IndianRupee, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import api from '../../utils/api';
+import AnimatedNumber from '../../components/AnimatedNumber';
 
 const STATUS_TABS = [
   { key: '', label: 'All' },
@@ -42,35 +43,37 @@ export default function AdminOrders() {
   }
 
   const kpis = [
-    { label: 'Total Revenue', value: `₹${totalRevenue.toLocaleString('en-IN')}`, icon: IndianRupee, color: 'from-emerald-500 to-green-600' },
+    { label: 'Total Revenue', value: totalRevenue, prefix: '₹', icon: IndianRupee, color: 'from-emerald-500 to-green-600' },
     { label: 'Paid', value: statusCounts.paid ?? 0, icon: CheckCircle2, color: 'from-blue-500 to-indigo-600' },
     { label: 'Pending', value: statusCounts.pending ?? 0, icon: Clock, color: 'from-amber-500 to-orange-600' },
     { label: 'Failed', value: statusCounts.failed ?? 0, icon: XCircle, color: 'from-red-500 to-rose-600' },
   ];
 
   return (
-    <div className="text-slate-800">
+    <div className="text-slate-800 animate-fade-in-up">
       <div className="flex items-center gap-3 mb-6">
-        <CreditCard className="w-7 h-7 text-red-600" />
-        <h2 className="text-2xl font-black">Platform Student Orders</h2>
+        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center shadow-md shadow-red-500/25 shrink-0">
+          <CreditCard className="w-5 h-5" />
+        </div>
+        <h2 className="text-xl sm:text-2xl font-black">Platform Student Orders</h2>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {kpis.map(kpi => (
-          <div key={kpi.label} className={`rounded-2xl p-5 text-white bg-gradient-to-br ${kpi.color} shadow-lg`}>
-            <kpi.icon className="w-5 h-5 mb-2 text-white/80" />
-            <p className="text-xl font-black leading-none">{kpi.value}</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/75 mt-1.5">{kpi.label}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        {kpis.map((kpi, idx) => (
+          <div key={kpi.label} className={`group rounded-2xl p-4 sm:p-5 text-white bg-gradient-to-br ${kpi.color} shadow-lg transition-transform duration-300 hover:-translate-y-1.5 animate-fade-in-up`} style={{ animationDelay: `${idx * 70}ms` }}>
+            <kpi.icon className="w-5 h-5 mb-2 text-white/80 transition-transform duration-300 group-hover:scale-110" />
+            <AnimatedNumber value={kpi.value} prefix={kpi.prefix || ''} className="block text-lg sm:text-xl font-black leading-none tabular-nums" />
+            <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-white/75 mt-1.5">{kpi.label}</p>
           </div>
         ))}
       </div>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar">
         {STATUS_TABS.map(tab => (
           <button
             key={tab.key}
             onClick={() => setStatusFilter(tab.key)}
-            className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wide transition-colors ${
+            className={`shrink-0 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wide transition-colors ${
               statusFilter === tab.key ? 'bg-red-600 text-white shadow-md shadow-red-600/25' : 'bg-white border border-slate-200 text-slate-500 hover:border-red-200'
             }`}
           >
@@ -122,12 +125,12 @@ export default function AdminOrders() {
 
       {/* Mobile cards */}
       <div className="lg:hidden space-y-3">
-        {orders.map(o => (
-          <div key={o.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+        {orders.map((o, idx) => (
+          <div key={o.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm animate-fade-in-up" style={{ animationDelay: `${Math.min(idx, 10) * 30}ms` }}>
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-bold text-slate-800 truncate">{o.buyer_name}</p>
-                <p className="text-xs text-slate-400 truncate">{o.item_name}</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-slate-800 leading-snug break-words">{o.buyer_name}</p>
+                <p className="text-xs text-slate-400 leading-snug break-words mt-0.5">{o.item_name}</p>
               </div>
               <span className={`shrink-0 px-2.5 py-1 text-[10px] font-black uppercase rounded-full ${
                 o.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700' : o.payment_status === 'failed' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'

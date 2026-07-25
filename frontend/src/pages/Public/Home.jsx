@@ -3,12 +3,17 @@ import api from '../../utils/api';
 
 // Home Modular Components
 import Hero from '../../components/Home/Hero';
+import BannerSlider from '../../components/Home/BannerSlider';
+import SupportSystem from '../../components/About/SupportSystem';
 import BrandsMarquee from '../../components/Home/BrandsMarquee';
 import Leaders from '../../components/Home/Leaders';
-import Transformation from '../../components/Home/Transformation';
 import PackagesList from '../../components/Home/PackagesList';
-import AffiliateCTA from '../../components/Home/AffiliateCTA';
+import SkillsShowcase from '../../components/Home/SkillsShowcase';
 import CoursesSlider from '../../components/Home/CoursesSlider';
+import SmartFreelancing from '../../components/About/SmartFreelancing';
+import TripAchievement from '../../components/About/TripAchievement';
+import AchievementRewards from '../../components/About/AchievementRewards';
+import GovernmentCertified from '../../components/About/GovernmentCertified';
 import Team from '../../components/Home/Team';
 import Testimonials from '../../components/Home/Testimonials';
 import SuccessStories from '../../components/Home/SuccessStories';
@@ -41,11 +46,16 @@ export default function Home() {
     <div className="overflow-hidden bg-slate-50 text-slate-900">
       <Hero />
       <BrandsMarquee />
+      <BannerSlider />
+      <SupportSystem />
       <Leaders />
-      <Transformation />
       <PackagesList packages={packages} loading={dataLoading} />
-      <AffiliateCTA />
+      <SkillsShowcase />
       <CoursesSlider courses={courses} loading={dataLoading} />
+      <SmartFreelancing />
+      <TripAchievement />
+      <AchievementRewards />
+      <GovernmentCertified />
       <Team />
       <Testimonials />
       <SuccessStories />

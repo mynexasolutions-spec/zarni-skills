@@ -13,6 +13,7 @@ admin_bp = Blueprint('admin', __name__)
 
 ALLOWED_VIDEO_EXTS = {'.mp4', '.webm', '.mov', '.avi', '.mkv'}
 ALLOWED_IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+ALLOWED_DOCUMENT_EXTS = {'.pdf', '.doc', '.docx'}
 
 
 import cloudinary.uploader
@@ -30,6 +31,41 @@ def _save_thumbnail(file_field, old_filename=None):
         return response.get('secure_url')
     except Exception as e:
         print(f"Cloudinary upload error: {e}")
+        return False
+
+
+def _save_video(file_field):
+    """Upload video to Cloudinary. Returns secure_url or None/False."""
+    f = file_field
+    if not f or not f.filename:
+        return None
+    ext = os.path.splitext(secure_filename(f.filename))[1].lower()
+    if ext not in ALLOWED_VIDEO_EXTS:
+        return False  # signal invalid
+    try:
+        response = cloudinary.uploader.upload(f, resource_type='video')
+        return response.get('secure_url')
+    except Exception as e:
+        print(f"Cloudinary video upload error: {e}")
+        return False
+
+
+def _save_document(file_field):
+    """Upload a PDF/DOC/DOCX document to Cloudinary (raw resource type). Returns secure_url or None/False.
+    The public_id is given the file's own extension — raw uploads have no extension
+    by default, and without one browsers can't tell it's a PDF to render inline,
+    so they fall back to downloading it instead of previewing it."""
+    f = file_field
+    if not f or not f.filename:
+        return None
+    ext = os.path.splitext(secure_filename(f.filename))[1].lower()
+    if ext not in ALLOWED_DOCUMENT_EXTS:
+        return False  # signal invalid
+    try:
+        response = cloudinary.uploader.upload(f, resource_type='raw', public_id=f'documents/{uuid.uuid4().hex}{ext}')
+        return response.get('secure_url')
+    except Exception as e:
+        print(f"Cloudinary document upload error: {e}")
         return False
 
 

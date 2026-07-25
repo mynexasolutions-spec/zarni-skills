@@ -34,6 +34,7 @@ class Config:
     VIDEO_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'video_uploads')
     THUMBNAIL_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'img', 'uploads')
     KYC_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'kyc_uploads')
+    FREELANCE_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'freelance_uploads')
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # 500 MB max upload
 
     # ── Flask-Mail defaults (overridden at runtime via SiteSettings) ──────
@@ -45,3 +46,7 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@zarni.com')
     MAIL_SUPPRESS_SEND = False  # set True in testing
+
+    # ── Razorpay (read straight from .env — not admin-configurable) ───────
+    RAZORPAY_KEY_ID = os.environ.get('razorpay_key', '')
+    RAZORPAY_KEY_SECRET = os.environ.get('razorpay_secret', '')

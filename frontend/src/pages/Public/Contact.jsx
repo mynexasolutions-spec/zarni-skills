@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import api from '../../utils/api';
-import { Mail, User, FileText, Send, MapPin, Clock, MessageCircle, ArrowUpRight } from 'lucide-react';
+import Reveal from '../../components/Reveal';
+import useTilt from '../../hooks/useTilt';
+import { Mail, User, FileText, Send, MapPin, Clock, MessageCircle, ArrowUpRight, Sparkles, Navigation } from 'lucide-react';
 
 const SOCIALS = [
   { label: 'Facebook', href: '#', path: 'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z' },
@@ -15,6 +17,24 @@ export default function Contact() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState('');
+
+  const panelRef = useRef(null);
+  const { ref: tiltRef, onMouseMove, onMouseLeave } = useTilt(2.5);
+
+  // Merge the panel's own ref (for the cursor spotlight) with the tilt hook's ref.
+  const setPanelRefs = (node) => {
+    panelRef.current = node;
+    tiltRef.current = node;
+  };
+
+  const onPanelMouseMove = (e) => {
+    onMouseMove(e);
+    const el = panelRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty('--spot-x', `${e.clientX - rect.left}px`);
+    el.style.setProperty('--spot-y', `${e.clientY - rect.top}px`);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,66 +72,97 @@ export default function Contact() {
         <div className="absolute -top-16 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-[100px] pointer-events-none z-0 animate-blob"></div>
         <div className="absolute -top-16 right-1/4 w-72 h-72 bg-indigo-300/20 rounded-full blur-[100px] pointer-events-none z-0 animate-blob" style={{ animationDirection: 'reverse' }}></div>
 
-        <div className="relative z-10 text-center px-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/8 border border-primary/15 text-xs font-bold text-primary uppercase tracking-widest mb-4">
-            <Mail className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
-            We're here to help you scale your future
+        {/* Floating ambient sparkles */}
+        {[
+          { top: '20%', left: '12%', size: 4, delay: '0s', dur: '5s' },
+          { top: '65%', left: '10%', size: 3, delay: '1.2s', dur: '6s' },
+          { top: '22%', left: '88%', size: 3, delay: '0.6s', dur: '5.5s' },
+          { top: '70%', left: '90%', size: 5, delay: '2s', dur: '4.8s' },
+        ].map((s, i) => (
+          <span
+            key={i}
+            className="absolute rounded-full bg-primary/50 pointer-events-none z-0"
+            style={{
+              top: s.top, left: s.left, width: s.size, height: s.size,
+              boxShadow: '0 0 10px 3px rgba(43,128,240,0.4)',
+              animation: `float ${s.dur} ease-in-out infinite`,
+              animationDelay: s.delay,
+            }}
+          ></span>
+        ))}
+
+        <Reveal variant="fade-up" className="relative z-10 text-center px-6">
+          <div className="relative overflow-hidden inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/8 border border-primary/15 text-xs font-bold text-primary uppercase tracking-widest mb-4">
+            <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-primary/10 to-transparent pointer-events-none"></span>
+            <Sparkles className="relative w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
+            <span className="relative">We're here to help you scale your future</span>
           </div>
-          <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.1]">
-            Get In <span className="bg-gradient-to-r from-primary via-blue-500 to-indigo-600 bg-clip-text text-transparent">Touch</span> With Us
+          <h2 className="font-heading text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.15]">
+            Get In <span className="bg-gradient-to-r from-primary via-blue-500 to-indigo-600 bg-clip-text text-transparent animate-gradient-x">Touch</span> With Us
           </h2>
           <p className="text-slate-500 text-sm sm:text-base font-medium leading-relaxed max-w-xl mx-auto mt-4">
             Whether you have a question about our packages, specific courses, or just want to say hello, our team is ready to assist you.
           </p>
-        </div>
+        </Reveal>
       </section>
 
       {/* 2. MAIN CONTENT AREA — split panel */}
-      <section className="py-4 z-10 relative">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="relative bg-white rounded-[2.5rem] shadow-2xl shadow-slate-300/40 overflow-hidden grid grid-cols-1 lg:grid-cols-5">
+      <section className="py-8 z-10 relative">
+        <div className="max-w-6xl mx-auto px-4">
+          <Reveal variant="scale-in" duration={800}>
+          <div
+            ref={setPanelRefs}
+            onMouseMove={onPanelMouseMove}
+            onMouseLeave={onMouseLeave}
+            className="group/panel relative bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl shadow-slate-300/40 overflow-hidden grid grid-cols-1 lg:grid-cols-2 lg:auto-rows-fr [transform:perspective(1400px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform"
+          >
+            {/* Cursor-follow spotlight across the whole card */}
+            <div
+              className="hidden lg:block absolute inset-0 opacity-0 group-hover/panel:opacity-100 transition-opacity duration-300 pointer-events-none z-20"
+              style={{ background: 'radial-gradient(500px circle at var(--spot-x,50%) var(--spot-y,50%), rgba(43,128,240,0.06), transparent 70%)' }}
+            ></div>
 
             {/* LEFT: Brand / info panel */}
-            <div className="lg:col-span-2 relative flex flex-col justify-between p-8 sm:p-10 bg-gradient-to-br from-primary via-primary to-indigo-700 overflow-hidden">
+            <div className="relative flex flex-col justify-between p-8 sm:p-10 lg:p-12 bg-gradient-to-br from-primary via-primary to-indigo-700 animate-gradient-x overflow-hidden">
               <div className="absolute inset-0 opacity-10 pointer-events-none"
                 style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
               </div>
-              <div className="absolute -top-16 -right-16 w-56 h-56 bg-white/10 rounded-full blur-[80px] pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-300/20 rounded-full blur-[90px] pointer-events-none"></div>
+              <div className="absolute -top-16 -right-16 w-56 h-56 bg-white/10 rounded-full blur-[80px] pointer-events-none animate-blob"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-300/20 rounded-full blur-[90px] pointer-events-none animate-blob" style={{ animationDirection: 'reverse' }}></div>
 
               <div className="relative z-10">
-                <div className="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center mb-6">
-                  <MessageCircle className="w-7 h-7 text-white" strokeWidth={2} />
+                <div className="w-12 h-12 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center mb-4">
+                  <MessageCircle className="w-6 h-6 text-white" strokeWidth={2} />
                 </div>
-                <h3 className="font-heading font-black text-2xl sm:text-3xl text-white leading-tight mb-3">
+                <h3 className="font-heading font-black text-xl sm:text-2xl text-white leading-tight mb-2">
                   Let's Start a Conversation
                 </h3>
-                <p className="text-white/80 text-sm leading-relaxed max-w-xs mb-10">
+                <p className="text-white/80 text-sm leading-relaxed max-w-xs mb-4">
                   Questions about packages, courses, or partnerships — drop us a line and our team will get back to you fast.
                 </p>
 
-                <div className="space-y-5">
-                  <a href="mailto:support@zarniskills.com" className="group flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-primary transition-colors duration-300">
-                      <Mail className="w-5 h-5 text-white group-hover:text-primary transition-colors duration-300" strokeWidth={2} />
+                <div className="space-y-3">
+                  <a href="mailto:support@zarniskills.com" className="group flex items-start gap-4 p-2.5 rounded-2xl hover:bg-white/10 transition-all duration-300">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-primary group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
+                      <Mail className="w-5 h-5 text-white group-hover:text-primary transition-colors duration-300 animate-bounce" strokeWidth={2} style={{ animationDelay: '0s' }} />
                     </div>
                     <div className="pt-1.5">
                       <p className="text-white font-bold text-sm group-hover:underline">support@zarniskills.com</p>
                       <p className="text-white/60 text-[11px] font-black uppercase tracking-widest mt-0.5">Email Us</p>
                     </div>
                   </a>
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
-                      <MapPin className="w-5 h-5 text-white" strokeWidth={2} />
+                  <div className="group flex items-start gap-4 p-2.5 rounded-2xl hover:bg-white/10 transition-all duration-300">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300">
+                      <MapPin className="w-5 h-5 text-white group-hover:animate-bounce" strokeWidth={2} style={{ animationDelay: '0.1s' }} />
                     </div>
                     <div className="pt-1.5">
                       <p className="text-white font-bold text-sm">123 Skills Tower, New Delhi</p>
                       <p className="text-white/60 text-[11px] font-black uppercase tracking-widest mt-0.5">Visit Office</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
-                      <Clock className="w-5 h-5 text-white" strokeWidth={2} />
+                  <div className="group flex items-start gap-4 p-2.5 rounded-2xl hover:bg-white/10 transition-all duration-300">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
+                      <Clock className="w-5 h-5 text-white group-hover:animate-spin" strokeWidth={2} style={{ animationDelay: '0.2s' }} />
                     </div>
                     <div className="pt-1.5">
                       <p className="text-white font-bold text-sm">We reply within 24 hours</p>
@@ -121,10 +172,10 @@ export default function Contact() {
                 </div>
               </div>
 
-              <div className="relative z-10 flex items-center gap-3 pt-10 mt-10 border-t border-white/15">
+              <div className="relative z-10 flex items-center gap-3 pt-4 mt-4 border-t border-white/15">
                 {SOCIALS.map((s) => (
                   <a key={s.label} href={s.href} aria-label={s.label}
-                    className="w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white hover:bg-white hover:text-primary hover:-translate-y-0.5 transition-all duration-300">
+                    className="w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white hover:bg-white hover:text-primary hover:-translate-y-1 hover:scale-110 active:scale-95 transition-all duration-300">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d={s.path} /></svg>
                   </a>
                 ))}
@@ -132,14 +183,18 @@ export default function Contact() {
             </div>
 
             {/* RIGHT: Form */}
-            <div className="lg:col-span-3 p-8 sm:p-10">
-              <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="p-10 sm:p-12 lg:p-14 relative flex flex-col justify-center">
+              {/* Animated background shimmer */}
+              <div className="absolute inset-0 opacity-0 group-hover/panel:opacity-100 transition-opacity duration-500 pointer-events-none">
+                <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-blob"></div>
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-3 relative z-10 flex flex-col gap-3">
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                  <Reveal variant="fade-up" delay={0}>
                     <label className="block text-sm font-bold text-slate-700 mb-1.5" htmlFor="name">Full Name</label>
                     <div className="relative group">
-                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none group-focus-within:text-primary transition-colors" strokeWidth={2} />
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none group-focus-within:text-primary group-focus-within:scale-110 transition-all" strokeWidth={2} />
                       <input
                         id="name"
                         type="text"
@@ -147,14 +202,15 @@ export default function Contact() {
                         placeholder="John Doe"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition relative"
                       />
+                      <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-gradient-to-r from-primary to-indigo-600 rounded-full group-focus-within:w-full transition-all duration-500"></div>
                     </div>
-                  </div>
-                  <div>
+                  </Reveal>
+                  <Reveal variant="fade-up" delay={100}>
                     <label className="block text-sm font-bold text-slate-700 mb-1.5" htmlFor="email">Email Address</label>
                     <div className="relative group">
-                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none group-focus-within:text-primary transition-colors" strokeWidth={2} />
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none group-focus-within:text-primary group-focus-within:scale-110 transition-all" strokeWidth={2} />
                       <input
                         id="email"
                         type="email"
@@ -162,16 +218,17 @@ export default function Contact() {
                         placeholder="john@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition relative"
                       />
+                      <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-gradient-to-r from-primary to-indigo-600 rounded-full group-focus-within:w-full transition-all duration-500"></div>
                     </div>
-                  </div>
+                  </Reveal>
                 </div>
 
-                <div>
+                <Reveal variant="fade-up" delay={200}>
                   <label className="block text-sm font-bold text-slate-700 mb-1.5" htmlFor="subject">Subject</label>
                   <div className="relative group">
-                    <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none group-focus-within:text-primary transition-colors" strokeWidth={2} />
+                    <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none group-focus-within:text-primary group-focus-within:scale-110 transition-all" strokeWidth={2} />
                     <input
                       id="subject"
                       type="text"
@@ -179,44 +236,61 @@ export default function Contact() {
                       placeholder="Inquiry about Pro Package"
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition relative"
                     />
+                    <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-gradient-to-r from-primary to-indigo-600 rounded-full group-focus-within:w-full transition-all duration-500"></div>
                   </div>
-                </div>
+                </Reveal>
 
-                <div>
+                <Reveal variant="fade-up" delay={300}>
                   <label className="block text-sm font-bold text-slate-700 mb-1.5" htmlFor="message">Message</label>
-                  <textarea
-                    id="message"
-                    rows={5}
-                    required
-                    placeholder="How can we help you?"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition resize-none"
-                  ></textarea>
-                </div>
+                  <div className="relative group">
+                    <textarea
+                      id="message"
+                      rows={5}
+                      required
+                      placeholder="How can we help you?"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:bg-white transition resize-none relative"
+                    ></textarea>
+                    <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-gradient-to-r from-primary to-indigo-600 rounded-full group-focus-within:w-full transition-all duration-500"></div>
+                  </div>
+                </Reveal>
 
-                {status === 'success' && (
-                  <p className="text-center text-sm font-bold text-emerald-600">Message sent! We'll get back to you soon.</p>
-                )}
-                {status === 'error' && (
-                  <p className="text-center text-sm font-bold text-red-600">Could not send your message right now. Please email us directly at support@zarniskills.com.</p>
-                )}
+                <Reveal variant="fade-up" delay={400}>
+                  {status === 'success' && (
+                    <div className="relative p-4 rounded-xl bg-emerald-50 border border-emerald-200 animate-pulse">
+                      <p className="text-center text-sm font-bold text-emerald-700">✓ Message sent! We'll get back to you soon.</p>
+                    </div>
+                  )}
+                  {status === 'error' && (
+                    <div className="relative p-4 rounded-xl bg-red-50 border border-red-200 animate-pulse">
+                      <p className="text-center text-sm font-bold text-red-700">Could not send your message right now. Please email us directly at support@zarniskills.com.</p>
+                    </div>
+                  )}
 
-                <button
-                  type="submit"
-                  disabled={status === 'sending'}
-                  className="group relative w-full inline-flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white font-bold rounded-xl transition-all duration-300 text-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 overflow-hidden disabled:opacity-70 disabled:hover:translate-y-0"
-                >
-                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-                  {status === 'sending' ? 'Sending...' : 'Send Message'}
-                  <Send className="w-4 h-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                </button>
+                  <button
+                    type="submit"
+                    disabled={status === 'sending'}
+                    className="group relative w-full inline-flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white font-bold rounded-xl transition-all duration-300 text-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-1 active:scale-[0.98] overflow-hidden disabled:opacity-70 disabled:hover:translate-y-0 animate-float"
+                  >
+                    {status !== 'sending' && (
+                      <span className="absolute inset-0 rounded-xl bg-primary/50 animate-pulse-ring pointer-events-none"></span>
+                    )}
+                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                    {status === 'sending' && (
+                      <span className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0 animate-shimmer-sweep"></span>
+                    )}
+                    <span className="relative">{status === 'sending' ? 'Sending...' : 'Send Message'}</span>
+                    <Send className="relative w-4 h-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                  </button>
+                </Reveal>
               </form>
             </div>
 
           </div>
+          </Reveal>
         </div>
       </section>
 
@@ -233,7 +307,7 @@ export default function Contact() {
             WebkitMaskImage: 'radial-gradient(ellipse 60% 100% at 50% 50%, #000 40%, transparent 90%)'
           }}>
         </div>
-        <div className="relative z-10 flex flex-col items-center text-center px-6">
+        <Reveal variant="scale-in" className="relative z-10 flex flex-col items-center text-center px-6">
           <div className="relative mb-4">
             <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping"></div>
             <div className="relative w-14 h-14 bg-gradient-to-br from-primary to-indigo-600 rounded-full flex items-center justify-center shadow-xl shadow-primary/30">
@@ -246,12 +320,76 @@ export default function Contact() {
             href="https://maps.google.com/?q=New+Delhi,India"
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center gap-1.5 mt-4 text-primary font-bold text-sm hover:underline"
+            className="group inline-flex items-center gap-1.5 mt-4 text-primary font-bold text-sm hover:underline active:scale-95 transition-transform"
           >
             Get Directions
             <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" strokeWidth={2.5} />
           </a>
-        </div>
+        </Reveal>
+
+        <Reveal variant="fade-up" delay={150} className="relative z-10 max-w-4xl mx-auto mt-10 px-6">
+          <div className="group relative">
+            {/* Floating ambient blobs */}
+            <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/20 rounded-full blur-[70px] pointer-events-none animate-blob opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+            <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-indigo-400/20 rounded-full blur-[80px] pointer-events-none animate-blob opacity-0 group-hover:opacity-100 transition-opacity duration-700" style={{ animationDirection: 'reverse' }}></div>
+
+            {/* Corner brackets — scanner accent */}
+            <div className="absolute -top-2 -left-2 w-8 h-8 border-t-[3px] border-l-[3px] border-primary rounded-tl-xl opacity-0 group-hover:opacity-100 -translate-x-1 translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-500 z-20 pointer-events-none"></div>
+            <div className="absolute -top-2 -right-2 w-8 h-8 border-t-[3px] border-r-[3px] border-primary rounded-tr-xl opacity-0 group-hover:opacity-100 translate-x-1 translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-500 z-20 pointer-events-none"></div>
+            <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-[3px] border-l-[3px] border-primary rounded-bl-xl opacity-0 group-hover:opacity-100 -translate-x-1 -translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-500 z-20 pointer-events-none"></div>
+            <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-[3px] border-r-[3px] border-primary rounded-br-xl opacity-0 group-hover:opacity-100 translate-x-1 -translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-500 z-20 pointer-events-none"></div>
+
+            <div className="relative rounded-[1.75rem] p-[2px] bg-gradient-to-r from-primary via-indigo-500 to-primary bg-[length:200%_100%] animate-gradient-x shadow-2xl shadow-primary/20 group-hover:shadow-primary/40 transition-shadow duration-500">
+              <div className="relative rounded-[1.7rem] overflow-hidden">
+                <iframe
+                  title="Zarni Skills HQ Location"
+                  src="https://maps.google.com/maps?q=New+Delhi,India&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                  width="100%"
+                  height="340"
+                  style={{ border: 0, filter: 'saturate(1.1) contrast(1.02)' }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="grayscale-[25%] group-hover:grayscale-0 transition-all duration-500 scale-[1.04] group-hover:scale-100"
+                ></iframe>
+
+                {/* Scanning sweep line */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1/3 h-full bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-[400%] transition-transform duration-[1400ms] ease-in-out skew-x-[-20deg]"></div>
+                </div>
+
+                <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-[1.7rem]"></div>
+
+                {/* Bouncing pin marker overlay */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full pointer-events-none">
+                  <MapPin className="w-8 h-8 text-primary drop-shadow-lg animate-bounce" fill="white" strokeWidth={2} />
+                  <div className="w-3 h-1.5 mx-auto bg-slate-900/20 rounded-full blur-[2px] animate-pulse"></div>
+                </div>
+
+                <div className="absolute top-4 left-4 flex items-center gap-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg pointer-events-none">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                  </span>
+                  <span className="text-[11px] font-black uppercase tracking-widest text-slate-700">We're Here</span>
+                </div>
+
+                {/* Hover overlay CTA */}
+                <a
+                  href="https://maps.google.com/?q=New+Delhi,India"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute inset-0 flex items-end justify-center pb-6 bg-gradient-to-t from-slate-900/70 via-slate-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                >
+                  <span className="inline-flex items-center gap-2 bg-white text-primary font-bold text-sm px-5 py-2.5 rounded-full shadow-xl translate-y-3 group-hover:translate-y-0 transition-transform duration-500 hover:bg-primary hover:text-white active:scale-95">
+                    <Navigation className="w-4 h-4" strokeWidth={2.5} />
+                    Open in Google Maps
+                  </span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </Reveal>
       </section>
 
     </div>

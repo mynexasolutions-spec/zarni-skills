@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Users, Link as LinkIcon, Check, Copy } from 'lucide-react';
+import { Users, Link as LinkIcon, Check, Copy, MessageCircle, Send, Mail, Sparkles, Zap, Award, ArrowRight, ShieldCheck, Share2 } from 'lucide-react';
 import api from '../../utils/api';
+import AnimatedNumber from '../../components/AnimatedNumber';
+import Reveal from '../../components/Reveal';
+import useTilt from '../../hooks/useTilt';
 
 export default function Referrals() {
   const { user } = useAuth();
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const { ref: tiltRef, onMouseMove, onMouseLeave } = useTilt(4);
 
   useEffect(() => {
     const fetchReferrals = async () => {
@@ -24,90 +28,246 @@ export default function Referrals() {
   }, []);
 
   const refUrl = `${window.location.origin}/register?ref=${user?.referral_code || ''}`;
+  const shareText = `Join Zarni Skills and start learning + earning with me! ${refUrl}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(refUrl);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 2200);
   };
+
+  const shareLinks = [
+    { label: 'WhatsApp', Icon: MessageCircle, href: `https://wa.me/?text=${encodeURIComponent(shareText)}`, color: 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-400/30' },
+    { label: 'Telegram', Icon: Send, href: `https://t.me/share/url?url=${encodeURIComponent(refUrl)}&text=${encodeURIComponent('Join Zarni Skills and start learning + earning with me!')}`, color: 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border-sky-400/30' },
+    { label: 'Email', Icon: Mail, href: `mailto:?subject=${encodeURIComponent('Join me on Zarni Skills')}&body=${encodeURIComponent(shareText)}`, color: 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-400/30' },
+  ];
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+      <div className="min-h-[65vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Referral Workspace...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 text-slate-800">
-      
-      {/* Referral link box banner */}
-      <section className="relative overflow-hidden rounded-[2.5rem] p-8 sm:p-12 text-white mb-10"
-        style={{
-          background: 'linear-gradient(135deg, #0b1428 0%, #101c4a 100%)'
-        }}>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(43,128,240,0.15),transparent_45%)]"></div>
-        <div className="relative z-10 max-w-2xl">
-          <h2 className="text-2xl sm:text-3xl font-black mb-2">Share your referral link</h2>
-          <p className="text-slate-355 text-sm mb-6">Earn up to 30% commission payouts when your referrals enroll in a package.</p>
-          
-          <div className="flex flex-col sm:flex-row items-stretch gap-3 bg-white/10 p-2 rounded-2xl border border-white/15">
-            <input
-              type="text"
-              readOnly
-              value={refUrl}
-              className="flex-grow bg-transparent border-0 text-white text-xs sm:text-sm font-semibold focus:outline-none px-3"
-            />
-            <button
-              onClick={handleCopy}
-              className="px-6 py-3 bg-white hover:bg-slate-100 text-slate-900 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 shrink-0 transition-transform active:scale-95"
-            >
-              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'Copied!' : 'Copy Link'}
-            </button>
+    <div className="w-full space-y-8 text-slate-800 pb-12">
+
+      {/* REFERRAL HERO CARD WITH TILT & GLASSMORPHISM */}
+      <Reveal variant="scale-in">
+        <div
+          ref={tiltRef}
+          onMouseMove={onMouseMove}
+          onMouseLeave={onMouseLeave}
+          className="relative overflow-hidden rounded-[2.5rem] p-6 sm:p-12 text-white shadow-2xl shadow-blue-950/20 group [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform transition-transform duration-300"
+          style={{ background: 'linear-gradient(135deg, #0b1428 0%, #1e3a8a 50%, #2563eb 100%)' }}
+        >
+          {/* Glowing Halos & Shimmer */}
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/20 rounded-full blur-[140px] pointer-events-none"></div>
+          <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
+
+          <div className="relative z-10 max-w-3xl space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/15 text-[10px] font-black uppercase tracking-widest text-blue-200 backdrop-blur-md">
+              <Sparkles className="w-4 h-4 text-amber-300 animate-spin-slow" />
+              Referral Growth Engine
+            </div>
+
+            <div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black tracking-tight mb-3">
+                Share Your Link & Earn
+              </h1>
+              <p className="text-slate-200 text-sm sm:text-base font-medium max-w-xl leading-relaxed">
+                Earn lucrative direct & passive affiliate payouts every time a new student registers using your personal referral link.
+              </p>
+            </div>
+
+            {/* Link Copy Box */}
+            <div className="bg-white/10 p-2 sm:p-2.5 rounded-2xl sm:rounded-3xl border border-white/20 backdrop-blur-md flex flex-col sm:flex-row items-stretch gap-3 shadow-inner">
+              <div className="flex items-center gap-3 flex-1 min-w-0 px-3 py-2 sm:py-0">
+                <LinkIcon className="w-5 h-5 text-blue-300 shrink-0 hidden sm:block" strokeWidth={2.5} />
+                <input
+                  type="text"
+                  readOnly
+                  value={refUrl}
+                  className="w-full bg-transparent border-0 text-white text-xs sm:text-sm font-black focus:outline-none tracking-wide"
+                />
+              </div>
+              <button
+                onClick={handleCopy}
+                className={`group/btn relative overflow-hidden px-8 py-3.5 rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shrink-0 transition-all active:scale-95 shadow-lg ${
+                  copied
+                    ? 'bg-emerald-500 text-white shadow-emerald-500/30'
+                    : 'bg-white hover:bg-slate-100 text-slate-900 shadow-white/20'
+                }`}
+              >
+                {!copied && (
+                  <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-blue-200/50 to-transparent"></span>
+                )}
+                <span className="relative flex items-center gap-2">
+                  {copied ? <Check className="w-4 h-4 animate-bounce" strokeWidth={2.5} /> : <Copy className="w-4 h-4" strokeWidth={2.5} />}
+                  {copied ? 'Copied!' : 'Copy Link'}
+                </span>
+              </button>
+            </div>
+
+            {/* Quick Share Pills */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center gap-1">
+                <Share2 className="w-3.5 h-3.5 text-blue-300" strokeWidth={2.5} /> Quick Share:
+              </span>
+              {shareLinks.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-black transition-all hover:-translate-y-0.5 shadow-sm backdrop-blur-md ${s.color}`}
+                >
+                  <s.Icon className="w-4 h-4" strokeWidth={2.2} />
+                  <span>{s.label}</span>
+                </a>
+              ))}
+            </div>
+
           </div>
         </div>
-      </section>
+      </Reveal>
 
-      {/* Referrals table list */}
-      <section className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-        <div className="flex items-center justify-between border-b pb-4 mb-6">
-          <h3 className="font-bold text-lg text-slate-900 flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary" /> People You Referred
-          </h3>
-          <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
-            {referrals.length} total
-          </span>
+      {/* REFERRED STUDENTS NETWORK TABLE / GRID */}
+      <Reveal variant="fade-up" delay={150}>
+        <div className="bg-white border border-slate-200/90 rounded-[2.5rem] p-6 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.04)] space-y-8 relative overflow-hidden">
+          {/* Subtle Ambient Background Light */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-400/5 rounded-full blur-[100px] pointer-events-none"></div>
+
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6 relative z-10">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-black uppercase tracking-widest mb-2 shadow-sm">
+                <Users className="w-3.5 h-3.5 text-blue-600" strokeWidth={2.5} />
+                Network Connections
+              </div>
+              <h2 className="font-heading font-black text-slate-900 text-2xl sm:text-3xl tracking-tight">
+                People You Referred
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50/60 border border-blue-200/80 rounded-2xl px-5 py-3 shrink-0 self-start sm:self-auto shadow-sm">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
+              <span className="text-xs font-black text-slate-700 uppercase tracking-widest">Active Team:</span>
+              <AnimatedNumber value={referrals.length} duration={1000} className="text-2xl font-heading font-black text-blue-600" />
+            </div>
+          </div>
+
+          {referrals.length > 0 ? (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden sm:block overflow-x-auto relative z-10">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-slate-400 text-xs font-black uppercase tracking-widest">
+                      <th className="py-4 font-black">Student Name</th>
+                      <th className="py-4 font-black">Email Address</th>
+                      <th className="py-4 font-black">Joined Date</th>
+                      <th className="py-4 font-black text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {referrals.map((r, idx) => {
+                      const initials = r.name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'ST';
+                      const palette = [
+                        'from-blue-600 to-indigo-600',
+                        'from-emerald-500 to-teal-600',
+                        'from-purple-600 to-fuchsia-600',
+                        'from-amber-500 to-orange-600'
+                      ];
+                      return (
+                        <tr key={idx} className="group hover:bg-blue-50/40 transition-colors">
+                          <td className="py-4 font-black text-slate-900">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${palette[idx % palette.length]} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-md transition-transform group-hover:scale-110`}>
+                                {initials}
+                              </div>
+                              <span className="group-hover:text-blue-600 transition-colors font-black text-sm">{r.name}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 text-slate-600 font-medium">{r.email || 'N/A'}</td>
+                          <td className="py-4 text-slate-400 font-medium text-xs">{r.created_at}</td>
+                          <td className="py-4 text-right">
+                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-black uppercase tracking-wider shadow-sm">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                              Active Referral
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card List View */}
+              <div className="sm:hidden space-y-3 relative z-10">
+                {referrals.map((r, idx) => {
+                  const initials = r.name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'ST';
+                  const palette = [
+                    'from-blue-600 to-indigo-600',
+                    'from-emerald-500 to-teal-600',
+                    'from-purple-600 to-fuchsia-600',
+                    'from-amber-500 to-orange-600'
+                  ];
+                  return (
+                    <div key={idx} className="p-4 rounded-2xl border border-slate-200/90 bg-slate-50/50 flex flex-col gap-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${palette[idx % palette.length]} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-md`}>
+                            {initials}
+                          </div>
+                          <p className="font-black text-slate-900 text-sm leading-snug break-words">{r.name}</p>
+                        </div>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-black uppercase tracking-wider shrink-0 shadow-sm">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                          Active Referral
+                        </span>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 flex flex-col gap-1 text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-slate-400 font-bold uppercase text-[10px]">Email:</span>
+                          <span className="text-slate-700 font-medium break-all">{r.email || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-slate-400 font-bold uppercase text-[10px]">Joined Date:</span>
+                          <span className="text-slate-600 font-bold">{r.created_at}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-16 px-6 relative z-10">
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-sm">
+                <Users className="w-8 h-8" strokeWidth={1.5} />
+              </div>
+              <h3 className="text-xl font-heading font-black text-slate-900 mb-2">No Referrals Recorded Yet</h3>
+              <p className="text-sm text-slate-500 font-medium max-w-sm mx-auto mb-6 leading-relaxed">
+                Copy your referral link above and share it on WhatsApp, Telegram, or social media to start building your team.
+              </p>
+              <button
+                onClick={handleCopy}
+                className="px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/25 transition-transform active:scale-95"
+              >
+                Copy My Referral Link
+              </button>
+            </div>
+          )}
+
         </div>
-
-        {referrals.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b text-slate-400">
-                  <th className="py-3 font-bold">Name</th>
-                  <th className="py-3 font-bold">Email</th>
-                  <th className="py-3 font-bold">Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                {referrals.map((r, idx) => (
-                  <tr key={idx} className="border-b last:border-0 hover:bg-slate-50">
-                    <td className="py-4 font-bold text-slate-800">{r.name}</td>
-                    <td className="py-4 text-slate-500">{r.email || 'N/A'}</td>
-                    <td className="py-4 text-slate-400">{r.created_at}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-16 text-slate-400 text-sm font-medium">
-            No referrals recorded yet. Copy and share your link to start earning commissions!
-          </div>
-        )}
-      </section>
+      </Reveal>
 
     </div>
   );

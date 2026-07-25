@@ -2,14 +2,51 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
-import { Package, Layers, Clock, Zap, Languages, List, Check, Video, DollarSign, CheckCircle2 } from 'lucide-react';
+import Reveal from '../../components/Reveal';
+import useTilt from '../../hooks/useTilt';
+import { Package, Layers, Clock, Zap, Languages, List, Check, Video, DollarSign, CheckCircle2, ChevronRight, Sparkles, ArrowRight, ShieldCheck, Star } from 'lucide-react';
+
+function TiltThumbnail({ pkg }) {
+  const { ref, onMouseMove, onMouseLeave } = useTilt(4);
+  return (
+    <div
+      ref={ref}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+      className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-200/90 p-3.5 shadow-[0_15px_40px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_70px_rgba(37,99,235,0.15)] hover:border-blue-300 transition-all duration-500 [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform"
+    >
+      <span
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"
+        style={{ background: `radial-gradient(300px circle at var(--glare-x,50%) var(--glare-y,50%), rgba(59,130,246,0.15), transparent 70%)` }}
+      ></span>
+      {pkg.thumbnail_display_url ? (
+        <div className="aspect-square w-full relative rounded-[2rem] overflow-hidden">
+          <img src={pkg.thumbnail_display_url} alt={pkg.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+          <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-blue-600 text-[10px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-blue-100">
+            <Layers className="w-3.5 h-3.5" strokeWidth={2.5} />
+            Master Package
+          </div>
+        </div>
+      ) : (
+        <div className="aspect-square w-full bg-gradient-to-br from-blue-600 via-indigo-600 to-sky-500 flex items-center justify-center rounded-[2rem] p-8 text-center text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+          <div>
+            <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest mb-4">Zarni Skills Bundle</span>
+            <h2 className="font-heading font-black text-4xl sm:text-5xl uppercase leading-tight">{pkg.name}</h2>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function PackageDetail() {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [pkg, setPkg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [pricingPreview, setPricingPreview] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -20,21 +57,43 @@ export default function PackageDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Live "already paid" upgrade-credit preview — same numbers the checkout
+  // page will actually charge, shown here so a logged-in student sees their
+  // real price before clicking through.
+  useEffect(() => {
+    if (!user || !pkg || pkg.owned) {
+      setPricingPreview(null);
+      return;
+    }
+    api.post('/student/checkout/pricing', { package_id: pkg.id })
+      .then(res => setPricingPreview(res.data))
+      .catch(() => setPricingPreview(null));
+  }, [user, pkg]);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Package...</p>
+        </div>
       </div>
     );
   }
 
   if (notFound || !pkg) {
     return (
-      <div className="max-w-md mx-auto text-center py-20">
-        <h3 className="text-lg font-bold">Package not found</h3>
-        <Link to="/packages" className="mt-4 inline-block px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold uppercase tracking-widest">
-          Browse Packages
-        </Link>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 -mt-24 pt-24">
+        <div className="max-w-md w-full text-center bg-white border border-slate-200 rounded-3xl p-8 sm:p-10 shadow-lg">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center mx-auto mb-4 text-amber-500">
+            <Package className="w-8 h-8" strokeWidth={1.5} />
+          </div>
+          <h3 className="text-xl font-heading font-black text-slate-900 mb-2">Package Not Found</h3>
+          <p className="text-slate-500 text-sm font-medium mb-6">The learning package you are looking for is unavailable.</p>
+          <Link to="/packages" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold uppercase tracking-widest shadow-md shadow-blue-500/25 transition-transform active:scale-95">
+            Browse All Packages <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+          </Link>
+        </div>
       </div>
     );
   }
@@ -44,168 +103,154 @@ export default function PackageDetail() {
   const l2 = pkg.level2_commission_percent || 0;
 
   return (
-    <div className="bg-slate-50 min-h-screen -mt-24 pt-24">
-      {/* Page Banner */}
-      <section className="relative py-20 md:py-28 flex items-center justify-center overflow-hidden"
-        style={{ background: 'radial-gradient(ellipse 90% 70% at 50% 0%, #eef6ff 0%, #f8faff 60%, #f8faff 100%)' }}>
-        <div className="absolute inset-0 pointer-events-none z-0"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(43,128,240,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(43,128,240,0.05) 1px, transparent 1px)',
-            backgroundSize: '44px 44px'
-          }}>
-        </div>
-        <div className="absolute -top-16 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
-        <div className="absolute -top-16 right-1/4 w-72 h-72 bg-indigo-300/20 rounded-full blur-[100px] pointer-events-none z-0"></div>
+    <div className="bg-slate-50 min-h-screen text-slate-800 -mt-24 pt-24 pb-24 relative overflow-hidden">
+      {/* Background Glow Accents */}
+      <div className="absolute top-[10%] left-1/4 w-[600px] h-[600px] bg-blue-400/10 blur-[150px] rounded-full pointer-events-none z-0"></div>
+      <div className="absolute bottom-[20%] right-1/4 w-[500px] h-[500px] bg-indigo-400/10 blur-[150px] rounded-full pointer-events-none z-0"></div>
 
-        <div className="relative z-10 text-center px-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/8 border border-primary/15 text-xs font-bold text-primary uppercase tracking-widest mb-4">
-            <Package className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
-            Premium Learning Package
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-black text-slate-900 tracking-tight leading-[1.1]">
-            {pkg.name}
-          </h1>
-          {pkg.description && (
-            <p className="text-slate-500 text-base sm:text-lg font-medium leading-relaxed max-w-2xl mx-auto mt-4">
-              {pkg.description}
-            </p>
-          )}
-        </div>
-      </section>
+      {/* Mesh Grid Pattern */}
+      <div className="absolute inset-0 z-0 opacity-20 pointer-events-none"
+        style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '36px 36px' }}>
+      </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
 
-        {/* Breadcrumb */}
-        <nav className="text-sm text-slate-500 mb-10 flex items-center gap-2 flex-wrap">
-          <Link to="/" className="hover:text-primary transition-colors font-medium">Home</Link>
-          <span className="text-slate-300">/</span>
-          <Link to="/packages" className="hover:text-primary transition-colors font-medium">Packages</Link>
-          <span className="text-slate-300">/</span>
-          <span className="text-slate-700 font-semibold">{pkg.name}</span>
+        {/* Breadcrumb Navigation */}
+        <nav className="text-xs font-bold text-slate-400 mb-6 flex items-center gap-2 flex-wrap uppercase tracking-wider">
+          <Link to="/" className="hover:text-blue-600 transition-colors">Home</Link>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+          <Link to="/packages" className="hover:text-blue-600 transition-colors">Packages</Link>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+          <span className="text-slate-900">{pkg.name}</span>
         </nav>
+
+        {/* HERO BANNER (Light Glass Header) */}
+        <Reveal variant="scale-in" duration={700}>
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-white via-blue-50/40 to-slate-50 border border-slate-200/90 p-6 sm:p-10 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.04)] mb-10">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-b from-blue-400/10 to-transparent pointer-events-none rounded-full blur-3xl"></div>
+
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-black tracking-[0.25em] uppercase mb-4 shadow-sm">
+                <Package className="w-3.5 h-3.5 text-blue-600" strokeWidth={2.5} />
+                Premium Skill Bundle
+              </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-heading font-black text-slate-900 tracking-tight leading-[1.15] mb-4">
+                {pkg.name}
+              </h1>
+              {pkg.description && (
+                <p className="text-slate-500 text-base sm:text-lg font-medium leading-relaxed max-w-3xl">
+                  {pkg.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
 
-          {/* Left: Main content */}
+          {/* Left Column: Content */}
           <div className="lg:col-span-2 space-y-8">
 
-            {/* Square Thumbnail with glow */}
-            <div className="group relative">
-              <div className="absolute -inset-[2px] rounded-[1.9rem] bg-gradient-to-br from-primary via-indigo-500 to-indigo-600 opacity-0 group-hover:opacity-60 blur-[6px] transition-all duration-500 pointer-events-none z-0"></div>
-              <div className="relative rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] group-hover:shadow-[0_24px_60px_-12px_rgba(43,128,240,0.2)] transition-all duration-500 z-10 bg-white p-3 border border-slate-100">
-                {pkg.thumbnail_display_url ? (
-                  <div className="aspect-square w-full relative rounded-[1.5rem] overflow-hidden">
-                    <img src={pkg.thumbnail_display_url} alt={pkg.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                    <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm text-primary text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5">
-                      <Layers className="w-3 h-3" strokeWidth={2.5} />
-                      Bundle Package
-                    </div>
-                  </div>
-                ) : (
-                  <div className="aspect-square w-full bg-gradient-to-br from-primary/80 via-blue-600 to-indigo-700 flex items-center justify-center rounded-[1.5rem]">
-                    <div className="text-center text-white p-8">
-                      <p className="text-xs uppercase tracking-widest text-white/60 mb-4 font-bold">Zarni Skills</p>
-                      <h2 className="font-heading font-black text-4xl md:text-5xl uppercase leading-tight">{pkg.name}</h2>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* 3D Tilt Thumbnail Container */}
+            <TiltThumbnail pkg={pkg} />
 
-            {/* Technical details grid */}
+            {/* Technical Specs Grid */}
             {(pkg.level || pkg.language || pkg.pkg_duration || pkg.courses.length > 0) && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 {pkg.pkg_duration && (
-                  <div className="group bg-white border border-slate-100 rounded-2xl p-4 text-center hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-300">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2.5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
-                      <Clock className="w-5 h-5 shrink-0" strokeWidth={2.5} />
+                  <div className="group bg-white border border-slate-200/80 rounded-2xl p-4 text-center hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-0.5 transition-all duration-300">
+                    <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-2.5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 border border-blue-100">
+                      <Clock className="w-5 h-5" strokeWidth={2.5} />
                     </div>
-                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Duration</p>
-                    <p className="text-sm font-bold text-slate-800">{pkg.pkg_duration}</p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black mb-0.5">Duration</p>
+                    <p className="text-sm font-black text-slate-900">{pkg.pkg_duration}</p>
                   </div>
                 )}
                 {pkg.level && (
-                  <div className="group bg-white border border-slate-100 rounded-2xl p-4 text-center hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-300">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2.5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
-                      <Zap className="w-5 h-5 shrink-0" strokeWidth={2.5} />
+                  <div className="group bg-white border border-slate-200/80 rounded-2xl p-4 text-center hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-0.5 transition-all duration-300">
+                    <div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-2.5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 border border-indigo-100">
+                      <Zap className="w-5 h-5" strokeWidth={2.5} />
                     </div>
-                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Level</p>
-                    <p className="text-sm font-bold text-slate-800">{pkg.level}</p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black mb-0.5">Skill Level</p>
+                    <p className="text-sm font-black text-slate-900">{pkg.level}</p>
                   </div>
                 )}
                 {pkg.language && (
-                  <div className="group bg-white border border-slate-100 rounded-2xl p-4 text-center hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-300">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2.5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
-                      <Languages className="w-5 h-5 shrink-0" strokeWidth={2.5} />
+                  <div className="group bg-white border border-slate-200/80 rounded-2xl p-4 text-center hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-0.5 transition-all duration-300">
+                    <div className="w-11 h-11 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mx-auto mb-2.5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 border border-sky-100">
+                      <Languages className="w-5 h-5" strokeWidth={2.5} />
                     </div>
-                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Language</p>
-                    <p className="text-sm font-bold text-slate-800">{pkg.language}</p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black mb-0.5">Language</p>
+                    <p className="text-sm font-black text-slate-900">{pkg.language}</p>
                   </div>
                 )}
-                <div className="group bg-white border border-slate-100 rounded-2xl p-4 text-center hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-300">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2.5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
-                    <List className="w-5 h-5 shrink-0" strokeWidth={2.5} />
+                <div className="group bg-white border border-slate-200/80 rounded-2xl p-4 text-center hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-0.5 transition-all duration-300">
+                  <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-2.5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 border border-purple-100">
+                    <List className="w-5 h-5" strokeWidth={2.5} />
                   </div>
-                  <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Courses</p>
-                  <p className="text-sm font-bold text-slate-800">{pkg.courses.length}</p>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black mb-0.5">Total Courses</p>
+                  <p className="text-sm font-black text-slate-900">{pkg.courses.length}</p>
                 </div>
               </div>
             )}
 
-            {/* What You Get */}
+            {/* What's Included */}
             {whatYouGet.length > 0 && (
-              <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-indigo-600/5 border border-primary/10 rounded-3xl p-7 sm:p-8">
-                <div className="absolute -top-16 -right-16 w-48 h-48 bg-primary/10 rounded-full blur-[70px] pointer-events-none"></div>
-                <h2 className="relative text-lg font-heading font-black text-slate-900 mb-6 flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-primary/25">
-                    <Check className="w-[18px] h-[18px]" strokeWidth={2.5} />
+              <div className="relative overflow-hidden bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 shadow-sm">
+                    <Check className="w-5 h-5" strokeWidth={2.5} />
                   </span>
-                  What's Included
-                </h2>
-                <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <h2 className="text-xl font-heading font-black text-slate-900">
+                    What's Included In This Package
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {whatYouGet.map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-3 bg-white rounded-2xl p-4 border border-slate-100 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-300">
-                      <Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" strokeWidth={2.5} />
-                      <span className="text-sm text-slate-700 font-medium">{item}</span>
+                    <div key={idx} className="flex items-start gap-3 bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/60 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all duration-300">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" strokeWidth={2.5} />
+                      <span className="text-xs sm:text-sm text-slate-700 font-bold leading-snug">{item}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Included Courses */}
+            {/* Curriculum Courses */}
             {pkg.courses.length > 0 && (
               <div className="space-y-6">
-                <h2 className="text-lg font-heading font-black text-slate-900 flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-primary/25">
-                    <List className="w-[18px] h-[18px]" strokeWidth={2.5} />
-                  </span>
-                  Comprehensive Curriculum
-                  <span className="text-primary ml-auto">{pkg.courses.length} Courses</span>
-                </h2>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-sm">
+                      <List className="w-5 h-5" strokeWidth={2.5} />
+                    </span>
+                    <h2 className="text-xl font-heading font-black text-slate-900">
+                      Courses Bundled ({pkg.courses.length})
+                    </h2>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {pkg.courses.map(course => (
-                    <Link key={course.id} to={`/courses/${course.id}`} className="group relative">
-                      <div className="absolute -inset-[2px] rounded-[1.9rem] bg-gradient-to-br from-primary via-indigo-500 to-indigo-600 opacity-0 group-hover:opacity-40 blur-[4px] transition-all duration-500 pointer-events-none z-0"></div>
-
-                      <div className="relative bg-white rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] group-hover:shadow-[0_24px_60px_-12px_rgba(43,128,240,0.2)] group-hover:-translate-y-1.5 transition-all duration-500 z-10 overflow-hidden">
-                        <div className="aspect-video w-full relative overflow-hidden">
+                    <Link key={course.id} to={`/courses/${course.slug || course.id}`} className="group relative">
+                      <div className="relative bg-white rounded-3xl border border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgba(37,99,235,0.15)] hover:border-blue-300 hover:-translate-y-1.5 transition-all duration-500 overflow-hidden">
+                        <div className="aspect-video w-full relative overflow-hidden bg-slate-100">
                           {course.thumbnail_display_url ? (
-                            <img src={course.thumbnail_display_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <img src={course.thumbnail_display_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-primary/10 to-indigo-600/10 flex items-center justify-center">
-                              <Video className="w-12 h-12 text-primary/40" strokeWidth={1.5} />
+                            <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+                              <Video className="w-12 h-12 text-blue-400" strokeWidth={1.5} />
                             </div>
                           )}
-                          <div className="absolute top-3.5 left-3.5 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-primary uppercase tracking-widest shadow-sm">
+                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-blue-600 uppercase tracking-widest shadow-sm border border-white">
                             {course.level || 'All Levels'}
                           </div>
                         </div>
-                        <div className="p-5 sm:p-6">
-                          <h3 className="font-heading font-black text-slate-900 text-sm sm:text-base group-hover:text-primary transition-colors mb-3 uppercase leading-tight line-clamp-2">{course.title}</h3>
-                          <div className="flex items-center gap-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-widest flex-wrap">
+                        <div className="p-5">
+                          <h3 className="font-heading font-black text-slate-900 text-base group-hover:text-blue-600 transition-colors mb-2 leading-snug line-clamp-2">{course.title}</h3>
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                             {course.course_duration && <span>{course.course_duration}</span>}
-                            {course.course_duration && course.language && <span className="w-1 h-1 rounded-full bg-slate-300"></span>}
+                            {course.course_duration && course.language && <span>•</span>}
                             {course.language && <span>{course.language}</span>}
                           </div>
                         </div>
@@ -217,86 +262,121 @@ export default function PackageDetail() {
             )}
           </div>
 
-          {/* Right: Sticky enrollment card */}
+          {/* Right Column: Sticky Enrollment Card */}
           <div className="lg:col-span-1">
-            <div className="sticky top-28 group relative">
-
-              <div className="absolute -inset-[1.5px] rounded-[1.9rem] bg-gradient-to-br from-primary via-indigo-500 to-indigo-600 opacity-0 group-hover:opacity-40 blur-[8px] transition-all duration-500 pointer-events-none z-0"></div>
-
-              <div className="relative z-10 bg-white rounded-3xl border border-slate-100 shadow-[0_8px_32px_rgba(0,0,0,0.06)] group-hover:shadow-[0_24px_60px_-12px_rgba(43,128,240,0.15)] transition-all duration-500 overflow-hidden">
-                <div className="h-1.5 w-full bg-gradient-to-r from-primary to-indigo-600"></div>
-                <div className="p-6 sm:p-7 space-y-6">
-
-                {/* Price */}
-                <div className="text-center pb-6 border-b border-slate-100">
-                  <p className="text-sm text-slate-400 line-through font-bold mb-2">₹{Number(pkg.price * 2).toLocaleString()}</p>
-                  <p className="text-5xl font-heading font-black bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">₹{Number(pkg.price).toLocaleString()}</p>
-                  <div className="mt-4 inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-emerald-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/80 animate-ping"></span>
-                    Save 50%
+            <div className="sticky top-28">
+              <div className="relative bg-white rounded-[2.5rem] border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.06)] overflow-hidden">
+                <div className="h-2 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500"></div>
+                <div className="p-6 sm:p-8 space-y-6">
+                  {/* Pricing Box */}
+                  <div className="text-center pb-6 border-b border-slate-100">
+                    {pricingPreview?.upgrade_credit > 0 ? (
+                      <div className="bg-slate-50 rounded-2xl p-4 text-left">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Package Price</p>
+                          <p className="text-sm font-bold text-slate-600">₹{Number(Math.round(pricingPreview.base_price)).toLocaleString('en-IN')}</p>
+                        </div>
+                        <div className="flex items-center justify-between mt-1.5">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Already Paid Credit</p>
+                          <p className="text-sm font-bold text-emerald-600">−₹{Number(Math.round(pricingPreview.upgrade_credit)).toLocaleString('en-IN')}</p>
+                        </div>
+                        <div className="border-t border-dashed border-slate-200 mt-2.5 pt-2.5 flex items-center justify-between">
+                          <p className="text-xs text-slate-500 font-black uppercase">You Pay</p>
+                          <p className="text-2xl font-black text-blue-600">₹{Number(Math.round(pricingPreview.final_amount)).toLocaleString('en-IN')}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-xs text-slate-400 line-through font-bold mb-1 uppercase tracking-wider">Original Price: ₹{Number(Math.round(pkg.price * 2)).toLocaleString('en-IN')}</p>
+                        <p className="text-4xl sm:text-5xl font-heading font-black text-slate-900 tracking-tight">
+                          ₹{Number(Math.round(pkg.price)).toLocaleString('en-IN')}
+                        </p>
+                        <div className="mt-3 inline-flex items-center gap-1.5 bg-emerald-500 text-white text-[10px] font-black px-3.5 py-1 rounded-full uppercase tracking-widest shadow-md shadow-emerald-500/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                          Limited Time 50% Off
+                        </div>
+                      </>
+                    )}
                   </div>
-                </div>
 
-                {/* Commission info */}
-                <div className="space-y-3">
-                  <p className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                    <DollarSign className="w-4 h-4" strokeWidth={2.5} />
-                    Referral Earnings
-                  </p>
-                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-slate-600 uppercase tracking-tight">Direct (L1)</span>
-                      <span className="font-black text-emerald-600 text-lg">{l1}%</span>
+                  {/* Affiliate Earnings Box */}
+                  <div className="bg-blue-50/60 border border-blue-100 rounded-2xl p-4 space-y-3">
+                    <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-blue-600" strokeWidth={2.5} />
+                      Referral Earnings Potential
+                    </p>
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-700">
+                      <span>Direct (Level 1):</span>
+                      <span className="font-black text-emerald-600 text-sm">{l1}% (₹{Number(Math.round(pkg.price * l1 / 100)).toLocaleString('en-IN')})</span>
                     </div>
-                    <div className="border-t border-slate-200"></div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-slate-600 uppercase tracking-tight">Passive (L2)</span>
-                      <span className="font-black text-blue-600 text-lg">{l2}%</span>
+                    <div className="border-t border-blue-100"></div>
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-700">
+                      <span>Passive (Level 2):</span>
+                      <span className="font-black text-blue-600 text-sm">{l2}% (₹{Number(Math.round(pkg.price * l2 / 100)).toLocaleString('en-IN')})</span>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-400 text-center">
-                    Direct: ₹{Number(pkg.price * l1 / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })} | Passive: ₹{Number(pkg.price * l2 / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </p>
-                </div>
 
-                {/* CTA */}
-                <div className="space-y-3">
-                  {user ? (
-                    <Link to={`/student/checkout?package_id=${pkg.id}`}
-                      className="group/btn relative w-full py-3.5 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white font-black rounded-xl text-sm transition-all shadow-lg shadow-primary/20 uppercase tracking-wider overflow-hidden inline-flex items-center justify-center">
-                      <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-500"></span>
-                      Buy This Package
-                    </Link>
-                  ) : (
-                    <>
-                      <Link to="/register"
-                        className="group/btn relative w-full py-3.5 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white font-black rounded-xl text-sm transition-all shadow-lg shadow-primary/20 uppercase tracking-wider overflow-hidden inline-flex items-center justify-center">
-                        <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-500"></span>
-                        Enroll Now
-                      </Link>
-                      <Link to="/login"
-                        className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-xs border border-slate-200 uppercase tracking-wider inline-block text-center">
-                        Already Enrolled? Login
-                      </Link>
-                    </>
-                  )}
-                </div>
+                  {/* Actions */}
+                  <div className="space-y-3 pt-2">
+                    {authLoading ? (
+                      <div className="w-full py-4 px-4 bg-slate-100 rounded-2xl animate-pulse h-[52px]"></div>
+                    ) : user ? (
+                      pkg.owned ? (
+                        <Link
+                          to={`/student/packages/${pkg.id}`}
+                          className="group relative w-full py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 active:scale-95 text-center overflow-hidden"
+                        >
+                          <CheckCircle2 className="w-4 h-4 shrink-0" strokeWidth={2.5} />
+                          <span>Go to My Package</span>
+                          <ArrowRight className="w-4 h-4 shrink-0 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+                        </Link>
+                      ) : (
+                        <Link
+                          to={`/student/checkout?package_id=${pkg.id}`}
+                          className="group relative w-full py-4 px-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 active:scale-95 text-center overflow-hidden"
+                        >
+                          <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></span>
+                          <span>Buy Package Now</span>
+                          <ArrowRight className="w-4 h-4 shrink-0 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+                        </Link>
+                      )
+                    ) : (
+                      <>
+                        <Link
+                          to="/register"
+                          className="group relative w-full py-4 px-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 active:scale-95 text-center overflow-hidden"
+                        >
+                          <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></span>
+                          <span>Enroll & Get Started</span>
+                          <ArrowRight className="w-4 h-4 shrink-0 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+                        </Link>
+                        <Link
+                          to="/login"
+                          className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all text-xs border border-slate-200 uppercase tracking-widest inline-block text-center"
+                        >
+                          Already Enrolled? Login
+                        </Link>
+                      </>
+                    )}
+                  </div>
 
-                {/* Trust badges */}
-                <div className="pt-4 border-t border-slate-100 space-y-2.5">
-                  <div className="flex items-center gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" strokeWidth={2.5} />
-                    <span className="text-xs text-slate-600 font-medium">Secure &amp; verified checkout</span>
+                  {/* Trust guarantees */}
+                  <div className="pt-4 border-t border-slate-100 space-y-2.5">
+                    <div className="flex items-center gap-2.5 text-xs text-slate-600 font-bold">
+                      <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" strokeWidth={2.5} />
+                      <span>Instant Access & Guaranteed Enrollment</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-slate-600 font-bold">
+                      <Clock className="w-4 h-4 text-blue-600 shrink-0" strokeWidth={2.5} />
+                      <span>Lifetime Access to all {pkg.courses.length} courses</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    <Clock className="w-4 h-4 text-primary shrink-0" strokeWidth={2.5} />
-                    <span className="text-xs text-slate-600 font-medium">Lifetime access to all {pkg.courses.length} courses</span>
-                  </div>
-                </div>
+
                 </div>
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>

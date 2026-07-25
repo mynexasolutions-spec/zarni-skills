@@ -1,7 +1,7 @@
 """
 Razorpay payment helpers for Zarni Skills.
-Razorpay Key ID and Secret are read from SiteSettings at call-time,
-so the admin can update them live without a server restart.
+Razorpay Key ID and Secret are read from the .env file (via app config) —
+not admin-configurable, so a server restart is needed to pick up new keys.
 """
 from __future__ import annotations
 import hmac, hashlib
@@ -9,11 +9,10 @@ from flask import current_app
 
 
 def _get_razorpay_client():
-    """Build a Razorpay client using keys stored in SiteSettings."""
+    """Build a Razorpay client using keys from app config (.env)."""
     import razorpay
-    from app.models import SiteSettings
-    key_id = SiteSettings.get('razorpay_key_id', '')
-    key_secret = SiteSettings.get('razorpay_key_secret', '')
+    key_id = current_app.config.get('RAZORPAY_KEY_ID', '')
+    key_secret = current_app.config.get('RAZORPAY_KEY_SECRET', '')
     if not key_id or not key_secret:
         return None, None, None
     client = razorpay.Client(auth=(key_id, key_secret))
@@ -21,14 +20,8 @@ def _get_razorpay_client():
 
 
 def is_razorpay_enabled() -> bool:
-    """Returns True if Razorpay is enabled AND keys are present."""
-    from app.models import SiteSettings
-    enabled = SiteSettings.get('razorpay_enabled', 'false')
-    if enabled.lower() != 'true':
-        return False
-    key_id = SiteSettings.get('razorpay_key_id', '')
-    key_secret = SiteSettings.get('razorpay_key_secret', '')
-    return bool(key_id and key_secret)
+    """Returns True if both Razorpay keys are present in .env."""
+    return bool(current_app.config.get('RAZORPAY_KEY_ID') and current_app.config.get('RAZORPAY_KEY_SECRET'))
 
 
 def create_razorpay_order(amount_inr: float, receipt: str) -> dict | None:
@@ -92,5 +85,4 @@ def verify_razorpay_signature(razorpay_order_id: str,
 
 
 def get_razorpay_key_id() -> str:
-    from app.models import SiteSettings
-    return SiteSettings.get('razorpay_key_id', '')
+    return current_app.config.get('RAZORPAY_KEY_ID', '')

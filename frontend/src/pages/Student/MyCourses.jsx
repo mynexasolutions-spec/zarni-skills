@@ -1,7 +1,116 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Lock, Play, ShoppingCart, GraduationCap, Sparkles } from 'lucide-react';
+import { BookOpen, Lock, Play, ShoppingCart, GraduationCap, Sparkles, CheckCircle2, ArrowRight, ShieldCheck, Zap, Layers } from 'lucide-react';
 import api from '../../utils/api';
+import AnimatedNumber from '../../components/AnimatedNumber';
+import Reveal from '../../components/Reveal';
+import useTilt from '../../hooks/useTilt';
+
+function CourseCard({ course, isOwned, idx, onAction }) {
+  const { ref, onMouseMove, onMouseLeave } = useTilt(5);
+
+  return (
+    <Reveal variant="scale-in" delay={idx * 80}>
+      <div
+        ref={ref}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        className="group relative bg-white border border-slate-200/90 rounded-[2.25rem] overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_55px_rgba(37,99,235,0.15)] hover:border-blue-300 transition-all duration-500 flex flex-col justify-between [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform"
+      >
+        {/* Mouse Glare Overlay */}
+        <span
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"
+          style={{ background: `radial-gradient(280px circle at var(--glare-x,50%) var(--glare-y,50%), rgba(59,130,246,0.15), transparent 70%)` }}
+        ></span>
+
+        <div>
+          {/* Thumbnail Container */}
+          <div className="aspect-video bg-slate-900 relative overflow-hidden">
+            {course.thumbnail_display_url ? (
+              <img
+                src={course.thumbnail_display_url}
+                alt={course.title}
+                className={`w-full h-full object-cover transition-transform duration-700 ${
+                  isOwned ? 'group-hover:scale-110' : 'grayscale-[40%] group-hover:grayscale-0 group-hover:scale-105'
+                }`}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-700 bg-gradient-to-br from-slate-900 to-slate-950">
+                <BookOpen className="w-14 h-14" strokeWidth={1.5} />
+              </div>
+            )}
+
+            {/* Overlay Gradient & Badge */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"></div>
+
+            {isOwned ? (
+              <span className="absolute top-3.5 left-3.5 bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg shadow-emerald-500/20">
+                <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} /> Unlocked
+              </span>
+            ) : (
+              <span className="absolute top-3.5 left-3.5 bg-slate-900/90 backdrop-blur-md text-slate-200 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 border border-white/10">
+                <Lock className="w-3.5 h-3.5 text-amber-400" strokeWidth={2.5} /> Premium Lock
+              </span>
+            )}
+
+            {/* Hover Play Button */}
+            {isOwned && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100 z-20">
+                <div className="w-14 h-14 bg-white text-blue-600 rounded-full flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110">
+                  <Play className="w-6 h-6 fill-current translate-x-0.5" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Card Content */}
+          <div className="p-6">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                {course.level || 'All Levels'}
+              </span>
+              {course.language && (
+                <span className="text-[10px] font-bold text-slate-400 uppercase">
+                  • {course.language}
+                </span>
+              )}
+            </div>
+
+            <h3 className="font-heading font-black text-slate-900 text-base sm:text-lg line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
+              {course.title}
+            </h3>
+            <p className="text-xs text-slate-500 font-medium mt-2 line-clamp-2 leading-relaxed">
+              {course.description || 'Comprehensive training course designed for actionable results and skill mastery.'}
+            </p>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <div className="px-6 pb-6 pt-2">
+          {isOwned ? (
+            <button
+              onClick={() => onAction(course.id)}
+              className="group/btn relative overflow-hidden w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98]"
+            >
+              <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></span>
+              <Play className="w-4 h-4 fill-current relative" />
+              <span className="relative">Watch Course</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => onAction(course.id)}
+              className="group/btn relative overflow-hidden w-full py-3.5 bg-slate-900 hover:bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]"
+            >
+              <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></span>
+              <ShoppingCart className="w-4 h-4 relative" />
+              <span className="relative">Unlock via Package</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </Reveal>
+  );
+}
 
 export default function MyCourses() {
   const navigate = useNavigate();
@@ -26,128 +135,117 @@ export default function MyCourses() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+      <div className="min-h-[65vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Your Learning Hub...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 text-slate-800">
+    <div className="w-full space-y-10 text-slate-800 pb-12">
 
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-[2.5rem] p-8 sm:p-10 text-white mb-10"
-        style={{ background: 'linear-gradient(135deg, #0f1f4d 0%, #1e3a8a 45%, #2563eb 100%)' }}>
-        <div className="absolute -top-16 -right-10 w-72 h-72 bg-blue-400/25 rounded-full blur-[100px] pointer-events-none"></div>
-        <div className="absolute -bottom-20 -left-10 w-64 h-64 bg-indigo-400/15 rounded-full blur-[100px] pointer-events-none"></div>
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[10px] font-black uppercase tracking-widest text-blue-200 mb-4">
-              <GraduationCap className="w-3.5 h-3.5" /> Learning Hub
+      {/* HERO BANNER */}
+      <Reveal variant="scale-in">
+        <div
+          className="relative overflow-hidden rounded-[2.5rem] p-8 sm:p-12 text-white shadow-xl shadow-blue-900/10"
+          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%)' }}
+        >
+          {/* Ambient Glow & Shimmer */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/20 rounded-full blur-[120px] pointer-events-none"></div>
+          <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
+
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 border border-white/15 text-[10px] font-black uppercase tracking-widest text-blue-200 mb-4 backdrop-blur-md">
+                <GraduationCap className="w-4 h-4 text-blue-300 animate-pulse" /> Student Learning Workspace
+              </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black mb-3 tracking-tight">
+                My Course Vault
+              </h1>
+              <p className="text-slate-300 text-sm sm:text-base font-medium max-w-lg leading-relaxed">
+                Continue your learning journey, watch video modules, or unlock new high-income courses.
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black mb-2">My Courses</h1>
-            <p className="text-slate-300 text-sm max-w-lg">Continue where you left off, or unlock new courses through your packages.</p>
-          </div>
-          <div className="shrink-0 bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl px-6 py-4">
-            <p className="text-3xl font-black leading-none">{myCourses.length}</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/70 mt-1.5">Enrolled Courses</p>
+
+            {/* Enrolled Counter Card */}
+            <div className="relative shrink-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 text-center min-w-[180px] shadow-lg">
+              <AnimatedNumber value={myCourses.length} duration={1200} className="block text-4xl sm:text-5xl font-heading font-black leading-none text-white tracking-tight" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-blue-200 mt-2">Unlocked Courses</p>
+            </div>
           </div>
         </div>
-      </div>
+      </Reveal>
 
-      {/* My Courses */}
-      <section className="mb-14">
-        <h2 className="text-xl font-black mb-6 flex items-center gap-2">
-          <Play className="w-5 h-5 text-primary fill-primary" /> Continue Learning
-        </h2>
+      {/* CONTINUED LEARNING SECTION */}
+      <section className="space-y-6">
+        <Reveal variant="fade-up">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-heading font-black text-slate-900 tracking-tight flex items-center gap-3">
+              <span className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
+                <Play className="w-5 h-5 fill-current translate-x-0.5" strokeWidth={2.5} />
+              </span>
+              Enrolled Courses ({myCourses.length})
+            </h2>
+          </div>
+        </Reveal>
 
         {myCourses.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {myCourses.map((course, idx) => (
-              <div
+              <CourseCard
                 key={course.id}
-                className="group bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 animate-fade-in-up"
-                style={{ animationDelay: `${idx * 60}ms` }}
-              >
-                <div className="aspect-video bg-slate-100 relative overflow-hidden">
-                  {course.thumbnail_display_url ? (
-                    <img src={course.thumbnail_display_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-primary/30">
-                      <BookOpen className="w-12 h-12" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100">
-                    <div className="w-14 h-14 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl">
-                      <Play className="w-6 h-6 text-primary fill-primary translate-x-0.5" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-bold text-slate-900 text-sm line-clamp-2 uppercase group-hover:text-primary transition-colors">{course.title}</h3>
-                  <p className="text-xs text-slate-400 mt-2 line-clamp-2">{course.description || 'Actionable training syllabus.'}</p>
-
-                  <button
-                    onClick={() => navigate(`/student/watch/${course.id}`)}
-                    className="w-full mt-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-md shadow-primary/20 group-hover:shadow-lg transition-all"
-                  >
-                    <Play className="w-4 h-4 fill-white" /> Watch Course
-                  </button>
-                </div>
-              </div>
+                course={course}
+                isOwned={true}
+                idx={idx}
+                onAction={(id) => navigate(`/student/watch-course/${id}`)}
+              />
             ))}
           </div>
         ) : (
-          <div className="relative overflow-hidden text-center py-16 bg-white rounded-3xl border border-slate-100 max-w-xl mx-auto">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-2xl pointer-events-none"></div>
-            <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4 relative z-10" />
-            <h3 className="text-lg font-bold text-slate-850 relative z-10">No Courses Yet</h3>
-            <p className="text-sm text-slate-400 mt-2 mb-6 relative z-10">You haven't unlocked any courses. Browse our packages to enroll.</p>
-            <button onClick={() => navigate('/student/packages')} className="relative z-10 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:-translate-y-0.5 transition-all">
-              Browse Packages
-            </button>
-          </div>
+          <Reveal variant="scale-in">
+            <div className="text-center py-16 px-6 bg-white rounded-[2.5rem] border border-slate-200/90 shadow-sm max-w-lg mx-auto">
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4 border border-blue-100">
+                <BookOpen className="w-8 h-8" strokeWidth={1.5} />
+              </div>
+              <h3 className="text-xl font-heading font-black text-slate-900 mb-2">No Courses Enrolled Yet</h3>
+              <p className="text-sm text-slate-500 font-medium mb-6 leading-relaxed">
+                You haven't unlocked any courses yet. Choose a package to gain immediate lifetime access to top courses.
+              </p>
+              <button
+                onClick={() => navigate('/student/packages')}
+                className="px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/25 transition-transform active:scale-95"
+              >
+                Browse Available Packages
+              </button>
+            </div>
+          </Reveal>
         )}
       </section>
 
-      {/* Available / Locked Courses */}
+      {/* AVAILABLE COURSES SECTION */}
       {availableCourses.length > 0 && (
-        <section>
-          <h2 className="text-xl font-black mb-6 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-500" /> Available to Unlock
-          </h2>
+        <section className="space-y-6 pt-4">
+          <Reveal variant="fade-up">
+            <h2 className="text-2xl font-heading font-black text-slate-900 tracking-tight flex items-center gap-3">
+              <span className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 shadow-sm">
+                <Sparkles className="w-5 h-5" strokeWidth={2.5} />
+              </span>
+              Available to Unlock ({availableCourses.length})
+            </h2>
+          </Reveal>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {availableCourses.map((course, idx) => (
-              <div
+              <CourseCard
                 key={course.id}
-                className="group bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all animate-fade-in-up"
-                style={{ animationDelay: `${idx * 60}ms` }}
-              >
-                <div className="aspect-video bg-slate-100 relative">
-                  {course.thumbnail_display_url ? (
-                    <img src={course.thumbnail_display_url} alt={course.title} className="w-full h-full object-cover grayscale-[40%] group-hover:grayscale-0 transition-all duration-500" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-primary/30">
-                      <BookOpen className="w-12 h-12" />
-                    </div>
-                  )}
-                  <span className="absolute top-3 left-3 bg-slate-900/80 text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                    <Lock className="w-3 h-3" /> Locked
-                  </span>
-                </div>
-                <div className="p-6 flex flex-col justify-between min-h-[180px]">
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm line-clamp-2 uppercase">{course.title}</h3>
-                    <p className="text-xs text-slate-400 mt-2 line-clamp-2">{course.description || 'Master hands-on skills.'}</p>
-                  </div>
-                  <div className="mt-6">
-                    <button onClick={() => navigate('/student/packages')} className="w-full py-3 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:shadow-lg transition-all">
-                      <ShoppingCart className="w-4 h-4" /> Unlock via Package
-                    </button>
-                  </div>
-                </div>
-              </div>
+                course={course}
+                isOwned={false}
+                idx={idx}
+                onAction={() => navigate('/student/packages')}
+              />
             ))}
           </div>
         </section>
@@ -156,3 +254,4 @@ export default function MyCourses() {
     </div>
   );
 }
+

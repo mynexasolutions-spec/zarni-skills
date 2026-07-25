@@ -34,6 +34,7 @@ def create_app():
     os.makedirs(app.config['VIDEO_UPLOAD_FOLDER'], exist_ok=True)
     os.makedirs(app.config['THUMBNAIL_UPLOAD_FOLDER'], exist_ok=True)
     os.makedirs(app.config['KYC_UPLOAD_FOLDER'], exist_ok=True)
+    os.makedirs(app.config['FREELANCE_UPLOAD_FOLDER'], exist_ok=True)
 
     from app.auth.routes import auth_bp
     from app.student.routes import student_bp

@@ -26,8 +26,10 @@ export default function AdminLayout() {
         </div>
 
         {/* Main Content Area — owns its own scroll region */}
-        <main className="flex-grow min-h-0 p-4 sm:p-6 overflow-y-auto overflow-x-hidden admin-scrollbar max-w-7xl mx-auto w-full">
-          <Outlet />
+        <main className="flex-grow min-h-0 px-4 sm:px-6 lg:px-8 py-5 sm:py-7 overflow-y-auto overflow-x-hidden admin-scrollbar w-full">
+          <div className="max-w-7xl mx-auto w-full">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
-import { ChevronDown, Layers, ChevronRight, ArrowRight, GraduationCap, Menu, X } from 'lucide-react';
+import { ChevronDown, Layers, ChevronRight, ArrowRight, GraduationCap, Menu, X, Sparkles } from 'lucide-react';
 
 export default function Navbar() {
   const { user } = useAuth();
@@ -14,6 +14,7 @@ export default function Navbar() {
   const [mobileCoursesOpen, setMobileCoursesOpen] = useState(false);
   const [packages, setPackages] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [navDataLoading, setNavDataLoading] = useState(true);
 
   const isActive = (path) => location.pathname === path;
   const isActiveGroup = (...paths) => paths.some(p => location.pathname.startsWith(p));
@@ -28,7 +29,7 @@ export default function Navbar() {
     api.get('/global-data').then(r => {
       setPackages(r.data.packages || []);
       setCourses(r.data.courses || []);
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setNavDataLoading(false));
   }, []);
 
   useEffect(() => {
@@ -46,16 +47,16 @@ export default function Navbar() {
   const navH = scrolled ? 'lg:h-16' : 'lg:h-[84px]';
   const logoH = scrolled ? 'h-10 lg:h-16' : 'h-10 lg:h-[84px]';
   const shadow = scrolled
-    ? 'shadow-[0_4px_30px_rgba(0,0,0,0.1)] bg-white/98'
-    : 'shadow-[0_1px_20px_rgba(0,0,0,0.06)] bg-white/90';
+    ? 'shadow-[0_8px_30px_rgba(15,23,42,0.12)] bg-white border-b border-slate-200'
+    : 'shadow-[0_4px_24px_rgba(37,99,235,0.08)] bg-white border-b border-slate-200/80';
 
   return (
     <nav className="fixed w-full z-50 top-0 left-0">
       {/* Top accent gradient line */}
-      <div className="w-full h-[2px] bg-gradient-to-r from-primary via-indigo-500 to-primary"></div>
+      <div className="w-full h-[2.5px] bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]"></div>
 
       {/* Nav Bar */}
-      <div className={`w-full flex items-center justify-between gap-4 lg:gap-8 xl:gap-12 py-2.5 lg:py-0 px-5 sm:px-8 lg:px-10 xl:px-14 backdrop-blur-md border-b border-slate-200/60 transition-all duration-300 ${shadow}`}>
+      <div className={`w-full flex items-center justify-between gap-4 lg:gap-8 xl:gap-12 py-2 sm:py-2.5 lg:py-0 px-4 sm:px-8 lg:px-10 xl:px-14 transition-all duration-300 ${shadow}`}>
 
         {/* Logo */}
         <Link to="/" className={`flex items-center flex-shrink-0 overflow-hidden transition-all duration-300 ${logoH}`}>
@@ -95,12 +96,22 @@ export default function Navbar() {
                   </div>
                   <div>
                     <p className="font-heading font-black text-sm text-slate-900 leading-tight">Premium Bundles</p>
-                    <p className="text-[11px] text-slate-400 font-semibold">{packages.length} package{packages.length !== 1 ? 's' : ''} available</p>
+                    <p className="text-[11px] text-slate-400 font-semibold">
+                      {navDataLoading ? 'Loading packages…' : `${packages.length} package${packages.length !== 1 ? 's' : ''} available`}
+                    </p>
                   </div>
                 </div>
               </div>
               <div className="flex flex-col gap-1 p-3">
-                {packages.map((pkg, idx) => (
+                {navDataLoading && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-6 h-6 rounded-full border-2 border-primary/20 border-t-primary animate-spin"></div>
+                  </div>
+                )}
+                {!navDataLoading && packages.length === 0 && (
+                  <p className="text-center text-xs text-slate-400 font-semibold py-6">No packages available right now.</p>
+                )}
+                {!navDataLoading && packages.map((pkg, idx) => (
                   <Link key={pkg.id} to={`/packages/${pkg.id}`}
                     className="relative flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 group/item hover:bg-gradient-to-r hover:from-primary/[0.06] hover:to-indigo-50/60 hover:shadow-[inset_2px_0_0_0_#2b80f0]">
                     <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-slate-100 border border-slate-100 shadow-sm transition-transform duration-300 group-hover/item:scale-105">
@@ -153,9 +164,17 @@ export default function Navbar() {
                 </div>
               </div>
               <div className="p-5">
-                <div className="grid grid-cols-2 gap-1.5">
-                  {courses.slice(0, 6).map(course => (
-                    <Link key={course.id} to={`/courses/${course.id}`}
+                {navDataLoading && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-6 h-6 rounded-full border-2 border-primary/20 border-t-primary animate-spin"></div>
+                  </div>
+                )}
+                {!navDataLoading && courses.length === 0 && (
+                  <p className="text-center text-xs text-slate-400 font-semibold py-6">No courses available right now.</p>
+                )}
+                <div className={`grid grid-cols-2 gap-1.5 ${navDataLoading ? 'hidden' : ''}`}>
+                  {!navDataLoading && courses.slice(0, 6).map(course => (
+                    <Link key={course.id} to={`/courses/${course.slug || course.id}`}
                       className="flex items-center gap-2.5 p-2 rounded-xl transition-all duration-200 group/item hover:bg-gradient-to-r hover:from-primary/[0.06] hover:to-sky-50/60 hover:shadow-[inset_2px_0_0_0_#2b80f0]">
                       <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-slate-100 border border-slate-100 shadow-sm transition-transform duration-300 group-hover/item:scale-105">
                         {course.thumbnail_display_url
@@ -197,17 +216,22 @@ export default function Navbar() {
         {/* Actions */}
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           {user ? (
-            <Link to={dashboardLink} className="group relative inline-flex items-center gap-2 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-primary/25 transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-              Dashboard
+            <Link to={dashboardLink} className="group relative inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/30 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden">
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+              <span className="relative flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                Dashboard
+              </span>
             </Link>
           ) : (
             <>
-              <Link to="/login" className="hidden sm:inline-flex items-center text-sm font-bold text-slate-600 hover:text-primary px-4 py-2.5 transition-colors duration-200 rounded-xl hover:bg-slate-100">Login</Link>
-              <Link to="/register" className="group relative inline-flex items-center gap-2 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-primary/25 transition-all duration-300 hover:-translate-y-0.5 overflow-hidden whitespace-nowrap">
-                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-                Get Started
-                <ArrowRight className="w-3.5 h-3.5 shrink-0 hidden sm:block" strokeWidth={2.5} />
+              <Link to="/login" className="hidden sm:inline-flex items-center text-xs font-black uppercase tracking-wider text-slate-600 hover:text-blue-600 px-4 py-2.5 transition-colors duration-200 rounded-xl hover:bg-blue-50">Login</Link>
+              <Link to="/register" className="group relative inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/30 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden whitespace-nowrap">
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                <span className="relative flex items-center gap-1.5">
+                  Get Started
+                  <ArrowRight className="w-3.5 h-3.5 shrink-0 hidden sm:block" strokeWidth={2.5} />
+                </span>
               </Link>
             </>
           )}
@@ -266,7 +290,7 @@ export default function Navbar() {
               <div className="overflow-hidden transition-all duration-300 bg-slate-50 rounded-xl mt-1 mx-1" style={{ maxHeight: mobileCoursesOpen ? '600px' : '0px' }}>
                 <div className="flex flex-col gap-2 p-3">
                   {courses.slice(0, 7).map(course => (
-                    <Link key={course.id} to={`/courses/${course.id}`} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 p-2 hover:bg-white rounded-xl transition-all duration-150">
+                    <Link key={course.id} to={`/courses/${course.slug || course.id}`} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 p-2 hover:bg-white rounded-xl transition-all duration-150">
                       <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-slate-100 border border-slate-200 shadow-sm">
                         {course.thumbnail_display_url ? <img src={course.thumbnail_display_url} alt={course.title} className="w-full h-full object-cover" loading="lazy" /> : <div className="w-full h-full bg-gradient-to-br from-primary to-sky-500 flex items-center justify-center text-[8px] font-bold text-white">C</div>}
                       </div>

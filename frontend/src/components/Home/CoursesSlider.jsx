@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, BadgeCheck, Star, Clock, ArrowRight } from 'lucide-react';
 
 function stripAndTruncate(html, max = 80) {
@@ -20,6 +20,7 @@ function getCardsPerPage() {
 }
 
 export default function CoursesSlider({ courses, loading = false }) {
+  const navigate = useNavigate();
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -150,44 +151,57 @@ export default function CoursesSlider({ courses, loading = false }) {
   };
 
   return (
-    <section ref={sectionRef} className="py-32 bg-slate-50 relative overflow-hidden" id="courses">
+    <section ref={sectionRef} className="pt-8 sm:pt-28 pb-16 sm:pb-32 bg-slate-50 relative overflow-hidden" id="courses">
       {/* Background artwork */}
-      <div className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" style={{ backgroundImage: 'url(/static/img/bgimage.png)' }}></div>
+      <div className="absolute inset-0 bg-cover bg-center pointer-events-none z-0 opacity-40" style={{ backgroundImage: 'url(/static/img/bgimage.png)' }}></div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      {/* Top shimmer sweep bar */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent animate-shimmer-sweep pointer-events-none"></div>
+
+      {/* Ambient background glow spheres */}
+      <div className="absolute -left-20 top-20 w-80 h-80 bg-blue-500/10 rounded-full blur-[120px] pointer-events-none z-0 animate-pulse"></div>
+      <div className="absolute right-0 bottom-10 w-96 h-96 bg-indigo-400/15 rounded-full blur-[130px] pointer-events-none z-0 animate-blob"></div>
+      <div className="absolute left-1/3 bottom-0 w-64 h-64 bg-cyan-400/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
+
+      {/* Floating Sparkles & Light Particles */}
+      <div className="absolute top-16 left-[12%] w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_12px_#3b82f6] animate-float pointer-events-none z-0"></div>
+      <div className="absolute bottom-20 right-[10%] w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_15px_#6366f1] animate-float-delayed pointer-events-none z-0"></div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-10 md:mb-16">
-          <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200/80 shadow-sm mb-6 mx-auto">
+          <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/90 border border-blue-200/80 shadow-[0_4px_14px_rgba(37,99,235,0.12)] mb-5 mx-auto select-none backdrop-blur-md">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-600 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
             </span>
-            <span className="text-xs font-bold text-slate-700 tracking-widest uppercase">Premium Catalog</span>
+            <span className="text-xs font-extrabold text-blue-700 tracking-widest uppercase">PREMIUM COURSE CATALOG</span>
           </div>
-          <h3 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 leading-tight">
-            Courses that <span className="relative inline-block bg-gradient-to-r from-primary via-indigo-500 to-indigo-600 bg-clip-text text-transparent">Shape Your Future<span className="absolute -bottom-1 left-0 right-0 h-[3px] rounded-full bg-gradient-to-r from-primary via-indigo-500 to-indigo-600 opacity-30"></span></span>
+
+          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 leading-tight tracking-tight">
+            Courses that <span className="relative inline-block bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-800 bg-clip-text text-transparent drop-shadow-[0_2px_15px_rgba(37,99,235,0.25)]">Shape Your Future<span className="absolute -bottom-1 left-0 right-0 h-[3.5px] rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 shadow-[0_0_10px_rgba(37,99,235,0.6)]"></span></span>
           </h3>
-          <p className="text-slate-500 mt-4 text-sm sm:text-base max-w-xl mx-auto">
+          <p className="text-slate-500 mt-4 text-sm sm:text-base max-w-xl mx-auto font-medium leading-relaxed">
             Learn industry-disruptive practical skills and build your financial future from day one.
           </p>
         </div>
       </div>
 
       <div
-        className="relative max-w-7xl mx-auto px-6 group/slider z-10"
+        className="relative max-w-7xl mx-auto px-4 sm:px-6 group/slider z-10"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
 
-        {/* Categories */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
+        {/* Categories — Single horizontal line on mobile with smooth scrolling */}
+        <div className="flex flex-nowrap overflow-x-auto justify-start sm:justify-center gap-2 sm:gap-3 mb-8 sm:mb-12 px-2 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {['all', 'creative', 'technical', 'softskills'].map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-6 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase transition-all duration-300 shadow-sm ${
+              className={`shrink-0 whitespace-nowrap px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-xs font-black tracking-wider uppercase transition-all duration-300 ${
                 activeCategory === cat
-                  ? 'shadow-primary/10 bg-gradient-to-r from-primary to-indigo-600 text-white'
-                  : 'bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 hover:text-primary'
+                  ? 'shadow-[0_8px_25px_rgba(37,99,235,0.35)] bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 text-white scale-105'
+                  : 'bg-white/90 border border-slate-200/90 text-slate-600 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 hover:scale-105'
               }`}
             >
               {cat === 'all' ? 'All Catalog' : cat}
@@ -200,7 +214,7 @@ export default function CoursesSlider({ courses, loading = false }) {
           onClick={() => goToPage(currentPage - 1)}
           disabled={maxPage <= 0}
           aria-label="Previous courses"
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-14 h-14 bg-white/90 backdrop-blur-md rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 hidden md:flex items-center justify-center text-slate-800 transition-all duration-300 hover:bg-primary hover:text-white hover:border-primary hover:scale-110 hover:shadow-[0_12px_36px_rgba(43,128,240,0.3)] active:scale-100 -translate-x-1/2 disabled:opacity-0 disabled:pointer-events-none disabled:scale-90"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-12 h-12 sm:w-14 sm:h-14 bg-white/95 backdrop-blur-md rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.12)] border border-white hidden md:flex items-center justify-center text-slate-800 transition-all duration-300 hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:scale-110 hover:shadow-[0_12px_36px_rgba(37,99,235,0.4)] active:scale-95 -translate-x-1/2 disabled:opacity-0 disabled:pointer-events-none disabled:scale-90"
         >
           <ChevronLeft width={26} height={26} strokeWidth={2.5} />
         </button>
@@ -208,7 +222,7 @@ export default function CoursesSlider({ courses, loading = false }) {
           onClick={() => goToPage(currentPage + 1)}
           disabled={maxPage <= 0}
           aria-label="Next courses"
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-14 h-14 bg-white/90 backdrop-blur-md rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 hidden md:flex items-center justify-center text-slate-800 transition-all duration-300 hover:bg-primary hover:text-white hover:border-primary hover:scale-110 hover:shadow-[0_12px_36px_rgba(43,128,240,0.3)] active:scale-100 translate-x-1/2 disabled:opacity-0 disabled:pointer-events-none disabled:scale-90"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-12 h-12 sm:w-14 sm:h-14 bg-white/95 backdrop-blur-md rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.12)] border border-white hidden md:flex items-center justify-center text-slate-800 transition-all duration-300 hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:scale-110 hover:shadow-[0_12px_36px_rgba(37,99,235,0.4)] active:scale-95 translate-x-1/2 disabled:opacity-0 disabled:pointer-events-none disabled:scale-90"
         >
           <ChevronRight width={26} height={26} strokeWidth={2.5} />
         </button>
@@ -216,7 +230,7 @@ export default function CoursesSlider({ courses, loading = false }) {
         {/* Slider Viewport — native scroll-snap, smooth on touch/trackpad/mouse-drag */}
         <div
           ref={trackRef}
-          className="flex gap-6 pb-12 px-4 -mx-4 pt-4 overflow-x-auto snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-5 sm:gap-6 pb-12 px-6 sm:px-4 -mx-4 pt-4 overflow-x-auto snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={stopDragging}
@@ -247,7 +261,7 @@ export default function CoursesSlider({ courses, loading = false }) {
                 <div className="absolute -inset-1 rounded-[2.2rem] bg-gradient-to-r from-primary to-indigo-600 opacity-0 group-hover/card:opacity-100 blur-[8px] transition-all duration-500 pointer-events-none z-0"></div>
 
                 <Link
-                  to={`/courses/${course.id}`}
+                  to={`/courses/${course.slug || course.id}`}
                   draggable={false}
                   onClickCapture={onCardClickCapture}
                   className="relative block w-full rounded-[2rem] bg-white border border-slate-100 shadow-[0_15px_40px_-20px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_-10px_rgba(43,128,240,0.18)] hover:-translate-y-2 transition-all duration-500 overflow-hidden flex flex-col h-full z-10"
@@ -303,26 +317,35 @@ export default function CoursesSlider({ courses, loading = false }) {
                       </span>
                     </div>
 
-                    {/* Instructor row — only shown when a real instructor is set on the course */}
-                    {course.instructor_name && (
-                      <div className="mt-3.5 pt-3.5 border-t border-slate-100 flex items-center gap-2.5">
-                        {course.instructor_image_display_url ? (
-                          <img
-                            src={course.instructor_image_display_url}
-                            alt={course.instructor_name}
-                            className="w-8 h-8 rounded-full object-cover shrink-0"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-indigo-600 text-white text-[10px] font-black flex items-center justify-center shrink-0">
-                            {course.instructor_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-800 truncate">{course.instructor_name}</p>
-                          <p className="text-[10px] text-slate-400 font-medium">Instructor</p>
+                    {/* Instructor row — Clicking photo or name opens instructor profile */}
+                    <div
+                      className="mt-3.5 pt-3.5 border-t border-slate-100 flex items-center gap-2.5 group/instructor cursor-pointer hover:bg-blue-50/50 p-1.5 -mx-1.5 rounded-xl transition-all"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (course.instructor_slug) {
+                          navigate(`/instructor/${course.instructor_slug}`);
+                        } else {
+                          navigate('/about');
+                        }
+                      }}
+                    >
+                      {course.instructor_image_display_url ? (
+                        <img
+                          src={course.instructor_image_display_url}
+                          alt={course.instructor_name || 'Zarni Skills Team'}
+                          className="w-8 h-8 rounded-full object-cover shrink-0 border border-blue-200 group-hover/instructor:scale-110 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-[10px] font-black flex items-center justify-center shrink-0 shadow-sm group-hover/instructor:scale-110 transition-transform">
+                          {(course.instructor_name || 'Zarni Skills Team').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
                         </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-800 group-hover/instructor:text-blue-600 transition-colors truncate">{course.instructor_name || 'Zarni Skills Team'}</p>
+                        <p className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">View Profile →</p>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </Link>
               </div>

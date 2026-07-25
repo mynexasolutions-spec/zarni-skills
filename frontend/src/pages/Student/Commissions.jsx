@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, CheckCircle2, Wallet, Clock } from 'lucide-react';
+import { Sparkles, CheckCircle2, Wallet, Clock, TrendingUp, Layers, Receipt, ShieldCheck } from 'lucide-react';
 import api from '../../utils/api';
+import AnimatedNumber from '../../components/AnimatedNumber';
+import Reveal from '../../components/Reveal';
+import useTilt from '../../hooks/useTilt';
 
 export default function Commissions() {
   const [commissions, setCommissions] = useState([]);
-  const [totals, setTotals] = useState({ total_earned: 0, available_balance: 0, pending_earnings: 0 });
+  const [totals, setTotals] = useState({ total_earned: 0, available_balance: 0, pending_earnings: 0, active_total: 0, passive_total: 0 });
   const [loading, setLoading] = useState(true);
+
+  const { ref: tiltHeroRef, onMouseMove: onHeroMove, onMouseLeave: onHeroLeave } = useTilt(3);
 
   useEffect(() => {
     const fetchCommissions = async () => {
@@ -16,6 +21,8 @@ export default function Commissions() {
           total_earned: response.data.total_earned || 0,
           available_balance: response.data.available_balance || 0,
           pending_earnings: response.data.pending_earnings || 0,
+          active_total: response.data.active_total || 0,
+          passive_total: response.data.passive_total || 0,
         });
       } catch (err) {
         console.error('Error fetching commissions', err);
@@ -28,113 +35,171 @@ export default function Commissions() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+      <div className="min-h-[65vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Commission Ledger...</p>
+        </div>
       </div>
     );
   }
 
   const kpis = [
-    { label: 'Total Earned', value: totals.total_earned, icon: CheckCircle2, color: 'from-emerald-500 to-green-600' },
-    { label: 'Available Balance', value: totals.available_balance, icon: Wallet, color: 'from-primary to-indigo-600' },
-    { label: 'Pending', value: totals.pending_earnings, icon: Clock, color: 'from-amber-500 to-orange-600' },
+    { label: 'Total Earned', value: totals.total_earned, icon: CheckCircle2, from: '#10b981', to: '#059669', shadow: 'rgba(16,185,129,0.3)' },
+    { label: 'Available Balance', value: totals.available_balance, icon: Wallet, from: '#2563eb', to: '#1d4ed8', shadow: 'rgba(37,99,235,0.3)' },
+    { label: 'Pending', value: totals.pending_earnings, icon: Clock, from: '#f59e0b', to: '#d97706', shadow: 'rgba(245,158,11,0.3)' },
+    { label: 'Active Income (L1)', value: totals.active_total, icon: TrendingUp, from: '#06b6d4', to: '#0891b2', shadow: 'rgba(6,182,212,0.3)' },
+    { label: 'Passive Income (L2)', value: totals.passive_total, icon: Layers, from: '#8b5cf6', to: '#7c3aed', shadow: 'rgba(139,92,246,0.3)' },
   ];
 
   return (
-    <div className="text-slate-800">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-indigo-600 text-white flex items-center justify-center shadow-md shadow-primary/25 shrink-0">
-          <Sparkles className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-black leading-tight">My Commissions</h2>
-          <p className="text-xs text-slate-400 font-medium">{commissions.length} commission{commissions.length !== 1 ? 's' : ''} earned from your referrals</p>
-        </div>
-      </div>
+    <div className="w-full space-y-8 text-slate-800 pb-12">
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        {kpis.map(kpi => (
-          <div key={kpi.label} className={`rounded-2xl p-5 text-white bg-gradient-to-br ${kpi.color} shadow-lg`}>
-            <kpi.icon className="w-5 h-5 mb-2 text-white/80" />
-            <p className="text-xl font-black leading-none">₹{kpi.value.toLocaleString('en-IN')}</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/75 mt-1.5">{kpi.label}</p>
-          </div>
-        ))}
-      </div>
+      {/* ── 3D TILT HERO HERO BANNER ───────────────────────────────────────── */}
+      <Reveal variant="scale-in">
+        <div
+          ref={tiltHeroRef}
+          onMouseMove={onHeroMove}
+          onMouseLeave={onHeroLeave}
+          className="relative rounded-[2.5rem] p-6 sm:p-10 text-white shadow-2xl shadow-blue-950/20 overflow-hidden group [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform transition-transform duration-300"
+          style={{ background: 'linear-gradient(135deg, #0b1428 0%, #1e3a8a 50%, #2563eb 100%)' }}
+        >
+          {/* Ambient Lighting & Pattern Sweep */}
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/20 rounded-full blur-[140px] pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-emerald-500/20 rounded-full blur-[120px] pointer-events-none"></div>
+          <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
 
-      {/* Desktop table */}
-      <div className="hidden lg:block bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-500">
-            <thead>
-              <tr className="border-b text-slate-400 font-bold text-xs uppercase tracking-wide">
-                <th className="pb-3">From</th>
-                <th className="pb-3">Package / Course</th>
-                <th className="pb-3">Date</th>
-                <th className="pb-3">Level</th>
-                <th className="pb-3 text-right">Sale Amount</th>
-                <th className="pb-3 text-right">Rate</th>
-                <th className="pb-3 text-right">Commission</th>
-                <th className="pb-3">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {commissions.map(c => (
-                <tr key={c.id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
-                  <td className="py-3.5 font-bold text-slate-800">{c.buyer_name}</td>
-                  <td className="py-3.5 text-slate-600">{c.item_name}</td>
-                  <td className="py-3.5 text-slate-400">{c.created_at}</td>
-                  <td className="py-3.5">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700">L{c.level}</span>
-                  </td>
-                  <td className="py-3.5 text-right text-slate-700">₹{c.sale_amount.toLocaleString('en-IN')}</td>
-                  <td className="py-3.5 text-right text-slate-500">{c.commission_percent}%</td>
-                  <td className={`py-3.5 text-right font-black ${c.status === 'approved' || c.status === 'paid' ? 'text-emerald-600' : 'text-amber-500'}`}>
-                    ₹{c.commission_amount.toLocaleString('en-IN')}
-                  </td>
-                  <td className="py-3.5">
-                    <span className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-full ${
-                      c.status === 'approved' ? 'bg-blue-50 text-blue-700' : c.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-                    }`}>{c.status}</span>
-                  </td>
-                </tr>
-              ))}
-              {commissions.length === 0 && (
-                <tr>
-                  <td colSpan="8" className="text-center py-12 text-slate-400 font-medium">No commissions earned yet. Share your referral link to start earning!</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Mobile cards */}
-      <div className="lg:hidden space-y-3">
-        {commissions.map(c => (
-          <div key={c.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-bold text-slate-800 truncate">{c.buyer_name}</p>
-                <p className="text-xs text-slate-400 truncate">{c.item_name}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{c.created_at} · L{c.level} · {c.commission_percent}%</p>
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="relative shrink-0">
+                <div className="absolute -inset-1.5 rounded-3xl bg-amber-400/40 blur-md animate-pulse"></div>
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-white/10 border border-white/20 text-white flex items-center justify-center shadow-xl backdrop-blur-md">
+                  <Sparkles className="w-7 h-7 text-amber-300" />
+                </div>
               </div>
-              <span className={`shrink-0 px-2.5 py-1 text-[10px] font-black uppercase rounded-full ${
-                c.status === 'approved' ? 'bg-blue-50 text-blue-700' : c.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-              }`}>{c.status}</span>
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-[10px] font-black uppercase tracking-widest text-blue-200 mb-2 backdrop-blur-md">
+                  <Receipt className="w-3.5 h-3.5" /> Commission Ledger
+                </div>
+                <h1 className="text-2xl sm:text-4xl font-heading font-black leading-tight tracking-tight text-white">
+                  My Commission Breakdown
+                </h1>
+                <p className="text-blue-100/80 text-xs sm:text-sm font-medium mt-1">
+                  {commissions.length} commission record{commissions.length !== 1 ? 's' : ''} generated from active & passive referrals.
+                </p>
+              </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-xs text-slate-400">Sale ₹{c.sale_amount.toLocaleString('en-IN')}</span>
-              <span className={`font-black text-sm ${c.status === 'approved' || c.status === 'paid' ? 'text-emerald-600' : 'text-amber-500'}`}>
-                ₹{c.commission_amount.toLocaleString('en-IN')}
-              </span>
+
+            <div className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md shadow-lg">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-black uppercase tracking-widest text-white">Auto-Calculated</span>
             </div>
           </div>
-        ))}
-        {commissions.length === 0 && (
-          <div className="text-center py-10 bg-white rounded-2xl border border-slate-100 text-slate-400 font-medium">No commissions earned yet. Share your referral link to start earning!</div>
-        )}
-      </div>
+        </div>
+      </Reveal>
+
+      {/* ── KPIS STRIP ─────────────────────────────────────────────────── */}
+      <Reveal variant="fade-up" delay={150}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-5">
+          {kpis.map((kpi) => (
+            <div
+              key={kpi.label}
+              className="group relative rounded-3xl p-5 text-white overflow-hidden transition-all duration-300 hover:-translate-y-1.5 shadow-lg border border-white/20"
+              style={{
+                background: `linear-gradient(135deg, ${kpi.from} 0%, ${kpi.to} 100%)`,
+                boxShadow: `0 10px 24px ${kpi.shadow}, inset 0 1px 0 rgba(255,255,255,0.3)`,
+              }}
+            >
+              <kpi.icon className="absolute -right-3 -bottom-3 w-20 h-20 text-white/10 pointer-events-none transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" strokeWidth={1.5} />
+              <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"></span>
+              <kpi.icon className="relative w-5 h-5 mb-2.5 text-white/90 transition-transform duration-300 group-hover:scale-110" />
+              <AnimatedNumber value={kpi.value} prefix="₹" className="relative block text-xl sm:text-2xl font-heading font-black leading-none tabular-nums text-white" />
+              <p className="relative text-[10px] font-black uppercase tracking-widest text-white/80 mt-2">{kpi.label}</p>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+
+      {/* ── COMMISSION RECORDS TABLE (VISIBLE ON ALL SCREENS) ─────────────────────────── */}
+      <Reveal variant="fade-up" delay={250}>
+        <div className="bg-white border border-slate-200/90 rounded-[2.5rem] p-5 sm:p-8 shadow-sm hover:shadow-lg transition-all duration-300">
+          <div className="relative flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+            <h3 className="flex items-center gap-3 font-heading font-black text-lg text-slate-900">
+              <span className="relative w-9 h-9 rounded-2xl bg-blue-50 flex items-center justify-center">
+                <span className="absolute inset-0 rounded-2xl bg-blue-400/30 blur-md animate-pulse"></span>
+                <Receipt className="relative w-4.5 h-4.5 text-blue-600" />
+              </span>
+              Commission Records
+            </h3>
+            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200/60 shrink-0">
+              {commissions.length} Total
+            </span>
+          </div>
+
+          <div className="relative overflow-x-auto">
+            <table className="w-full text-left text-sm text-slate-600">
+              <thead>
+                <tr className="bg-slate-50/80 text-slate-400 font-black text-[10px] uppercase tracking-widest border-b border-slate-100">
+                  <th className="py-3.5 px-4 rounded-l-2xl">Referred Member</th>
+                  <th className="py-3.5 px-4">Package / Item</th>
+                  <th className="py-3.5 px-4">Date</th>
+                  <th className="py-3.5 px-4">Level</th>
+                  <th className="py-3.5 px-4 text-right">Sale Amount</th>
+                  <th className="py-3.5 px-4 text-right">Commission</th>
+                  <th className="py-3.5 px-4 rounded-r-2xl">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {commissions.map((c, idx) => {
+                  const initials = c.buyer_name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+                  const palette = ['from-blue-500 to-indigo-600', 'from-emerald-500 to-teal-600', 'from-purple-500 to-fuchsia-600', 'from-amber-500 to-orange-600', 'from-pink-500 to-rose-600'];
+                  const isPositive = c.status === 'approved' || c.status === 'paid';
+                  const statusBadge = c.status === 'approved' ? 'bg-blue-50 text-blue-700 border-blue-200' : c.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+                  return (
+                    <tr key={c.id} className="group hover:bg-slate-50/80 transition-colors">
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-2xl bg-gradient-to-br ${palette[idx % palette.length]} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110`}>
+                            {initials}
+                          </div>
+                          <span className="font-heading font-black text-slate-900">{c.buyer_name}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 font-medium text-slate-700">{c.item_name}</td>
+                      <td className="py-4 px-4 font-bold text-slate-400 text-xs">{c.created_at}</td>
+                      <td className="py-4 px-4">
+                        <span className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">L{c.level}</span>
+                      </td>
+                      <td className="py-4 px-4 text-right font-bold text-slate-700 tabular-nums">₹{c.sale_amount.toLocaleString('en-IN')}</td>
+                      <td className={`py-4 px-4 text-right font-heading font-black text-base tabular-nums ${isPositive ? 'text-emerald-600' : 'text-amber-500'}`}>
+                        ₹{c.commission_amount.toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${statusBadge}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${c.status === 'paid' ? 'bg-emerald-500' : c.status === 'approved' ? 'bg-blue-500' : 'bg-amber-500 animate-pulse'}`}></span>
+                          {c.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {commissions.length === 0 && (
+                  <tr>
+                    <td colSpan="7" className="text-center py-16">
+                      <div className="w-14 h-14 mx-auto rounded-3xl bg-blue-50 flex items-center justify-center mb-3 text-blue-500">
+                        <Receipt className="w-7 h-7" />
+                      </div>
+                      <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">No commissions earned yet</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </Reveal>
+
     </div>
   );
 }
+

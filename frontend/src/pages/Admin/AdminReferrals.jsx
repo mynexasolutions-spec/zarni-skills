@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Share2, Users, UserCheck } from 'lucide-react';
+import { Share2, Users, UserCheck, ShieldCheck, Mail, Calendar, ArrowRight } from 'lucide-react';
 import api from '../../utils/api';
+import AnimatedNumber from '../../components/AnimatedNumber';
 
 function Avatar({ r }) {
-  const initials = r.name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+  const initials = r.name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || '??';
   return r.profile_image_url ? (
-    <img src={r.profile_image_url} alt={r.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+    <img src={r.profile_image_url} alt={r.name} className="w-10 h-10 rounded-full object-cover shrink-0 ring-2 ring-pink-500/20" />
   ) : (
-    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-fuchsia-600 text-white text-xs font-black flex items-center justify-center shrink-0">
+    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-fuchsia-600 text-white text-xs font-black flex items-center justify-center shrink-0 ring-2 ring-pink-500/20">
       {initials}
     </div>
   );
@@ -37,68 +38,88 @@ export default function AdminReferrals() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-4">
+        <div className="relative flex items-center justify-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500"></div>
+          <div className="absolute animate-ping rounded-full h-10 w-10 border border-pink-400 opacity-75"></div>
+        </div>
+        <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest animate-pulse">Loading referral nodes...</p>
       </div>
     );
   }
 
   return (
-    <div className="text-slate-800">
-      <div className="flex items-center gap-3 mb-6">
-        <Share2 className="w-7 h-7 text-red-600" />
-        <h2 className="text-2xl font-black">All Referrals</h2>
+    <div className="text-slate-800 space-y-6 pb-10">
+      
+      {/* Header */}
+      <div className="flex items-center gap-3.5">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-fuchsia-600 text-white flex items-center justify-center shadow-lg shadow-pink-500/20 shrink-0">
+          <Share2 className="w-5.5 h-5.5" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 leading-tight">Referrals Registry</h2>
+          <p className="text-xs text-slate-400 font-semibold">Track affiliate marketing signups and verification status</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6 max-w-md">
-        <div className="rounded-2xl p-5 text-white bg-gradient-to-br from-pink-500 to-fuchsia-600 shadow-lg">
-          <Users className="w-5 h-5 mb-2 text-white/80" />
-          <p className="text-xl font-black leading-none">{totalReferred}</p>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/75 mt-1.5">Total Referred Users</p>
+      {/* KPI stats */}
+      <div className="grid grid-cols-2 gap-4 max-w-xl">
+        <div className="group relative overflow-hidden rounded-[1.8rem] p-5 text-white bg-gradient-to-br from-pink-500 to-fuchsia-600 shadow-lg border border-white/5 transition-all">
+          <Users className="absolute -right-4 -bottom-4 w-20 h-20 text-white/10 group-hover:scale-105 transition-transform" />
+          <div className="relative z-10">
+            <AnimatedNumber value={totalReferred} duration={1000} className="block text-2xl sm:text-3xl font-black leading-none tracking-tight tabular-nums" />
+            <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/70 mt-2">Referred Accounts</p>
+          </div>
         </div>
-        <div className="rounded-2xl p-5 text-white bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
-          <UserCheck className="w-5 h-5 mb-2 text-white/80" />
-          <p className="text-xl font-black leading-none">{totalReferrers}</p>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/75 mt-1.5">Active Referrers</p>
+        <div className="group relative overflow-hidden rounded-[1.8rem] p-5 text-white bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg border border-white/5 transition-all">
+          <UserCheck className="absolute -right-4 -bottom-4 w-20 h-20 text-white/10 group-hover:scale-105 transition-transform" />
+          <div className="relative z-10">
+            <AnimatedNumber value={totalReferrers} duration={1000} className="block text-2xl sm:text-3xl font-black leading-none tracking-tight tabular-nums" />
+            <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/70 mt-2">Active Promoters</p>
+          </div>
         </div>
       </div>
 
       {/* Desktop table */}
-      <div className="hidden lg:block bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+      <div className="hidden lg:block bg-white border border-slate-200/80 rounded-[2.2rem] p-2 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-500">
+          <table className="w-full text-left text-sm text-slate-600">
             <thead>
-              <tr className="border-b text-slate-400 font-bold text-xs uppercase tracking-wide">
-                <th className="pb-3">Referred User</th>
-                <th className="pb-3">Referred By</th>
-                <th className="pb-3">Joined</th>
-                <th className="pb-3">Status</th>
+              <tr className="text-slate-400 font-extrabold text-xs uppercase tracking-wider">
+                <th className="px-6 py-4">Referred Member</th>
+                <th className="px-6 py-4">Invited By</th>
+                <th className="px-6 py-4">Created Date</th>
+                <th className="px-6 py-4 text-center pr-6">Sales Level</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-50">
               {referrals.map(r => (
-                <tr key={r.id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
-                  <td className="py-3.5">
+                <tr key={r.id} className="hover:bg-slate-50/60 transition-colors duration-150 group">
+                  <td className="px-6 py-3.5">
                     <div className="flex items-center gap-3">
                       <Avatar r={r} />
                       <div className="min-w-0">
-                        <p className="font-bold text-slate-800 truncate">{r.name}</p>
-                        <p className="text-xs text-slate-400 truncate">{r.email}</p>
+                        <p className="font-bold text-slate-800 leading-tight">{r.name}</p>
+                        <p className="text-xs text-slate-400 mt-0.5 truncate">{r.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3.5 font-semibold text-blue-600">{r.referrer_name || 'N/A'}</td>
-                  <td className="py-3.5 text-slate-400">{r.created_at}</td>
-                  <td className="py-3.5">
-                    <span className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-full ${
-                      r.is_paid ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
-                    }`}>{r.is_paid ? 'Paid' : 'Unpaid'}</span>
+                  <td className="px-6 py-3.5 font-bold text-blue-600 hover:text-blue-700 transition-colors">
+                    {r.referrer_name || 'Direct / Organic'}
+                  </td>
+                  <td className="px-6 py-3.5 text-slate-400 text-xs">{r.created_at}</td>
+                  <td className="px-6 py-3.5 text-center pr-6">
+                    <span className={`inline-flex px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full border ${
+                      r.is_paid 
+                        ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
+                        : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                    }`}>{r.is_paid ? 'Paid Invoice' : 'Unpaid Lead'}</span>
                   </td>
                 </tr>
               ))}
               {referrals.length === 0 && (
                 <tr>
-                  <td colSpan="4" className="text-center py-10 text-slate-400 font-medium">No referrals recorded yet.</td>
+                  <td colSpan="4" className="text-center py-16 text-slate-400 font-semibold">No referrals recorded yet.</td>
                 </tr>
               )}
             </tbody>
@@ -106,32 +127,34 @@ export default function AdminReferrals() {
         </div>
       </div>
 
-      {/* Mobile cards */}
-      <div className="lg:hidden space-y-3">
-        {referrals.map(r => (
-          <div key={r.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <Avatar r={r} />
-              <div className="min-w-0 flex-1">
-                <p className="font-bold text-slate-800 truncate">{r.name}</p>
-                <p className="text-xs text-slate-400 truncate">{r.email}</p>
+      {/* Mobile cards view */}
+      <div className="lg:hidden space-y-4">
+        {referrals.map((r, idx) => (
+          <div key={r.id} className="bg-white border border-slate-200/85 rounded-2xl p-4 shadow-sm animate-fade-in-up" style={{ animationDelay: `${Math.min(idx, 10) * 30}ms` }}>
+            <div className="flex items-center gap-3 justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <Avatar r={r} />
+                <div className="min-w-0">
+                  <p className="font-bold text-slate-800 leading-tight truncate">{r.name}</p>
+                  <p className="text-xs text-slate-400 mt-0.5 truncate">{r.email}</p>
+                </div>
               </div>
-              <span className={`shrink-0 px-2.5 py-1 text-[10px] font-black uppercase rounded-full ${
-                r.is_paid ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+              <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full ${
+                r.is_paid ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' : 'bg-slate-100 text-slate-500'
               }`}>{r.is_paid ? 'Paid' : 'Unpaid'}</span>
             </div>
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 text-xs">
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 text-xs">
               <span className="text-slate-400">Referred by</span>
-              <span className="font-semibold text-blue-600">{r.referrer_name || 'N/A'}</span>
+              <span className="font-bold text-blue-600">{r.referrer_name || 'Direct Sign-up'}</span>
             </div>
-            <div className="flex items-center justify-between mt-1.5 text-xs">
-              <span className="text-slate-400">Joined</span>
-              <span className="text-slate-600">{r.created_at}</span>
+            <div className="flex items-center justify-between mt-2 text-xs">
+              <span className="text-slate-400">Date Joined</span>
+              <span className="text-slate-600 font-medium">{r.created_at}</span>
             </div>
           </div>
         ))}
         {referrals.length === 0 && (
-          <div className="text-center py-10 bg-white rounded-2xl border border-slate-100 text-slate-400 font-medium">No referrals recorded yet.</div>
+          <div className="text-center py-12 bg-white rounded-2xl border border-slate-100 text-slate-400 font-semibold">No referrals recorded yet.</div>
         )}
       </div>
     </div>

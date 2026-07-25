@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { GraduationCap, BadgeCheck, Heart, Clock, List, ArrowRight } from 'lucide-react';
+import { GraduationCap, BadgeCheck, Heart, Clock, List, ArrowRight, Check } from 'lucide-react';
 
 export default function CourseCard({ course, index = 0 }) {
   const coursePrices = (course.packages || [])
@@ -27,7 +27,11 @@ export default function CourseCard({ course, index = 0 }) {
           <div className="absolute top-3.5 left-3.5 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-primary uppercase tracking-widest shadow-sm">
             {course.level || 'All Levels'}
           </div>
-          {course.certificate && (
+          {course.owned ? (
+            <div className="absolute top-3.5 right-3.5 bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1">
+              <Check className="w-3 h-3" strokeWidth={3} /> Purchased
+            </div>
+          ) : course.certificate && (
             <div className="absolute top-3.5 right-3.5 bg-emerald-500 text-white p-1.5 rounded-lg shadow-lg" title="Certificate on completion">
               <BadgeCheck className="w-4 h-4" strokeWidth={2.5} />
             </div>
@@ -66,12 +70,47 @@ export default function CourseCard({ course, index = 0 }) {
             {course.title}
           </h3>
 
+          {(() => {
+            const InstructorWrapper = course.instructor_slug ? Link : 'div';
+            const wrapperProps = course.instructor_slug ? { to: `/instructor/${course.instructor_slug}` } : {};
+            return (
+              <InstructorWrapper
+                {...wrapperProps}
+                className={`flex items-center gap-2.5 mb-4 pb-4 border-b border-slate-100 ${course.instructor_slug ? 'hover:opacity-75 transition-opacity' : ''}`}
+              >
+                {course.instructor_image_display_url ? (
+                  <img
+                    src={course.instructor_image_display_url}
+                    alt={course.instructor_name || 'Zarni Skills Team'}
+                    className="w-8 h-8 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-indigo-600 text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                    {(course.instructor_name || 'Zarni Skills Team').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-800 truncate">{course.instructor_name || 'Zarni Skills Team'}</p>
+                  <p className="text-[10px] text-slate-400 font-medium">Instructor</p>
+                </div>
+              </InstructorWrapper>
+            );
+          })()}
+
           <div className="mt-auto">
-            <Link to={`/courses/${course.id}`}
-              className="group/btn relative w-full bg-slate-50 border-2 border-slate-100 hover:border-primary hover:bg-primary/5 text-slate-700 hover:text-primary py-3 px-5 rounded-xl font-black text-xs inline-flex items-center justify-center gap-2 text-center transition-colors duration-300 uppercase tracking-widest">
-              View Curriculum
-              <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-0.5" strokeWidth={3} />
-            </Link>
+            {course.owned ? (
+              <Link to={`/student/watch/${course.id}`}
+                className="group/btn relative w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-5 rounded-xl font-black text-xs inline-flex items-center justify-center gap-2 text-center transition-all duration-300 uppercase tracking-widest shadow-md shadow-emerald-500/20 active:scale-95">
+                <span>Watch Course</span>
+                <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-1" strokeWidth={3} />
+              </Link>
+            ) : (
+              <Link to={`/courses/${course.slug || course.id}`}
+                className="group/btn relative w-full bg-slate-50 border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 text-slate-700 hover:text-blue-600 py-3 px-5 rounded-xl font-black text-xs inline-flex items-center justify-center gap-2 text-center transition-colors duration-300 uppercase tracking-widest">
+                <span>View Details</span>
+                <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover/btn:translate-x-0.5" strokeWidth={3} />
+              </Link>
+            )}
           </div>
         </div>
       </div>

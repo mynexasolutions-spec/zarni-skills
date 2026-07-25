@@ -1,114 +1,263 @@
-import React from 'react';
-import { Users, Mail, GraduationCap, BadgeCheck, Star } from 'lucide-react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Users, GraduationCap, BadgeCheck, Star, ChevronLeft, ChevronRight, Sparkles, ShieldCheck } from 'lucide-react';
+import useCountUp from '../../hooks/useCountUp';
+import useInView from '../../hooks/useInView';
+import api from '../../utils/api';
 
-const TEAM = [
-  { name: "Suriya Yadav", role: "CEO & Founder", badge: "Founder", imgFile: "/static/img/team/Suriya_Yadav _CEO_FOUNDER.webp", color: "#3b82f6", bio: "Visionary leader with a passion for empowering learners worldwide." },
-  { name: "Karan Yadav", role: "COO & Co-Founder", badge: "Co-Founder", imgFile: "/static/img/team/Karan_Yadav_COO_CO_Founder.webp", color: "#f59e0b", bio: "Driving operations and building impactful learning experiences." },
-  { name: "Ajay Yadav", role: "Director", badge: "Director", imgFile: "/static/img/team/Ajay_Yadav_Director.webp", color: "#10b981", bio: "Strategic thinker overseeing growth and long-term vision." },
-  { name: "Shailendra Yadav", role: "Manager", badge: "Manager", imgFile: "/static/img/team/Shailendra_Yadav_Manager.webp", color: "#8b5cf6", bio: "Ensuring smooth management and delivering excellence every day." },
-  { name: "Tarun Prajapati", role: "Distributor", badge: "Distributor", imgFile: "/static/img/team/Tarun_Prajapati_Distributor.webp", color: "#06b6d4", bio: "Expanding our reach and connecting learners across regions." }
-];
+const FALLBACK_IMG = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80";
 
 const STATS = [
-  { value: "50+", label: "Expert Mentors", sub: "Industry leaders & professionals", color: "#3b82f6", Icon: Users },
-  { value: "10K+", label: "Students Guided", sub: "Towards their dream careers", color: "#f59e0b", Icon: GraduationCap },
-  { value: "95%", label: "Success Rate", sub: "Students achieve their goals", color: "#10b981", Icon: BadgeCheck },
-  { value: "4.8/5", label: "Learner Rating", sub: "Trusted by thousands", color: "#f59e0b", Icon: Star },
+  { target: 50, decimals: 0, suffix: '+', label: "Expert Mentors", sub: "Industry leaders & professionals", color: "#3b82f6", Icon: Users },
+  { target: 10, decimals: 0, suffix: 'K+', label: "Students Guided", sub: "Towards their dream careers", color: "#f59e0b", Icon: GraduationCap },
+  { target: 95, decimals: 0, suffix: '%', label: "Success Rate", sub: "Students achieve their goals", color: "#10b981", Icon: BadgeCheck },
+  { target: 4.8, decimals: 1, suffix: '/5', label: "Learner Rating", sub: "Trusted by thousands", color: "#f59e0b", Icon: Star },
 ];
 
+function getCardsPerPage() {
+  if (typeof window === 'undefined') return 5;
+  const w = window.innerWidth;
+  if (w >= 1280) return 5;
+  if (w >= 1024) return 4;
+  if (w >= 768) return 3;
+  return 2; // 2 cards per view on mobile
+}
+
 export default function Team({ showStats = true }) {
+  const [team, setTeam] = useState([]);
+
+  useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        const response = await api.get('/home-team');
+        setTeam(response.data.team_members || []);
+      } catch (err) {
+        console.error('Error fetching team members', err);
+      }
+    };
+    fetchTeam();
+  }, []);
+
+  const [statsRef, statsInView] = useInView(0.3);
+  const statValues = [
+    useCountUp(STATS[0].target, statsInView, STATS[0].decimals),
+    useCountUp(STATS[1].target, statsInView, STATS[1].decimals),
+    useCountUp(STATS[2].target, statsInView, STATS[2].decimals),
+    useCountUp(STATS[3].target, statsInView, STATS[3].decimals),
+  ];
+
+  const trackRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [cardsPerPage, setCardsPerPage] = useState(getCardsPerPage);
+  const isDragging = useRef(false);
+  const dragMoved = useRef(false);
+  const startX = useRef(0);
+  const startScrollLeft = useRef(0);
+  const cardStepRef = useRef(280);
+
+  const totalPages = Math.max(1, Math.ceil(team.length / cardsPerPage));
+  const maxPage = totalPages - 1;
+
+  const measureCardStep = useCallback(() => {
+    const track = trackRef.current;
+    if (!track || !track.firstElementChild) return;
+    const card = track.firstElementChild;
+    const style = window.getComputedStyle(track);
+    const gap = parseFloat(style.columnGap || style.gap || '24');
+    cardStepRef.current = card.getBoundingClientRect().width + gap;
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => {
+      setCardsPerPage(getCardsPerPage());
+      measureCardStep();
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [measureCardStep]);
+
+  useEffect(() => {
+    measureCardStep();
+  }, [cardsPerPage, measureCardStep]);
+
+  const goToPage = useCallback((pageIdx) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const clamped = Math.max(0, Math.min(pageIdx, maxPage));
+    track.scrollTo({ left: clamped * cardsPerPage * cardStepRef.current, behavior: 'smooth' });
+  }, [maxPage, cardsPerPage]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    let raf = null;
+    const onScroll = () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const step = cardStepRef.current;
+        if (step > 0) {
+          setCurrentPage(Math.round(track.scrollLeft / (step * cardsPerPage)));
+        }
+      });
+    };
+    track.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      track.removeEventListener('scroll', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [cardsPerPage]);
+
+  const onMouseDown = (e) => {
+    const track = trackRef.current;
+    if (!track) return;
+    isDragging.current = true;
+    dragMoved.current = false;
+    startX.current = e.clientX;
+    startScrollLeft.current = track.scrollLeft;
+  };
+  const onMouseMove = (e) => {
+    if (!isDragging.current || !trackRef.current) return;
+    const delta = e.clientX - startX.current;
+    if (Math.abs(delta) > 4) dragMoved.current = true;
+    trackRef.current.scrollLeft = startScrollLeft.current - delta;
+  };
+  const stopDragging = () => {
+    isDragging.current = false;
+  };
+
   return (
-    <section className="py-24 relative overflow-hidden bg-slate-50" id="team">
+    <section className="py-24 sm:py-32 relative overflow-hidden bg-gradient-to-b from-blue-50/60 via-white to-blue-50/40" id="team">
 
       {/* Background artwork */}
-      <div className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" style={{ backgroundImage: 'url(/static/img/bgimage.png)' }}></div>
+      <div className="absolute inset-0 bg-cover bg-center pointer-events-none z-0 opacity-70" style={{ backgroundImage: 'url(/static/img/bgimage.png)' }}></div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      {/* Top light shimmer sweep bar */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent animate-shimmer-sweep pointer-events-none"></div>
+
+      {/* Dual Rotating Cyber Compass Rings behind header */}
+      <div className="absolute top-24 left-1/2 -translate-x-1/2 w-[520px] h-[520px] rounded-full border border-blue-500/20 border-dashed animate-[spin_50s_linear_infinite] pointer-events-none z-0"></div>
+      <div className="absolute top-24 left-1/2 -translate-x-1/2 w-[380px] h-[380px] rounded-full border border-cyan-400/25 border-dashed animate-[spin_35s_linear_infinite_reverse] pointer-events-none z-0"></div>
+
+      {/* Floating Neon Particles */}
+      <span className="absolute top-20 left-[10%] w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_12px_#3b82f6] animate-float pointer-events-none z-0"></span>
+      <span className="absolute bottom-32 left-[5%] w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee] animate-float-delayed pointer-events-none z-0"></span>
+      <span className="absolute top-1/3 right-[6%] w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_12px_#6366f1] animate-float pointer-events-none z-0"></span>
+
+      {/* Diagonal Laser Stream comets */}
+      <div className="absolute top-16 left-[-10%] w-[120%] h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent rotate-6 animate-shimmer-sweep pointer-events-none z-0"></div>
+      <div className="absolute bottom-24 left-[-10%] w-[120%] h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent -rotate-6 animate-shimmer-sweep pointer-events-none z-0" style={{ animationDelay: '3.5s' }}></div>
+
+      {/* Ambient glows */}
+      <div className="absolute -top-10 -left-16 w-[420px] h-[420px] bg-blue-300/20 blur-[120px] rounded-full pointer-events-none z-0 animate-pulse"></div>
+      <div className="absolute bottom-0 -right-16 w-[420px] h-[420px] bg-indigo-300/20 blur-[120px] rounded-full pointer-events-none z-0 animate-pulse" style={{ animationDelay: '2s' }}></div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
 
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 text-primary text-xs font-black uppercase tracking-widest mb-4">
-            <Users className="w-4 h-4 shrink-0" strokeWidth={2.5} />
-            Our Leadership
+        <div className="text-center max-w-3xl mx-auto mb-14 md:mb-18">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-blue-200 text-blue-700 text-xs font-bold uppercase tracking-widest mb-4 shadow-[0_4px_20px_rgba(37,99,235,0.15)] select-none mx-auto hover:scale-105 transition-transform duration-300">
+            <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-spin-slow" />
+            <span>OUR LEADERSHIP</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-4">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[0.95] mb-4 uppercase drop-shadow-sm">
             Meet Our Expert{' '}
-            <span className="relative inline-block text-primary">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 animate-gradient-x drop-shadow-[0_2px_15px_rgba(37,99,235,0.25)]">
               Team
-              <svg className="absolute -bottom-1.5 left-0 w-full" viewBox="0 0 120 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 6C20 2 40 1 60 3C80 5 100 4 118 2" stroke="#2b80f0" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
             </span>
           </h2>
-          <p className="text-slate-500 text-base leading-relaxed">
+          {/* Glowing Underline Bar */}
+          <div className="relative w-20 sm:w-24 h-1 sm:h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 rounded-full shadow-[0_0_14px_rgba(37,99,235,0.6)] overflow-hidden mx-auto mb-5">
+            <span className="absolute inset-0 w-full h-full bg-white/40 -translate-x-full animate-shimmer-sweep"></span>
+          </div>
+          <p className="text-slate-500 text-sm sm:text-base font-semibold max-w-xl mx-auto leading-relaxed">
             Connect with industry visionaries and expert mentors dedicated to accelerating your growth.
           </p>
         </div>
+      </div>
 
-        {/* Team Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {TEAM.map((m, idx) => (
-            <div key={idx} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-slate-100/80 hover:shadow-[0_16px_40px_rgba(43,128,240,0.14)] hover:-translate-y-1.5 transition-all duration-400">
+      {/* Team Cards Slider */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 group/slider z-10">
 
+        {/* Navigation Arrows (Desktop) */}
+        <button
+          onClick={() => goToPage(currentPage - 1)}
+          disabled={currentPage <= 0}
+          aria-label="Previous team members"
+          className="absolute left-2 top-[38%] -translate-y-1/2 z-20 w-12 h-12 bg-white/95 backdrop-blur-md rounded-full shadow-[0_10px_30px_rgba(37,99,235,0.2)] border border-slate-200 hidden md:flex items-center justify-center text-slate-800 transition-all duration-300 hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:scale-110 active:scale-100 -translate-x-1/2 disabled:opacity-0 disabled:pointer-events-none disabled:scale-90"
+        >
+          <ChevronLeft width={22} height={22} strokeWidth={2.5} />
+        </button>
+        <button
+          onClick={() => goToPage(currentPage + 1)}
+          disabled={currentPage >= maxPage}
+          aria-label="Next team members"
+          className="absolute right-2 top-[38%] -translate-y-1/2 z-20 w-12 h-12 bg-white/95 backdrop-blur-md rounded-full shadow-[0_10px_30px_rgba(37,99,235,0.2)] border border-slate-200 hidden md:flex items-center justify-center text-slate-800 transition-all duration-300 hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:scale-110 active:scale-100 translate-x-1/2 disabled:opacity-0 disabled:pointer-events-none disabled:scale-90"
+        >
+          <ChevronRight width={22} height={22} strokeWidth={2.5} />
+        </button>
+
+        <div
+          ref={trackRef}
+          className="grid grid-cols-2 md:flex gap-3 sm:gap-6 pb-4 px-1 -mx-1 md:overflow-x-auto md:snap-x md:snap-mandatory cursor-grab active:cursor-grabbing select-none no-scrollbar"
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={stopDragging}
+          onMouseLeave={stopDragging}
+        >
+          {team.map((m) => (
+            <Link
+              key={m.id}
+              to={`/team/${m.slug || m.id}`}
+              draggable={false}
+              onClick={(e) => { if (dragMoved.current) e.preventDefault(); }}
+              className="group relative flex flex-col bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-slate-100 hover:border-blue-300 hover:shadow-[0_16px_36px_rgba(37,99,235,0.14)] hover:-translate-y-1.5 transition-all duration-300 w-full md:shrink-0 md:snap-start md:w-[calc((100%-3rem)/3)] lg:w-[calc((100%-4.5rem)/4)] xl:w-[calc((100%-6rem)/5)]"
+            >
               {/* Photo block */}
               <div className="relative w-full overflow-hidden" style={{ aspectRatio: '3/4' }}>
                 <img
-                  src={m.imgFile}
+                  src={m.image_display_url || FALLBACK_IMG}
                   alt={m.name}
+                  draggable={false}
                   onError={(e) => {
-                    e.target.src = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80";
+                    e.target.src = FALLBACK_IMG;
                   }}
-                  className="w-full h-full object-cover object-top transition-transform duration-600 group-hover:scale-[1.04]"
+                  className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-white text-[10px] font-black uppercase tracking-wider shadow-md" style={{ backgroundColor: m.color }}>
-                  {m.badge}
-                </div>
+
+                {m.badge && (
+                  <div className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-white text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-md backdrop-blur-md" style={{ backgroundColor: m.color || '#2563eb' }}>
+                    {m.badge}
+                  </div>
+                )}
               </div>
 
               {/* Info block */}
-              <div className="flex flex-col flex-1 p-4 pt-3.5 gap-1.5">
-                <h3 className="text-[15px] font-black text-slate-900 leading-tight">{m.name}</h3>
-                <p className="text-[12px] font-bold" style={{ color: m.color }}>{m.role}</p>
-                <div className="w-8 h-[2px] rounded-full mt-0.5 mb-1" style={{ backgroundColor: m.color }}></div>
-                <p className="text-slate-400 text-[11px] leading-snug flex-1">{m.bio}</p>
-
-                {/* Social icons */}
-                <div className="flex items-center gap-2.5 mt-3 pt-3 border-t border-slate-100">
-                  <a href="#" className="w-8 h-8 rounded-full bg-white hover:bg-primary hover:text-white flex items-center justify-center text-slate-400 shadow-[0_2px_6px_rgba(0,0,0,0.08)] transition-all duration-200">
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
-                    </svg>
-                  </a>
-                  <a href="#" className="w-8 h-8 rounded-full bg-white hover:bg-sky-500 hover:text-white flex items-center justify-center text-slate-400 shadow-[0_2px_6px_rgba(0,0,0,0.08)] transition-all duration-200">
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                    </svg>
-                  </a>
-                  <a href="#" className="w-8 h-8 rounded-full bg-white hover:bg-pink-500 hover:text-white flex items-center justify-center text-slate-400 shadow-[0_2px_6px_rgba(0,0,0,0.08)] transition-all duration-200">
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z" />
-                    </svg>
-                  </a>
-                  <a href="#" className="w-8 h-8 rounded-full bg-white hover:bg-primary hover:text-white flex items-center justify-center text-slate-400 shadow-[0_2px_6px_rgba(0,0,0,0.08)] transition-all duration-200">
-                    <Mail className="w-3.5 h-3.5" />
-                  </a>
-                </div>
+              <div className="bg-white flex flex-col flex-1 p-3.5 sm:p-5 pt-3 sm:pt-4 gap-0.5 sm:gap-1 text-left">
+                <h3 className="text-xs sm:text-base font-heading font-black text-slate-900 leading-tight group-hover:text-blue-600 transition-colors uppercase truncate">{m.name}</h3>
+                <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider truncate" style={{ color: m.color || '#2563eb' }}>{m.designation}</p>
+                <div className="w-6 sm:w-8 h-[2px] rounded-full my-1.5 sm:my-2 transition-all duration-300 group-hover:w-14" style={{ backgroundColor: m.color || '#2563eb' }}></div>
+                <p className="text-slate-500 text-[10px] sm:text-xs font-medium leading-snug sm:leading-relaxed flex-1 line-clamp-2 sm:line-clamp-none">{m.bio}</p>
               </div>
 
-            </div>
+            </Link>
           ))}
+          {team.length === 0 && (
+            <div className="w-full text-center py-12 text-slate-400 font-medium">Loading team...</div>
+          )}
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         {/* Stats Bar */}
         {showStats && (
-          <div className="mt-14 bg-white border border-slate-100 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.05)] grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-100 overflow-hidden">
+          <div ref={statsRef} className="mt-14 sm:mt-18 bg-gradient-to-br from-white via-white to-blue-50/30 backdrop-blur-md border border-white/90 rounded-3xl shadow-[0_15px_40px_rgba(37,99,235,0.12)] grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-slate-100 overflow-hidden">
             {STATS.map((s, idx) => (
-              <div key={idx} className="flex items-center gap-4 px-6 py-5 group hover:bg-slate-50 transition-colors duration-200">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${s.color}1a` }}>
-                  <s.Icon className="w-5 h-5" stroke={s.color} strokeWidth={2} />
+              <div key={idx} className="flex items-center gap-4 px-6 py-6 group hover:bg-blue-50/40 transition-colors duration-300">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-md shadow-blue-500/15 transition-transform duration-300 group-hover:scale-115 group-hover:rotate-12" style={{ backgroundColor: `${s.color}1a` }}>
+                  <s.Icon className="w-6 h-6" stroke={s.color} strokeWidth={2} />
                 </div>
                 <div>
-                  <div className="text-xl font-black text-slate-900 leading-none mb-0.5">{s.value}</div>
+                  <div className="text-2xl font-black text-slate-900 leading-none mb-1">{statValues[idx]}{s.suffix}</div>
                   <div className="text-[12px] font-bold leading-tight" style={{ color: s.color }}>{s.label}</div>
                   <div className="text-[10px] text-slate-400 font-medium mt-0.5">{s.sub}</div>
                 </div>
@@ -116,8 +265,8 @@ export default function Team({ showStats = true }) {
             ))}
           </div>
         )}
-
       </div>
+
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ShieldAlert, Landmark, Sparkles, CheckCircle2, ChevronRight } from 'lucide-react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { ShieldAlert, ShieldCheck, Landmark, CheckCircle2, Tag, X, ArrowLeft, ArrowRight, ArrowUpCircle, Package, BookOpen, Lock, Sparkles, PartyPopper, Play } from 'lucide-react';
 import api from '../../utils/api';
 
 let razorpayScriptPromise = null;
@@ -27,15 +27,22 @@ export default function Checkout() {
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState('');
 
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponChecking, setCouponChecking] = useState(false);
+  const [couponError, setCouponError] = useState('');
+  const [pricing, setPricing] = useState(null);
+  const [pricingLoading, setPricingLoading] = useState(false);
+
+  const packageId = searchParams.get('package_id');
+  const courseId = searchParams.get('course_id');
+
   useEffect(() => {
     const fetchItemDetails = async () => {
       try {
-        const pkgId = searchParams.get('package_id');
-        const courseId = searchParams.get('course_id');
-
-        if (pkgId) {
+        if (packageId) {
           const response = await api.get('/global-data');
-          const found = response.data.packages.find(p => String(p.id) === pkgId);
+          const found = response.data.packages.find(p => String(p.id) === packageId);
           if (found) setItem({ ...found, type: 'package' });
         } else if (courseId) {
           const response = await api.get('/courses');
@@ -49,13 +56,56 @@ export default function Checkout() {
       }
     };
     fetchItemDetails();
-  }, [searchParams]);
+  }, [packageId, courseId]);
+
+  const fetchPricing = async (coupon_code) => {
+    setPricingLoading(true);
+    try {
+      const payload = packageId ? { package_id: packageId, coupon_code } : { course_id: courseId, coupon_code };
+      const response = await api.post('/student/checkout/pricing', payload);
+      setPricing(response.data);
+      return response.data;
+    } catch (err) {
+      console.error('Error fetching pricing preview', err);
+      return null;
+    } finally {
+      setPricingLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (item) fetchPricing(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setCouponChecking(true);
+    setCouponError('');
+    const result = await fetchPricing(couponInput.trim());
+    if (result && result.coupon_valid) {
+      setAppliedCoupon(couponInput.trim().toUpperCase());
+    } else {
+      setAppliedCoupon(null);
+      setCouponError((result && result.message) || 'Invalid coupon code.');
+    }
+    setCouponChecking(false);
+  };
+
+  const handleRemoveCoupon = async () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponError('');
+    await fetchPricing(null);
+  };
+
+  const successRedirect = () => (item.type === 'package' ? '/student/packages' : `/student/watch/${item.id}`);
 
   const handleSimulatedPurchase = async (payload) => {
     const response = await api.post('/student/purchase', payload);
     if (response.data.success) {
       setSuccess(true);
-      setTimeout(() => navigate('/student/courses'), 2500);
+      setTimeout(() => navigate(successRedirect()), 2500);
     } else {
       setError(response.data.message || 'Purchase failed.');
     }
@@ -65,7 +115,8 @@ export default function Checkout() {
     setError('');
     setPaying(true);
 
-    const payload = item.type === 'package' ? { package_id: item.id } : { course_id: item.id };
+    const basePayload = item.type === 'package' ? { package_id: item.id } : { course_id: item.id };
+    const payload = { ...basePayload, coupon_code: appliedCoupon || undefined };
 
     let orderResponse;
     try {
@@ -77,7 +128,8 @@ export default function Checkout() {
     }
 
     if (!orderResponse.data.razorpay_enabled) {
-      // Razorpay isn't configured — fall back to simulated instant purchase.
+      // Razorpay isn't configured, or the price is fully covered by the coupon/upgrade
+      // credit — fall back to the simulated instant purchase (still server-verified).
       try {
         await handleSimulatedPurchase(payload);
       } catch (err) {
@@ -105,6 +157,7 @@ export default function Checkout() {
       currency,
       name: 'Zarni Skills',
       description: item_name,
+      image: `${window.location.origin}/static/img/zarni-logo.png`,
       order_id,
       prefill: { name: user_name, email: user_email },
       theme: { color: '#2b80f0' },
@@ -118,7 +171,7 @@ export default function Checkout() {
           });
           if (verifyResponse.data.success) {
             setSuccess(true);
-            setTimeout(() => navigate('/student/courses'), 2500);
+            setTimeout(() => navigate(successRedirect()), 2500);
           } else {
             setError(verifyResponse.data.message || 'Payment verification failed.');
           }
@@ -139,74 +192,235 @@ export default function Checkout() {
     rzp.open();
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!item) {
-    return (
-      <div className="max-w-md mx-auto text-center py-16">
-        <ShieldAlert className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-bold">Invalid checkout item</h3>
-      </div>
-    );
-  }
+  const ItemIcon = item?.type === 'course' ? BookOpen : Package;
 
   return (
-    <div className="max-w-lg mx-auto py-12 px-6">
-      
-      {success ? (
-        <div className="bg-white rounded-3xl border p-8 text-center shadow-lg">
-          <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4 animate-bounce" />
-          <h2 className="text-2xl font-black text-slate-900">Payment Successful!</h2>
-          <p className="text-slate-500 text-xs mt-2">Enrolling you into your purchased classes...</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-3xl border overflow-hidden shadow-md">
-          
-          <div className="bg-gradient-to-r from-primary to-indigo-600 p-6 text-white">
-            <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2.5 py-1 rounded-full">Secure Checkout</span>
-            <h2 className="text-xl font-bold mt-3">{item.name || item.title}</h2>
-            <p className="text-3xl font-black mt-2">₹{item.price}</p>
-          </div>
+    <div className="min-h-screen relative overflow-hidden bg-slate-50 flex flex-col">
+      {/* Ambient background */}
+      <div className="fixed inset-0 pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse 90% 60% at 50% -10%, #eef6ff 0%, #f8faff 55%, #f8faff 100%)' }}></div>
+      <div className="fixed top-[-10%] left-[8%] w-96 h-96 bg-blue-400/10 rounded-full blur-[130px] pointer-events-none -z-10"></div>
+      <div className="fixed bottom-[-10%] right-[8%] w-96 h-96 bg-indigo-400/10 rounded-full blur-[130px] pointer-events-none -z-10"></div>
 
-          <div className="p-6 border-b">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Order Summary</p>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Type</span>
-                <span className="font-bold text-slate-700 capitalize">{item.type}</span>
+      {/* Minimal top bar */}
+      <header className="w-full px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between shrink-0">
+        <Link to="/" className="flex items-center gap-2.5 shrink-0">
+          <img src="/static/img/zarni-logo.png" alt="Zarni Skills" className="h-8 w-auto object-contain"
+            onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+          <span className="hidden items-center font-black text-lg text-primary">Zarni Skills</span>
+        </Link>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] sm:text-xs font-black uppercase tracking-widest">
+          <Lock className="w-3 h-3" /> Secure Checkout
+        </span>
+      </header>
+
+      <main className="flex-1 w-full max-w-lg mx-auto px-4 sm:px-6 pb-16 flex flex-col justify-center">
+
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+          </div>
+        ) : !item ? (
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center shadow-lg">
+            <ShieldAlert className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-900">Invalid checkout item</h3>
+            <p className="text-sm text-slate-400 mt-1">This link is missing a valid package or course.</p>
+            <Link to="/packages" className="inline-flex items-center gap-1.5 mt-5 text-xs font-bold text-primary hover:underline">
+              <ArrowLeft className="w-3.5 h-3.5" /> Browse Packages
+            </Link>
+          </div>
+        ) : success ? (
+          <div className="relative overflow-hidden bg-white rounded-[2rem] border border-slate-200/90 p-8 sm:p-10 text-center shadow-[0_30px_70px_-20px_rgba(16,185,129,0.4)] animate-scale-in">
+            {/* Confetti burst */}
+            {[
+              { top: '8%', left: '12%', size: 8, color: '#34d399', delay: '0ms', dur: '2.2s' },
+              { top: '15%', left: '85%', size: 10, color: '#60a5fa', delay: '150ms', dur: '2.6s' },
+              { top: '75%', left: '10%', size: 7, color: '#fbbf24', delay: '300ms', dur: '2.4s' },
+              { top: '80%', left: '88%', size: 9, color: '#f472b6', delay: '450ms', dur: '2.8s' },
+              { top: '5%', left: '50%', size: 6, color: '#a78bfa', delay: '600ms', dur: '2.3s' },
+              { top: '90%', left: '48%', size: 8, color: '#34d399', delay: '250ms', dur: '2.5s' },
+            ].map((c, i) => (
+              <span key={i} className="absolute rounded-full pointer-events-none animate-float"
+                style={{ top: c.top, left: c.left, width: c.size, height: c.size, backgroundColor: c.color, opacity: 0.7, animationDelay: c.delay, animationDuration: c.dur }}></span>
+            ))}
+
+            <div className="relative w-24 h-24 mx-auto mb-5">
+              <div className="absolute inset-0 rounded-full bg-emerald-400/25 blur-2xl animate-pulse"></div>
+              <div className="absolute inset-0 rounded-full border-2 border-emerald-300/50 animate-ping" style={{ animationDuration: '2s' }}></div>
+              <div className="relative w-full h-full rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/40">
+                <CheckCircle2 className="w-12 h-12 text-white" strokeWidth={2.5} />
               </div>
-              <div className="flex justify-between border-t pt-2 mt-2 font-bold text-slate-800">
-                <span>Total Amount</span>
-                <span>₹{item.price}</span>
-              </div>
+              <span className="absolute -top-1.5 -right-1.5 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center">
+                <PartyPopper className="w-4 h-4 text-amber-500" />
+              </span>
             </div>
-          </div>
 
-          <div className="p-6">
-            {error && (
-              <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-xs font-bold text-center">
-                {error}
-              </div>
-            )}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-black uppercase tracking-widest mb-3">
+              <Sparkles className="w-3 h-3" /> Payment Successful
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-heading font-black text-slate-900 leading-tight">You're All Set!</h2>
+            <p className="text-slate-500 text-sm mt-2 max-w-sm mx-auto">
+              You now have full access to <span className="font-bold text-slate-800">{item.name || item.title}</span>.
+              {item.type === 'course' ? ' Time to start learning.' : ' Your courses are ready to explore.'}
+            </p>
+
             <button
-              onClick={handlePay}
-              disabled={paying}
-              className="w-full py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-transform hover:-translate-y-0.5 shadow-md shadow-primary/20 disabled:opacity-60"
+              onClick={() => navigate(successRedirect())}
+              className="group relative overflow-hidden w-full mt-7 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/30 hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2"
             >
-              {paying ? 'Processing...' : 'Pay via UPI / Cards'}
+              <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent"></span>
+              {item.type === 'course' ? <Play className="w-4 h-4 relative fill-current" /> : null}
+              <span className="relative">{item.type === 'course' ? 'Start Watching Now' : 'Go to My Packages'}</span>
+              <ArrowRight className="w-4 h-4 relative transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
             </button>
-            <p className="text-center text-[10px] text-slate-400 mt-4">Payments secured by Razorpay SDK integrations.</p>
+
+            <p className="text-[10px] text-slate-400 font-semibold mt-4">Redirecting you automatically...</p>
           </div>
+        ) : (
+          <>
+            {(() => {
+              const finalAmount = pricing ? pricing.final_amount : item.price;
+              const hasUpgradeCredit = pricing && pricing.upgrade_credit > 0;
+              const hasCouponDiscount = pricing && pricing.coupon_discount > 0;
 
-        </div>
-      )}
+              return (
+                <div className="relative rounded-[2rem] p-[1.5px] bg-gradient-to-br from-blue-400/40 via-indigo-300/20 to-transparent shadow-[0_25px_60px_-20px_rgba(37,99,235,0.35)] animate-fade-in-up">
+                  <div className="bg-white rounded-[calc(2rem-1.5px)] overflow-hidden">
 
+                    {/* Header */}
+                    <div className="relative overflow-hidden p-6 sm:p-7 text-white"
+                      style={{ background: 'linear-gradient(135deg, #0f1f4d 0%, #1e3a8a 45%, #2563eb 100%)' }}>
+                      <div className="absolute inset-0 opacity-[0.07] pointer-events-none"
+                        style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
+                      <div className="absolute -top-12 -right-8 w-48 h-48 bg-blue-400/25 rounded-full blur-[90px] pointer-events-none animate-blob"></div>
+                      <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
+
+                      <div className="relative z-10 flex items-start gap-3.5">
+                        <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 shadow-inner">
+                          <ItemIcon className="w-6 h-6 text-white" strokeWidth={2} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-blue-200/80">{item.type}</p>
+                          <h2 className="text-lg sm:text-xl font-heading font-black leading-snug truncate">{item.name || item.title}</h2>
+                        </div>
+                      </div>
+                      <p className="relative z-10 text-3xl sm:text-4xl font-heading font-black mt-4">
+                        ₹{pricingLoading ? '···' : finalAmount.toLocaleString('en-IN')}
+                      </p>
+                    </div>
+
+                    {/* Order Summary */}
+                    <div className="p-6 border-b border-slate-100">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Order Summary</p>
+
+                      {hasUpgradeCredit && (
+                        <div className="flex items-start gap-2.5 bg-emerald-50 border border-emerald-100 rounded-xl px-3.5 py-3 mb-4">
+                          <ArrowUpCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={2.5} />
+                          <p className="text-[11px] text-emerald-800 font-semibold leading-relaxed">
+                            You already own a package — its price (<span className="font-black">₹{pricing.upgrade_credit.toLocaleString('en-IN')}</span>) is credited toward this upgrade, so you only pay the difference.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="space-y-2.5 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400 font-medium">Base Price</span>
+                          <span className="font-bold text-slate-700">₹{Number(item.price).toLocaleString('en-IN')}</span>
+                        </div>
+                        {hasUpgradeCredit && (
+                          <div className="flex justify-between text-emerald-600 font-bold">
+                            <span>Already-Owned Package Credit</span>
+                            <span>−₹{pricing.upgrade_credit.toLocaleString('en-IN')}</span>
+                          </div>
+                        )}
+                        {hasCouponDiscount && (
+                          <div className="flex justify-between text-emerald-600 font-bold">
+                            <span>Coupon ({appliedCoupon})</span>
+                            <span>−₹{pricing.coupon_discount.toLocaleString('en-IN')}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between border-t border-dashed border-slate-200 pt-2.5 mt-2.5 font-black text-slate-900">
+                          <span>Total Amount</span>
+                          <span className="text-blue-600">₹{pricingLoading ? '···' : finalAmount.toLocaleString('en-IN')}</span>
+                        </div>
+                      </div>
+
+                      {(hasUpgradeCredit || hasCouponDiscount) && (
+                        <div className="mt-4 inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-[11px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest shadow-md shadow-emerald-500/25">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          You save ₹{((pricing.upgrade_credit || 0) + (pricing.coupon_discount || 0)).toLocaleString('en-IN')} on this order
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Coupon */}
+                    <div className="p-6 border-b border-slate-100">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5" /> Coupon Code
+                      </p>
+                      {appliedCoupon ? (
+                        <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
+                          <span className="flex items-center gap-2 text-sm font-bold text-emerald-700">
+                            <Tag className="w-4 h-4" /> {appliedCoupon} applied
+                          </span>
+                          <button onClick={handleRemoveCoupon} className="p-1 rounded-lg text-emerald-600 hover:bg-emerald-100 hover:text-emerald-800 transition-colors">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={couponInput}
+                            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                            placeholder="Enter coupon code"
+                            className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-shadow"
+                          />
+                          <button
+                            onClick={handleApplyCoupon}
+                            disabled={couponChecking || !couponInput.trim()}
+                            className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest disabled:opacity-60 transition-colors shrink-0"
+                          >
+                            {couponChecking ? '···' : 'Apply'}
+                          </button>
+                        </div>
+                      )}
+                      {couponError && <p className="text-xs text-red-500 font-bold mt-2">{couponError}</p>}
+                    </div>
+
+                    {/* Pay */}
+                    <div className="p-6">
+                      {error && (
+                        <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-xs font-bold text-center animate-scale-in">
+                          {error}
+                        </div>
+                      )}
+                      <button
+                        onClick={handlePay}
+                        disabled={paying || pricingLoading}
+                        className="group relative overflow-hidden w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest transition-all hover:-translate-y-0.5 hover:shadow-xl shadow-lg shadow-blue-500/25 disabled:opacity-60 disabled:hover:translate-y-0 active:scale-[0.98] flex items-center justify-center gap-2"
+                      >
+                        {!paying && <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent"></span>}
+                        {paying ? (
+                          <span className="relative flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 animate-spin" /> Processing...
+                          </span>
+                        ) : (
+                          <span className="relative">{finalAmount > 0 ? 'Pay via UPI / Cards' : 'Claim for Free'}</span>
+                        )}
+                      </button>
+                      <div className="flex items-center justify-center gap-4 mt-5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        <span className="flex items-center gap-1.5"><Landmark className="w-3.5 h-3.5 text-slate-300" /> Razorpay Secured</span>
+                        <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-slate-300" /> 256-bit SSL</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })()}
+          </>
+        )}
+      </main>
     </div>
   );
 }

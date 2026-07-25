@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
-  Layers, Plus, Pencil, Ban, X, ImagePlus, Percent, CheckCircle2, BookOpen
+  Layers, Plus, Pencil, Ban, X, ImagePlus, Percent, CheckCircle2, BookOpen, AlertCircle, Sparkles, Languages, Clock, BookOpenCheck, Loader2
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -131,224 +132,297 @@ export default function AdminPackages() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-4">
+        <div className="relative flex items-center justify-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-rose-500"></div>
+          <div className="absolute animate-ping rounded-full h-10 w-10 border border-rose-400 opacity-75"></div>
+        </div>
+        <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest animate-pulse">Loading catalog packages...</p>
       </div>
     );
   }
 
   return (
-    <div className="text-slate-800">
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <Layers className="w-7 h-7 text-red-600" />
-          <h2 className="text-2xl font-black">Learning Packages Catalog</h2>
+    <div className="text-slate-800 space-y-6 pb-10">
+      
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center shadow-lg shadow-rose-500/20 shrink-0">
+            <Layers className="w-5.5 h-5.5" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black tracking-tight text-slate-900 leading-tight">Packages Catalog</h2>
+            <p className="text-xs text-slate-400 font-semibold">Group educational courses into commercial product bundles</p>
+          </div>
         </div>
-        <button onClick={openCreate} className="px-4 py-2.5 bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-md shadow-red-600/25">
-          <Plus className="w-4 h-4" /> Create Package
+        <button 
+          onClick={openCreate} 
+          className="group relative overflow-hidden px-6 py-2.5 bg-rose-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-md shadow-rose-600/25 hover:shadow-xl hover:bg-rose-700 transition-all duration-300 self-start sm:self-center"
+        >
+          <Plus className="w-5 h-5" /> Create Package
         </button>
       </div>
 
+      {/* Package Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {packages.map(pkg => (
-          <div key={pkg.id} className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="aspect-video bg-slate-100 relative">
-              {pkg.thumbnail_display_url ? (
-                <img src={pkg.thumbnail_display_url} alt={pkg.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-red-200">
-                  <Layers className="w-10 h-10" />
-                </div>
-              )}
-              <span className={`absolute top-3 left-3 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
-                pkg.is_active !== false ? 'bg-emerald-500 text-white' : 'bg-slate-500 text-white'
-              }`}>{pkg.is_active !== false ? 'Active' : 'Inactive'}</span>
-            </div>
-            <div className="p-5">
-              <h4 className="font-bold text-slate-900 uppercase text-sm">{pkg.name}</h4>
-              <p className="text-lg font-black text-red-600 mt-1">₹{(pkg.price || 0).toLocaleString('en-IN')}</p>
-              <p className="text-xs text-slate-400 mt-2 line-clamp-2">{pkg.description || 'Professional training package.'}</p>
-              <div className="flex items-center gap-2 mt-3 flex-wrap">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                  <Percent className="w-3 h-3" /> L1 {pkg.level1_commission_percent}% / L2 {pkg.level2_commission_percent}%
-                </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
-                  <BookOpen className="w-3 h-3" /> {(pkg.courses || []).length} courses
-                </span>
+        {packages.map((pkg, idx) => (
+          <div 
+            key={pkg.id} 
+            className="group bg-white border border-slate-200/80 rounded-[2.2rem] overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+          >
+            <div>
+              {/* Card Image Area */}
+              <div className="aspect-[16/10] bg-slate-100 relative overflow-hidden">
+                {pkg.thumbnail_display_url ? (
+                  <img src={pkg.thumbnail_display_url} alt={pkg.name} className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-[1.03]" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-2 bg-slate-50">
+                    <Layers className="w-10 h-10" />
+                    <span className="text-[10px] font-black uppercase tracking-wider">No visual uploaded</span>
+                  </div>
+                )}
+                
+                {/* Active/Inactive badge */}
+                <span className={`absolute top-4 left-4 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border ${
+                  pkg.is_active !== false 
+                    ? 'bg-emerald-500/90 border-emerald-400/25 text-white backdrop-blur-md' 
+                    : 'bg-slate-900/90 border-slate-800/20 text-slate-300 backdrop-blur-md'
+                }`}>{pkg.is_active !== false ? 'Active' : 'Archived'}</span>
               </div>
-              <div className="flex gap-2 mt-4 pt-4 border-t">
-                <button onClick={() => openEdit(pkg)} className="flex-1 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:border-red-300 hover:text-red-600 flex items-center justify-center gap-1.5">
-                  <Pencil className="w-3.5 h-3.5" /> Edit
+
+              {/* Card Body */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 uppercase text-sm tracking-tight line-clamp-1">{pkg.name}</h4>
+                  <p className="text-xl font-black text-rose-600 mt-1">₹{(pkg.price || 0).toLocaleString('en-IN')}</p>
+                </div>
+                
+                <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 h-8">{pkg.description || 'Professional training bundle compiled for advanced learning.'}</p>
+                
+                {/* Visual Indicators */}
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
+                    <Percent className="w-3 h-3" /> L1 {pkg.level1_commission_percent}% / L2 {pkg.level2_commission_percent}%
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-indigo-600 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-md">
+                    <BookOpen className="w-3 h-3" /> {(pkg.courses || []).length} courses
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card Footer Actions */}
+            <div className="p-6 pt-0">
+              <div className="flex gap-2.5 pt-4 border-t border-slate-100">
+                <button 
+                  onClick={() => openEdit(pkg)} 
+                  className="flex-1 py-2.5 border border-slate-200 hover:border-rose-500/30 hover:bg-rose-50 rounded-xl text-xs font-bold text-slate-600 hover:text-rose-600 flex items-center justify-center gap-1.5 transition-all"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> Modify
                 </button>
                 {pkg.is_active !== false && (
-                  <button onClick={() => handleDeactivate(pkg.id)} className="flex-1 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:border-red-300 hover:text-red-600 flex items-center justify-center gap-1.5">
-                    <Ban className="w-3.5 h-3.5" /> Deactivate
+                  <button 
+                    onClick={() => handleDeactivate(pkg.id)} 
+                    className="flex-1 py-2.5 border border-slate-200 hover:border-slate-800/30 hover:bg-slate-100 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <Ban className="w-3.5 h-3.5" /> Archive
                   </button>
                 )}
               </div>
             </div>
+
           </div>
         ))}
         {packages.length === 0 && (
-          <div className="col-span-full text-center py-16 bg-white rounded-3xl border border-slate-100 text-slate-400 font-medium">
-            No packages created yet.
+          <div className="col-span-full text-center py-16 bg-white rounded-3xl border border-slate-200/80 text-slate-400 font-semibold">
+            No active bundles created yet. Click "Create Package" to begin.
           </div>
         )}
       </div>
 
       {/* Create/Edit Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      {showForm && createPortal(
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-[2.2rem] max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scale-in border border-slate-100" onClick={(e) => e.stopPropagation()}>
 
-            {/* Header */}
+            {/* Modal Header */}
             <div className="shrink-0 flex items-center justify-between gap-4 px-6 sm:px-8 py-5 text-white"
-              style={{ background: 'linear-gradient(135deg, #0b1428 0%, #3d0d1e 60%, #7f1d1d 100%)' }}>
+              style={{ background: 'linear-gradient(135deg, #09090b 0%, #1e0e18 50%, #3b0717 100%)' }}>
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
-                  <Layers className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0">
+                  <Layers className="w-6 h-6" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-lg font-black truncate">{editingId ? 'Edit Package' : 'Create New Package'}</h3>
-                  <p className="text-[11px] text-white/60 truncate">{editingId ? `Updating "${form.name}"` : 'Set up a new learning bundle for students'}</p>
+                  <h3 className="text-lg font-black tracking-tight truncate">{editingId ? 'Modify Package' : 'Create Product Bundle'}</h3>
+                  <p className="text-[10px] text-slate-400 font-semibold truncate">{editingId ? `Updating "${form.name}"` : 'Configure a learning package target setup'}</p>
                 </div>
               </div>
-              <button onClick={() => setShowForm(false)} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors shrink-0">
-                <X className="w-[18px] h-[18px]" />
+              <button onClick={() => setShowForm(false)} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all shrink-0 hover:scale-105">
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Scrollable body */}
-            <form id="package-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto admin-scrollbar px-6 sm:px-8 py-6 space-y-7">
-              {error && <div className="p-3 bg-red-50 border border-red-100 text-red-700 rounded-xl text-xs font-bold">{error}</div>}
+            {/* Modal Scrollable body */}
+            <form id="package-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto admin-scrollbar px-6 sm:px-8 py-6 space-y-6 bg-slate-50/50">
+              {error && (
+                <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-600 rounded-xl text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
 
-              {/* Thumbnail */}
-              <div>
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Thumbnail</p>
+              {/* Thumbnail Upload component */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-4">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Cover Art / Thumbnail</p>
                 <div className="flex items-center gap-4">
-                  <div className="w-32 aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-red-50 to-rose-50 border border-slate-100 flex items-center justify-center shrink-0">
-                    {thumbPreview ? <img src={thumbPreview} className="w-full h-full object-cover" alt="" /> : <ImagePlus className="w-7 h-7 text-red-200" />}
+                  <div className="w-32 aspect-video rounded-xl overflow-hidden bg-slate-50 border border-slate-200/60 flex items-center justify-center shrink-0 shadow-sm">
+                    {thumbPreview ? <img src={thumbPreview} className="w-full h-full object-contain p-1" alt="" /> : <ImagePlus className="w-7 h-7 text-slate-300" />}
                   </div>
-                  <label className="px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 cursor-pointer hover:border-red-300 hover:text-red-600 transition-colors">
-                    {thumbPreview ? 'Replace Image' : 'Upload Thumbnail'}
+                  <label className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200/60 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 cursor-pointer transition-colors shadow-sm">
+                    {thumbPreview ? 'Replace file' : 'Select file'}
                     <input type="file" accept="image/*" className="hidden" onChange={handleThumbChange} />
                   </label>
                 </div>
               </div>
 
-              {/* Basic Info */}
-              <div>
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Basic Information</p>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Package Name *</label>
-                    <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Description</label>
-                    <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Price (₹) *</label>
-                      <input required type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Min Income for L2 (₹)</label>
-                      <input type="number" min="0" step="0.01" value={form.min_income} onChange={(e) => setForm({ ...form, min_income: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Commission */}
-              <div>
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                  <Percent className="w-3.5 h-3.5 text-amber-500" /> Commission Settings
-                </p>
-                <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-amber-700 mb-1.5 uppercase">Level 1 % — direct referrer</label>
-                    <input required type="number" min="0" max="100" step="0.01" value={form.level1_pct} onChange={(e) => setForm({ ...form, level1_pct: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-amber-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-200" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-amber-700 mb-1.5 uppercase">Level 2 % — passive income</label>
-                    <input required type="number" min="0" max="100" step="0.01" value={form.level2_pct} onChange={(e) => setForm({ ...form, level2_pct: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-amber-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-200" />
-                  </div>
-                  <p className="sm:col-span-2 text-[11px] text-amber-700/80">L2 is only awarded once the L2 earner's total income exceeds the Min Income threshold above.</p>
-                </div>
-              </div>
-
-              {/* Details */}
-              <div>
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Package Details — shown to students</p>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Duration</label>
-                      <input value={form.pkg_duration} onChange={(e) => setForm({ ...form, pkg_duration: e.target.value })} placeholder="Lifetime Access" className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Level</label>
-                      <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow">
-                        <option value="">-- Select --</option>
-                        {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Language</label>
-                      <input value={form.language} onChange={(e) => setForm({ ...form, language: e.target.value })} placeholder="Hindi, English" className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">What You Get</label>
-                    <textarea rows={4} value={form.what_you_get} onChange={(e) => setForm({ ...form, what_you_get: e.target.value })} placeholder={'3 Premium Courses\nLifetime Access\nCertificate\nCommunity Access'} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-                    <p className="text-[11px] text-slate-400 mt-1">One item per line. Shown as checkmarks on the package page.</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Requirements</label>
-                    <textarea rows={2} value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} placeholder={'Smartphone with internet\nBasic English understanding'} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-                    <p className="text-[11px] text-slate-400 mt-1">One item per line.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Courses */}
-              {allCourses.length > 0 && (
+              {/* Basic Info input blocks */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-4">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Standard details</p>
+                
                 <div>
-                  <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Assign Courses</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto border border-slate-200 rounded-2xl p-3">
+                  <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Bundle Title *</label>
+                  <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
+                </div>
+                
+                <div>
+                  <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Public Description</label>
+                  <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Retail Price (₹) *</label>
+                    <input required type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Min Earnings For L2 Overrides (₹)</label>
+                    <input type="number" min="0" step="0.01" value={form.min_income} onChange={(e) => setForm({ ...form, min_income: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Commission settings */}
+              <div className="bg-amber-500/5 border border-amber-500/25 rounded-2xl p-4 sm:p-5 space-y-4">
+                <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4" /> Commission Structures
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-amber-700 mb-1.5 uppercase tracking-wide">L1 Direct Referrer Percent (%) *</label>
+                    <input required type="number" min="0" max="100" step="0.01" value={form.level1_pct} onChange={(e) => setForm({ ...form, level1_pct: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-amber-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-amber-700 mb-1.5 uppercase tracking-wide">L2 Passive Referrer Percent (%) *</label>
+                    <input required type="number" min="0" max="100" step="0.01" value={form.level2_pct} onChange={(e) => setForm({ ...form, level2_pct: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-amber-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500" />
+                  </div>
+                  <p className="sm:col-span-2 text-[10px] text-amber-800 font-semibold leading-relaxed">Commission guidelines: L2 commissions are paid out to tier-2 referrers once their direct network earnings exceed the minimum milestone threshold set above.</p>
+                </div>
+              </div>
+
+              {/* Course Features */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-4">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 font-extrabold">Student Page Specifications</p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Duration</label>
+                    <input value={form.pkg_duration} onChange={(e) => setForm({ ...form, pkg_duration: e.target.value })} placeholder="Lifetime Access" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide flex items-center gap-1"><Layers className="w-3.5 h-3.5" /> Level</label>
+                    <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
+                      <option value="">-- Select --</option>
+                      {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide flex items-center gap-1"><Languages className="w-3.5 h-3.5" /> Language</label>
+                    <input value={form.language} onChange={(e) => setForm({ ...form, language: e.target.value })} placeholder="English, Hindi" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Included Features / Deliverables</label>
+                  <textarea rows={4} value={form.what_you_get} onChange={(e) => setForm({ ...form, what_you_get: e.target.value })} placeholder={'3 Premium Courses\nLifetime Access\nCompletion Certificate'} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50" />
+                  <p className="text-[10px] text-slate-400 mt-1 font-medium">List one item per line. Shows up with checkmarks on details pages.</p>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Course requirements</label>
+                  <textarea rows={2} value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} placeholder={'High-speed internet access\nBasic computer skills'} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50" />
+                  <p className="text-[10px] text-slate-400 mt-1 font-medium">List one requirement item per line.</p>
+                </div>
+              </div>
+
+              {/* Course checklists */}
+              {allCourses.length > 0 && (
+                <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-3">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><BookOpenCheck className="w-4 h-4 text-rose-500" /> Assign active courses</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-slate-200/60 rounded-xl p-3 bg-slate-50/30">
                     {allCourses.map(c => (
-                      <label key={c.id} className="flex items-center gap-2 text-sm font-medium text-slate-600 cursor-pointer hover:bg-slate-50 p-1.5 rounded-lg">
-                        <input type="checkbox" checked={form.course_ids.includes(c.id)} onChange={() => toggleCourse(c.id)} className="w-4 h-4 rounded accent-red-600" />
-                        {c.title}
+                      <label key={c.id} className="flex items-center gap-2.5 text-xs font-bold text-slate-600 cursor-pointer hover:bg-white p-2 rounded-lg transition-all border border-transparent hover:border-slate-100 shadow-sm">
+                        <input type="checkbox" checked={form.course_ids.includes(c.id)} onChange={() => toggleCourse(c.id)} className="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500 accent-rose-600" />
+                        <span className="truncate">{c.title}</span>
                       </label>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Publish */}
-              <label className="flex items-center justify-between gap-3 cursor-pointer bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                <span className="text-sm font-bold text-slate-700">Active (visible to students)</span>
-                <span className="relative inline-flex items-center">
+              {/* Toggle switch for Visibility */}
+              <label className="flex items-center justify-between gap-3 cursor-pointer bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm">
+                <div>
+                  <span className="text-xs font-extrabold text-slate-700 block">Catalog Visibility</span>
+                  <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Toggle whether student accounts can view and purchase this bundle</span>
+                </div>
+                <span className="relative inline-flex items-center shrink-0">
                   <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="sr-only peer" />
-                  <span className="w-10 h-6 bg-slate-300 peer-checked:bg-red-600 rounded-full transition-colors"></span>
-                  <span className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></span>
+                  <span className="w-11 h-6.5 bg-slate-200 peer-checked:bg-rose-600 rounded-full transition-colors duration-300"></span>
+                  <span className="absolute left-1 top-1 w-4.5 h-4.5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow"></span>
                 </span>
               </label>
+
             </form>
 
-            {/* Sticky footer */}
-            <div className="shrink-0 flex gap-3 px-6 sm:px-8 py-5 border-t border-slate-100 bg-white">
-              <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-3 border border-slate-200 rounded-xl font-bold text-xs uppercase text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
-              <button type="submit" form="package-form" disabled={saving} className="flex-1 py-3 bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-60 flex items-center justify-center gap-2 shadow-md shadow-red-600/25 hover:shadow-lg transition-all">
-                {saving ? 'Saving...' : <><CheckCircle2 className="w-4 h-4" /> {editingId ? 'Save Changes' : 'Create Package'}</>}
+            {/* Modal Footer Controls */}
+            <div className="shrink-0 flex gap-3.5 px-6 sm:px-8 py-5 border-t border-slate-150 bg-white">
+              <button 
+                type="button" 
+                onClick={() => setShowForm(false)} 
+                className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-xl font-bold text-xs uppercase text-slate-500 transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                form="package-form" 
+                disabled={saving} 
+                className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-60 flex items-center justify-center gap-1.5 transition-all shadow-md shadow-rose-600/10 hover:shadow-lg"
+              >
+                {saving ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <><CheckCircle2 className="w-5 h-5" /> {editingId ? 'Save Changes' : 'Publish Bundle'}</>
+                )}
               </button>
             </div>
+
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Wallet, ArrowUpRight, ArrowDownRight, Scale } from 'lucide-react';
 import api from '../../utils/api';
+import AnimatedNumber from '../../components/AnimatedNumber';
 
 const TYPE_TABS = [
   { key: '', label: 'All' },
@@ -60,28 +61,30 @@ export default function AdminWalletDetails() {
   ];
 
   return (
-    <div className="text-slate-800">
+    <div className="text-slate-800 animate-fade-in-up">
       <div className="flex items-center gap-3 mb-6">
-        <Wallet className="w-7 h-7 text-red-600" />
-        <h2 className="text-2xl font-black">Wallet Ledger</h2>
+        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center shadow-md shadow-red-500/25 shrink-0">
+          <Wallet className="w-5 h-5" />
+        </div>
+        <h2 className="text-xl sm:text-2xl font-black">Wallet Ledger</h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        {kpis.map(kpi => (
-          <div key={kpi.label} className={`rounded-2xl p-5 text-white bg-gradient-to-br ${kpi.color} shadow-lg`}>
-            <kpi.icon className="w-5 h-5 mb-2 text-white/80" />
-            <p className="text-xl font-black leading-none">₹{kpi.value.toLocaleString('en-IN')}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+        {kpis.map((kpi, idx) => (
+          <div key={kpi.label} className={`group rounded-2xl p-4 sm:p-5 text-white bg-gradient-to-br ${kpi.color} shadow-lg transition-transform duration-300 hover:-translate-y-1.5 animate-fade-in-up`} style={{ animationDelay: `${idx * 70}ms` }}>
+            <kpi.icon className="w-5 h-5 mb-2 text-white/80 transition-transform duration-300 group-hover:scale-110" />
+            <AnimatedNumber value={kpi.value} prefix="₹" className="block text-xl font-black leading-none tabular-nums" />
             <p className="text-[10px] font-bold uppercase tracking-widest text-white/75 mt-1.5">{kpi.label}</p>
           </div>
         ))}
       </div>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar">
         {TYPE_TABS.map(tab => (
           <button
             key={tab.key}
             onClick={() => setTypeFilter(tab.key)}
-            className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wide transition-colors ${
+            className={`shrink-0 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wide transition-colors ${
               typeFilter === tab.key ? 'bg-red-600 text-white shadow-md shadow-red-600/25' : 'bg-white border border-slate-200 text-slate-500 hover:border-red-200'
             }`}
           >
@@ -141,14 +144,14 @@ export default function AdminWalletDetails() {
 
       {/* Mobile cards */}
       <div className="lg:hidden space-y-3">
-        {transactions.map(t => {
+        {transactions.map((t, idx) => {
           const isCommission = t.type === 'commission';
           return (
-            <div key={t.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+            <div key={t.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm animate-fade-in-up" style={{ animationDelay: `${Math.min(idx, 10) * 30}ms` }}>
               <div className="flex items-center gap-2.5">
                 <Avatar t={t} />
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-slate-800 truncate">{t.user_name}</p>
+                  <p className="font-bold text-slate-800 leading-snug break-words">{t.user_name}</p>
                   <p className="text-xs text-slate-400 capitalize">{t.type}</p>
                 </div>
                 <span className={`shrink-0 font-black text-sm ${isCommission ? 'text-emerald-600' : 'text-red-600'}`}>

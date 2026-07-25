@@ -59,6 +59,62 @@
   animation: marquee 75s linear infinite;
 }
 
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient-x {
+  background-size: 200% auto;
+  animation: gradient-x 4s ease-in-out infinite;
+}
+
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer-sweep {
+  animation: shimmer-sweep 2.2s ease-in-out infinite;
+}
+
+@keyframes dash-flow {
+  to { stroke-dashoffset: -20; }
+}
+
+.animate-dash-flow {
+  animation: dash-flow 2.4s linear infinite;
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.85); opacity: 0.6; }
+  70% { transform: scale(1.4); opacity: 0; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes gradient-border {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient-border {
+  background-size: 300% 300%;
+  animation: gradient-border 3s ease infinite;
+}
+
+
 .hover-pause:hover .animate-marquee {
   animation-play-state: paused;
 }
@@ -97,35 +153,29 @@ input[type="password"]::-ms-clear {
   display: none;
 }
 
-html,
-body {
+html {
   scrollbar-width: thin;
   scrollbar-color: #2b80f0 transparent;
 }
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  width: 12px;
+html::-webkit-scrollbar {
+  width: 10px;
 }
-html::-webkit-scrollbar-track,
-body::-webkit-scrollbar-track {
+html::-webkit-scrollbar-track {
   background: transparent;
 }
-html::-webkit-scrollbar-thumb,
-body::-webkit-scrollbar-thumb {
+html::-webkit-scrollbar-thumb {
   background-image: linear-gradient(180deg, #7cb4fb 0%, #2b80f0 50%, #1a4fa0 100%);
   border-radius: 9999px;
-  border: 2.5px solid transparent;
+  border: 2px solid transparent;
   background-clip: padding-box;
   box-shadow: 0 0 0 1px rgba(43, 128, 240, 0.06);
   transition: box-shadow 0.2s ease;
 }
-html::-webkit-scrollbar-thumb:hover,
-body::-webkit-scrollbar-thumb:hover {
+html::-webkit-scrollbar-thumb:hover {
   background-image: linear-gradient(180deg, #5b9df5 0%, #1a6fcf 50%, #12376f 100%);
   box-shadow: 0 0 8px rgba(43, 128, 240, 0.45);
 }
-html::-webkit-scrollbar-corner,
-body::-webkit-scrollbar-corner {
+html::-webkit-scrollbar-corner {
   background: transparent;
 }
 

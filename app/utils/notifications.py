@@ -1,5 +1,5 @@
 from app import db
-from app.models import Notification
+from app.models import Notification, User
 
 def add_notification(user_id, title, message, type='system'):
     """Create a new in-app notification for a user."""
@@ -12,6 +12,15 @@ def add_notification(user_id, title, message, type='system'):
     db.session.add(notif)
     db.session.commit()
     return notif
+
+
+def notify_admins(title, message, type='system'):
+    """Create the same in-app notification for every admin user — used for
+    events admins need to act on (new withdrawal/manager/KYC requests)."""
+    admin_ids = [u.id for u in User.query.filter_by(role='admin').all()]
+    for admin_id in admin_ids:
+        db.session.add(Notification(user_id=admin_id, title=title, message=message, type=type))
+    db.session.commit()
 
 def mark_notification_read(notif_id, user_id):
     """Mark a specific notification as read."""

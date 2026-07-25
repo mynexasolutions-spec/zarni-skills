@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import ManagerSidebar from '../components/Manager/ManagerSidebar';
+import DashboardSidebar from '../components/Student/DashboardSidebar';
 import DashboardHeader from '../components/Student/DashboardHeader';
 
 export default function ManagerLayout() {
@@ -22,12 +22,14 @@ export default function ManagerLayout() {
 
         {/* Sidebar — overlay drawer on mobile, static column on desktop */}
         <div className={`${mobileSidebarOpen ? 'fixed left-0 top-16 bottom-0 z-40' : 'hidden'} lg:block`}>
-          <ManagerSidebar onNavigate={() => setMobileSidebarOpen(false)} />
+          <DashboardSidebar onNavigate={() => setMobileSidebarOpen(false)} />
         </div>
 
         {/* Main Content Area — owns its own scroll region */}
-        <main className="flex-grow min-h-0 p-4 sm:p-6 overflow-y-auto overflow-x-hidden manager-scrollbar max-w-7xl mx-auto w-full">
-          <Outlet />
+        <main className="flex-grow min-h-0 px-4 sm:px-6 lg:px-8 py-5 sm:py-7 overflow-y-auto overflow-x-hidden manager-scrollbar w-full">
+          <div className="max-w-7xl mx-auto w-full">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
