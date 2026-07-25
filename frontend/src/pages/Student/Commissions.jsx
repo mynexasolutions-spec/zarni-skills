@@ -56,7 +56,7 @@ export default function Commissions() {
     <div className="w-full space-y-8 text-slate-800 pb-12">
 
       {/* ── 3D TILT HERO HERO BANNER ───────────────────────────────────────── */}
-      <Reveal variant="scale-in">
+      <div>
         <div
           ref={tiltHeroRef}
           onMouseMove={onHeroMove}
@@ -96,10 +96,10 @@ export default function Commissions() {
             </div>
           </div>
         </div>
-      </Reveal>
+      </div>
 
       {/* ── KPIS STRIP ─────────────────────────────────────────────────── */}
-      <Reveal variant="fade-up" delay={150}>
+      <div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-5">
           {kpis.map((kpi) => (
             <div
@@ -118,10 +118,10 @@ export default function Commissions() {
             </div>
           ))}
         </div>
-      </Reveal>
+      </div>
 
       {/* ── COMMISSION RECORDS TABLE (VISIBLE ON ALL SCREENS) ─────────────────────────── */}
-      <Reveal variant="fade-up" delay={250}>
+      <div>
         <div className="bg-white border border-slate-200/90 rounded-[2.5rem] p-5 sm:p-8 shadow-sm hover:shadow-lg transition-all duration-300">
           <div className="relative flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
             <h3 className="flex items-center gap-3 font-heading font-black text-lg text-slate-900">
@@ -136,7 +136,57 @@ export default function Commissions() {
             </span>
           </div>
 
-          <div className="relative overflow-x-auto">
+          {/* Mobile View (Card List) */}
+          <div className="md:hidden space-y-3.5">
+            {commissions.map((c, idx) => {
+              const initials = c.buyer_name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+              const palette = ['from-blue-500 to-indigo-600', 'from-emerald-500 to-teal-600', 'from-purple-500 to-fuchsia-600', 'from-amber-500 to-orange-600', 'from-pink-500 to-rose-600'];
+              const isPositive = c.status === 'approved' || c.status === 'paid';
+              const statusBadge = c.status === 'approved' ? 'bg-blue-50 text-blue-700 border-blue-200' : c.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+              return (
+                <div key={c.id} className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${palette[idx % palette.length]} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-sm`}>
+                        {initials}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-heading font-black text-slate-900 text-sm truncate">{c.buyer_name}</p>
+                        <p className="text-[11px] font-semibold text-slate-500 truncate">{c.item_name}</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider rounded-full border shrink-0 ${statusBadge}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${c.status === 'paid' ? 'bg-emerald-500' : c.status === 'approved' ? 'bg-blue-500' : 'bg-amber-500'}`}></span>
+                      {c.status}
+                    </span>
+                  </div>
+                  <div className="pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">L{c.level}</span>
+                      <span className="text-slate-400 font-bold text-[11px]">{c.created_at}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-400 uppercase font-black mr-1.5">Earned</span>
+                      <span className={`font-heading font-black text-base tabular-nums ${isPositive ? 'text-emerald-600' : 'text-amber-500'}`}>
+                        ₹{c.commission_amount.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {commissions.length === 0 && (
+              <div className="text-center py-12 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-50 flex items-center justify-center mb-2 text-blue-500">
+                  <Receipt className="w-6 h-6" />
+                </div>
+                <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">No commissions earned yet</p>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop View (Table) */}
+          <div className="hidden md:block relative overflow-x-auto">
             <table className="w-full text-left text-sm text-slate-600">
               <thead>
                 <tr className="bg-slate-50/80 text-slate-400 font-black text-[10px] uppercase tracking-widest border-b border-slate-100">
@@ -197,7 +247,7 @@ export default function Commissions() {
             </table>
           </div>
         </div>
-      </Reveal>
+      </div>
 
     </div>
   );
