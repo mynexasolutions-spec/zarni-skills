@@ -212,7 +212,7 @@ export default function BannerSlider() {
                       src={b.image_display_url}
                       alt="Promotional banner"
                       draggable="false"
-                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.02]"
+                      className="w-full h-full object-contain transition-transform duration-700 hover:scale-[1.02]"
                     />
                   </div>
                 </div>

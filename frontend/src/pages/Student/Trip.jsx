@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Compass, Plane, Wallet, Calendar, TrendingUp, Clock, Zap, Flag, ArrowUpRight, Sparkles, Send, CheckCircle2, XCircle } from 'lucide-react';
+import { Compass, Plane, Wallet, Calendar, TrendingUp, Clock, Zap, Flag, ArrowUpRight, Sparkles, Send, CheckCircle2, XCircle, IndianRupee, Target } from 'lucide-react';
 import api from '../../utils/api';
 import AnimatedNumber from '../../components/AnimatedNumber';
 
@@ -14,6 +14,41 @@ function daysLeft(goalDateStr) {
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
+// Live Days/Hours/Minutes breakdown, ticking every 30s (minute precision is
+// all the UI shows, so a full 1s interval would just waste renders).
+function useCountdown(targetDate) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(id);
+  }, []);
+  if (!targetDate) return { days: 0, hours: 0, minutes: 0, expired: true };
+  const diffMs = Math.max(0, targetDate.getTime() - now.getTime());
+  return {
+    days: Math.floor(diffMs / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((diffMs / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((diffMs / (1000 * 60)) % 60),
+    expired: diffMs <= 0,
+  };
+}
+
+function CountdownUnit({ value, label }) {
+  const digits = String(value).padStart(2, '0').split('');
+  return (
+    <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+      <div className="flex gap-1 sm:gap-1.5">
+        {digits.map((d, i) => (
+          <div key={i} className="relative w-8 h-10 sm:w-11 sm:h-14 rounded-lg sm:rounded-xl bg-white flex items-center justify-center text-fuchsia-800 font-black text-base sm:text-2xl shadow-[0_8px_20px_rgba(0,0,0,0.25)] overflow-hidden">
+            <span className="absolute inset-x-0 top-1/2 h-px bg-black/5"></span>
+            {d}
+          </div>
+        ))}
+      </div>
+      <span className="text-[9px] sm:text-[10px] font-black text-white/75 uppercase tracking-widest">{label}</span>
+    </div>
+  );
+}
+
 export default function Trip() {
   const navigate = useNavigate();
   const [goal, setGoal] = useState(null);
@@ -22,6 +57,8 @@ export default function Trip() {
   const [claiming, setClaiming] = useState(false);
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const countdown = useCountdown(goal?.goal_date ? new Date(`${goal.goal_date}T23:59:59`) : null);
 
   const fetchTripRequest = async () => {
     try {
@@ -137,15 +174,15 @@ export default function Trip() {
         <h2 className="text-xl sm:text-2xl font-black">Trip Achievements</h2>
       </div>
 
-      {/* Trip image + title */}
+      {/* Trip hero: title, banner photo, live countdown, at-a-glance amounts */}
       <div className="relative overflow-hidden rounded-3xl sm:rounded-[2rem] mb-6 text-white animate-fade-in-up animate-gradient-x"
         style={{ background: achieved
           ? 'linear-gradient(115deg, #064e3b 0%, #059669 30%, #10b981 55%, #059669 80%, #064e3b 100%)'
-          : 'linear-gradient(115deg, #0f1f4d 0%, #1e3a8a 30%, #2563eb 55%, #1e3a8a 80%, #0f1f4d 100%)' }}>
+          : 'linear-gradient(115deg, #1a0533 0%, #4c1d75 25%, #86198f 50%, #4c1d75 75%, #1a0533 100%)' }}>
         <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
-        <div className="absolute -top-16 -right-10 w-72 h-72 bg-blue-400/25 rounded-full blur-[100px] pointer-events-none animate-blob"></div>
-        {achieved && <div className="absolute -bottom-16 -left-10 w-64 h-64 bg-emerald-400/20 rounded-full blur-[100px] pointer-events-none animate-blob" style={{ animationDelay: '2.5s' }}></div>}
+        <div className={`absolute -top-16 -right-10 w-72 h-72 rounded-full blur-[100px] pointer-events-none animate-blob ${achieved ? 'bg-blue-400/25' : 'bg-fuchsia-400/25'}`}></div>
+        <div className={`absolute -bottom-16 -left-10 w-64 h-64 rounded-full blur-[100px] pointer-events-none animate-blob ${achieved ? 'bg-emerald-400/20' : 'bg-purple-500/25'}`} style={{ animationDelay: '2.5s' }}></div>
         <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
         {achieved && [
           { top: '20%', left: '58%', size: 4, delay: '0s', dur: '5s' },
@@ -156,25 +193,70 @@ export default function Trip() {
             style={{ top: s.top, left: s.left, width: s.size, height: s.size, boxShadow: '0 0 8px 2px rgba(252,211,77,0.6)', animation: `float ${s.dur} ease-in-out infinite`, animationDelay: s.delay }}
           ></span>
         ))}
-        <div className="relative z-10 flex flex-col sm:flex-row items-center gap-5 sm:gap-6 p-6 sm:p-10">
-          {goal.image_url && (
-            <div className="w-28 h-28 sm:w-40 sm:h-40 shrink-0 relative animate-float">
-              <img
-                src={goal.image_url}
-                alt="Trip reward"
-                className="w-full h-full object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.25)]"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
-            </div>
-          )}
-          <div className="text-center sm:text-left">
+
+        <div className="relative z-10 p-5 sm:p-8">
+          {/* Title */}
+          <div className="text-center mb-5">
             {achieved && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-300/40 text-emerald-200 text-[10px] font-black uppercase tracking-widest mb-3 animate-pulse">
                 <Plane className="w-3 h-3" /> Goal Achieved!
               </span>
             )}
             <h3 className="text-xl sm:text-3xl font-black">{goal.title}</h3>
-            <p className="text-slate-300 text-xs sm:text-sm mt-2">Hit your income goal before the deadline to unlock this trip reward.</p>
+          </div>
+
+          {/* Full-width banner photo */}
+          {goal.image_url && (
+            <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden border-4 border-white/90 shadow-[0_20px_45px_rgba(0,0,0,0.35)] mb-6">
+              <img
+                src={goal.image_url}
+                alt="Trip reward"
+                className="w-full h-full object-cover"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            </div>
+          )}
+
+          {/* Live countdown */}
+          {!achieved && !countdown.expired && (
+            <div className="flex items-center justify-center gap-2 sm:gap-4 mb-6">
+              <CountdownUnit value={countdown.days} label="Days" />
+              <span className="text-white/40 font-black text-xl -mt-4">:</span>
+              <CountdownUnit value={countdown.hours} label="Hours" />
+              <span className="text-white/40 font-black text-xl -mt-4">:</span>
+              <CountdownUnit value={countdown.minutes} label="Minutes" />
+            </div>
+          )}
+
+          {/* Amount summary pills */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="relative flex items-center justify-between gap-3 bg-black/25 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-base sm:text-lg font-black leading-none truncate">₹{target.toLocaleString('en-IN')}</p>
+                <p className="text-[10px] text-white/60 font-bold mt-1">Target Amount</p>
+              </div>
+              <span className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
+                <IndianRupee className="w-4 h-4 text-fuchsia-700" strokeWidth={2.5} />
+              </span>
+            </div>
+            <div className="relative flex items-center justify-between gap-3 bg-black/25 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-base sm:text-lg font-black leading-none truncate">₹{earnings.toLocaleString('en-IN')}</p>
+                <p className="text-[10px] text-white/60 font-bold mt-1">Earn Amount</p>
+              </div>
+              <span className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
+                <IndianRupee className="w-4 h-4 text-emerald-600" strokeWidth={2.5} />
+              </span>
+            </div>
+            <div className="relative flex items-center justify-between gap-3 bg-black/25 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-base sm:text-lg font-black leading-none truncate">₹{remaining.toLocaleString('en-IN')}</p>
+                <p className="text-[10px] text-white/60 font-bold mt-1">Remaining Amount</p>
+              </div>
+              <span className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
+                <IndianRupee className="w-4 h-4 text-amber-600" strokeWidth={2.5} />
+              </span>
+            </div>
           </div>
         </div>
       </div>

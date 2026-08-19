@@ -159,10 +159,6 @@ export default function Testimonials() {
 
       {/* Bi-directional Continuous Infinite Marquee Sliders */}
       <div className="w-full overflow-hidden hover-pause relative z-10 space-y-6">
-        {/* Gradient Fades on edges */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-24 sm:w-36 bg-gradient-to-r from-blue-50/90 via-blue-50/40 to-transparent z-20"></div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-24 sm:w-36 bg-gradient-to-l from-blue-50/90 via-blue-50/40 to-transparent z-20"></div>
-
         {/* Marquee Row 1 (Left to Right) */}
         <div className="flex w-max gap-6 animate-marquee py-2 px-3">
           {[0, 1].map(setIdx => (

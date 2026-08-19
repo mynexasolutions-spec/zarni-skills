@@ -479,11 +479,20 @@ class Achievement(db.Model):
     """Admin-managed milestone shown on the student 'My Achievements' page."""
     __tablename__ = 'achievements'
 
+    @property
+    def image_display_url(self):
+        if self.image_filename:
+            if self.image_filename.startswith('http') or self.image_filename.startswith('/'):
+                return self.image_filename
+            return f"/static/img/uploads/{self.image_filename}"
+        return None
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text, nullable=True)
     icon = db.Column(db.String(50), default='Trophy', nullable=False)
     gradient = db.Column(db.String(50), default='from-amber-400 to-orange-500', nullable=False)
+    image_filename = db.Column(db.String(256), nullable=True)
     # metric: earnings | referrals | rank
     metric = db.Column(db.String(20), nullable=False, default='earnings')
     target = db.Column(db.Numeric(12, 2), nullable=False, default=0)

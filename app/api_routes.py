@@ -4114,6 +4114,7 @@ def _achievement_dict(a):
         'description': a.description,
         'icon': a.icon,
         'gradient': a.gradient,
+        'image_display_url': a.image_display_url,
         'metric': a.metric,
         'target': float(a.target),
         'display_order': a.display_order,
@@ -4130,10 +4131,11 @@ def admin_achievements():
         items = Achievement.query.order_by(Achievement.display_order, Achievement.id).all()
         return jsonify({'achievements': [_achievement_dict(a) for a in items]})
 
-    data = request.get_json() or {}
-    title = (data.get('title') or '').strip()
-    metric = (data.get('metric') or '').strip()
-    target = data.get('target')
+    from app.admin.routes import _save_thumbnail, ALLOWED_IMAGE_EXTS
+    f = request.form
+    title = (f.get('title') or '').strip()
+    metric = (f.get('metric') or '').strip()
+    target = f.get('target')
     if not title or metric not in _ACHIEVEMENT_METRICS or target in (None, ''):
         return jsonify({'success': False, 'message': 'Title, metric and target are required.'}), 400
     try:
@@ -4141,15 +4143,20 @@ def admin_achievements():
     except (TypeError, ValueError):
         return jsonify({'success': False, 'message': 'Target must be a number.'}), 400
 
+    image = _save_thumbnail(request.files.get('image_file'))
+    if image is False:
+        return jsonify({'success': False, 'message': f'Invalid image format. Allowed: {", ".join(ALLOWED_IMAGE_EXTS)}'}), 400
+
     achievement = Achievement(
         title=title,
-        description=(data.get('description') or '').strip() or None,
-        icon=(data.get('icon') or '').strip() or 'Trophy',
-        gradient=(data.get('gradient') or '').strip() or 'from-amber-400 to-orange-500',
+        description=(f.get('description') or '').strip() or None,
+        icon=(f.get('icon') or '').strip() or 'Trophy',
+        gradient=(f.get('gradient') or '').strip() or 'from-amber-400 to-orange-500',
+        image_filename=image or None,
         metric=metric,
         target=target,
-        display_order=int(data.get('display_order') or 0),
-        is_active=bool(data.get('is_active', True)),
+        display_order=int(f.get('display_order') or 0),
+        is_active=f.get('is_active') in ('true', 'on', '1'),
         created_by=current_user.id,
     )
     db.session.add(achievement)
@@ -4169,10 +4176,11 @@ def admin_achievement_detail(achievement_id):
         db.session.commit()
         return jsonify({'success': True})
 
-    data = request.get_json() or {}
-    title = (data.get('title') or '').strip()
-    metric = (data.get('metric') or '').strip()
-    target = data.get('target')
+    from app.admin.routes import _save_thumbnail, ALLOWED_IMAGE_EXTS
+    f = request.form
+    title = (f.get('title') or '').strip()
+    metric = (f.get('metric') or '').strip()
+    target = f.get('target')
     if not title or metric not in _ACHIEVEMENT_METRICS or target in (None, ''):
         return jsonify({'success': False, 'message': 'Title, metric and target are required.'}), 400
     try:
@@ -4180,14 +4188,20 @@ def admin_achievement_detail(achievement_id):
     except (TypeError, ValueError):
         return jsonify({'success': False, 'message': 'Target must be a number.'}), 400
 
+    image = _save_thumbnail(request.files.get('image_file'), achievement.image_filename)
+    if image is False:
+        return jsonify({'success': False, 'message': f'Invalid image format. Allowed: {", ".join(ALLOWED_IMAGE_EXTS)}'}), 400
+
     achievement.title = title
-    achievement.description = (data.get('description') or '').strip() or None
-    achievement.icon = (data.get('icon') or '').strip() or 'Trophy'
-    achievement.gradient = (data.get('gradient') or '').strip() or 'from-amber-400 to-orange-500'
+    achievement.description = (f.get('description') or '').strip() or None
+    achievement.icon = (f.get('icon') or '').strip() or 'Trophy'
+    achievement.gradient = (f.get('gradient') or '').strip() or 'from-amber-400 to-orange-500'
     achievement.metric = metric
     achievement.target = target
-    achievement.display_order = int(data.get('display_order') or 0)
-    achievement.is_active = bool(data.get('is_active', True))
+    achievement.display_order = int(f.get('display_order') or 0)
+    achievement.is_active = f.get('is_active') in ('true', 'on', '1')
+    if image:
+        achievement.image_filename = image
     db.session.commit()
     return jsonify({'success': True})
 
@@ -4243,6 +4257,7 @@ def student_achievement_milestones():
             'description': a.description,
             'icon': a.icon,
             'gradient': a.gradient,
+            'image_display_url': a.image_display_url,
             'metric': a.metric,
             'target': target,
             'current': current,

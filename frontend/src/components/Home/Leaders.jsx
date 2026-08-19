@@ -101,17 +101,20 @@ export default function Leaders() {
 
           {/* Mini trust stats — count up once in view */}
           <div style={revealStyle(300)} className={`relative flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-4 ${revealClass}`}>
-            <div className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white/90 backdrop-blur-md border border-blue-100 shadow-[0_6px_20px_rgba(37,99,235,0.08)] text-center transition-all duration-300 hover:scale-105 hover:border-blue-300">
-              <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{students}K+</p>
-              <p className="text-[10px] text-blue-600 font-black uppercase tracking-wider mt-1">Active Students</p>
+            <div className="relative px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white/90 backdrop-blur-md border border-blue-100 shadow-[0_6px_20px_rgba(37,99,235,0.08)] text-center transition-all duration-300 hover:scale-105 hover:border-blue-300 overflow-hidden">
+              <span className="absolute top-0 left-0 right-0 h-full bg-gradient-to-r from-transparent via-blue-200/40 to-transparent -translate-x-full animate-shimmer-sweep pointer-events-none"></span>
+              <p className="relative text-xl sm:text-2xl font-black text-slate-900 leading-none">{students}K+</p>
+              <p className="relative text-[10px] text-blue-600 font-black uppercase tracking-wider mt-1">Active Students</p>
             </div>
-            <div className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white/90 backdrop-blur-md border border-amber-100 shadow-[0_6px_20px_rgba(245,158,11,0.08)] text-center transition-all duration-300 hover:scale-105 hover:border-amber-300">
-              <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{rating}<span className="text-amber-400">★</span></p>
-              <p className="text-[10px] text-amber-600 font-black uppercase tracking-wider mt-1">Avg Rating</p>
+            <div className="relative px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white/90 backdrop-blur-md border border-amber-100 shadow-[0_6px_20px_rgba(245,158,11,0.08)] text-center transition-all duration-300 hover:scale-105 hover:border-amber-300 overflow-hidden">
+              <span className="absolute top-0 left-0 right-0 h-full bg-gradient-to-r from-transparent via-amber-200/40 to-transparent -translate-x-full animate-shimmer-sweep pointer-events-none" style={{ animationDelay: '0.7s' }}></span>
+              <p className="relative text-xl sm:text-2xl font-black text-slate-900 leading-none">{rating}<span className="text-amber-400">★</span></p>
+              <p className="relative text-[10px] text-amber-600 font-black uppercase tracking-wider mt-1">Avg Rating</p>
             </div>
-            <div className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white/90 backdrop-blur-md border border-emerald-100 shadow-[0_6px_20px_rgba(16,185,129,0.08)] text-center transition-all duration-300 hover:scale-105 hover:border-emerald-300">
-              <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{practical}%</p>
-              <p className="text-[10px] text-emerald-600 font-black uppercase tracking-wider mt-1">Practical Focus</p>
+            <div className="relative px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white/90 backdrop-blur-md border border-emerald-100 shadow-[0_6px_20px_rgba(16,185,129,0.08)] text-center transition-all duration-300 hover:scale-105 hover:border-emerald-300 overflow-hidden">
+              <span className="absolute top-0 left-0 right-0 h-full bg-gradient-to-r from-transparent via-emerald-200/40 to-transparent -translate-x-full animate-shimmer-sweep pointer-events-none" style={{ animationDelay: '1.4s' }}></span>
+              <p className="relative text-xl sm:text-2xl font-black text-slate-900 leading-none">{practical}%</p>
+              <p className="relative text-[10px] text-emerald-600 font-black uppercase tracking-wider mt-1">Practical Focus</p>
             </div>
           </div>
         </div>
@@ -127,8 +130,11 @@ export default function Leaders() {
               <div className="p-5 sm:p-6">
                 <div className="absolute -right-8 -bottom-8 w-28 h-28 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/25 transition-colors pointer-events-none"></div>
                 <span className="absolute top-5 right-5 text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 group-hover:text-blue-700 transition-colors uppercase tracking-widest">01 / Curated</span>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white mb-4 shadow-lg shadow-blue-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                  {(() => { const Ic = PLATFORM_ICON_MAP[features[0]?.icon] || CheckCircle2; return <Ic width={22} height={22} strokeWidth={2.5} />; })()}
+                <div className="relative w-12 h-12 mb-4">
+                  <span className="absolute inset-0 rounded-xl bg-blue-500/50 animate-pulse-ring"></span>
+                  <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                    {(() => { const Ic = PLATFORM_ICON_MAP[features[0]?.icon] || CheckCircle2; return <Ic width={22} height={22} strokeWidth={2.5} />; })()}
+                  </div>
                 </div>
                 <h4 className="text-base font-black text-slate-900 mb-1.5 group-hover:text-blue-600 transition-colors duration-300">{features[0]?.title}</h4>
                 <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-medium">{features[0]?.description}</p>
@@ -141,8 +147,11 @@ export default function Leaders() {
               <div className="p-5 sm:p-6">
                 <div className="absolute -right-8 -bottom-8 w-28 h-28 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/25 transition-colors pointer-events-none"></div>
                 <span className="absolute top-5 right-5 text-[10px] font-black text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100 group-hover:text-indigo-700 transition-colors uppercase tracking-widest">02 / Network</span>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white mb-4 shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                  {(() => { const Ic = PLATFORM_ICON_MAP[features[1]?.icon] || User; return <Ic width={22} height={22} strokeWidth={2.5} />; })()}
+                <div className="relative w-12 h-12 mb-4">
+                  <span className="absolute inset-0 rounded-xl bg-indigo-500/50 animate-pulse-ring" style={{ animationDelay: '0.5s' }}></span>
+                  <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                    {(() => { const Ic = PLATFORM_ICON_MAP[features[1]?.icon] || User; return <Ic width={22} height={22} strokeWidth={2.5} />; })()}
+                  </div>
                 </div>
                 <h4 className="text-base font-black text-slate-900 mb-1.5 group-hover:text-indigo-600 transition-colors duration-300">{features[1]?.title}</h4>
                 <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-medium">{features[1]?.description}</p>
@@ -152,7 +161,7 @@ export default function Leaders() {
 
           {/* CENTER SIDE: Character Illustration with Orbit Lines & Floating Pills */}
           <div style={revealStyle(150)} className={`order-1 lg:order-2 lg:col-span-4 flex flex-col items-center justify-center relative min-h-[340px] sm:min-h-[400px] lg:min-h-[460px] ${revealScaleClass}`}>
-            <div className="absolute w-56 h-56 sm:w-80 sm:h-80 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-full blur-[90px] pointer-events-none z-0"></div>
+            <div className="absolute w-56 h-56 sm:w-80 sm:h-80 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-full blur-[90px] pointer-events-none z-0 animate-pulse"></div>
 
             {/* Orbit rings with traveling glowing comets */}
             <div className="absolute w-56 h-56 sm:w-72 sm:h-72 lg:w-[21rem] lg:h-[21rem] border-2 border-dashed border-blue-400/40 rounded-full animate-[spin_24s_linear_infinite] z-0 pointer-events-none">
@@ -163,22 +172,22 @@ export default function Leaders() {
             </div>
 
             {/* 4 Animated Floating Feature Pills */}
-            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-[9px] sm:text-xs px-2.5 py-1 rounded-full font-black absolute top-2 left-0 sm:top-8 sm:-left-2 z-20 shadow-md shadow-emerald-500/10 animate-[float_4s_ease-in-out_infinite] select-none whitespace-nowrap flex items-center gap-1.5 backdrop-blur-md">
+            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-[9px] sm:text-xs px-2.5 py-1 rounded-full font-black absolute top-8 left-6 sm:top-14 sm:left-4 z-20 shadow-md shadow-emerald-500/10 animate-[float_4s_ease-in-out_infinite] select-none whitespace-nowrap flex items-center gap-1.5 backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
               ✓ Live Mentorship
             </div>
 
-            <div className="bg-blue-500/10 border border-blue-500/30 text-blue-700 text-[9px] sm:text-xs px-2.5 py-1 rounded-full font-black absolute top-4 right-0 sm:top-10 sm:-right-2 z-20 shadow-md shadow-blue-500/10 animate-[float_5s_ease-in-out_infinite] select-none whitespace-nowrap flex items-center gap-1.5 backdrop-blur-md">
+            <div className="bg-blue-500/10 border border-blue-500/30 text-blue-700 text-[9px] sm:text-xs px-2.5 py-1 rounded-full font-black absolute top-10 right-6 sm:top-16 sm:right-4 z-20 shadow-md shadow-blue-500/10 animate-[float_5s_ease-in-out_infinite] select-none whitespace-nowrap flex items-center gap-1.5 backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
               ✓ High Income Skills
             </div>
 
-            <div className="bg-indigo-500/10 border border-indigo-500/30 text-indigo-700 text-[9px] sm:text-xs px-2.5 py-1 rounded-full font-black absolute bottom-20 right-0 sm:bottom-24 sm:-right-2 z-20 shadow-md shadow-indigo-500/10 animate-[float_6s_ease-in-out_infinite] select-none whitespace-nowrap flex items-center gap-1.5 backdrop-blur-md">
+            <div className="bg-indigo-500/10 border border-indigo-500/30 text-indigo-700 text-[9px] sm:text-xs px-2.5 py-1 rounded-full font-black absolute bottom-24 right-6 sm:bottom-28 sm:right-4 z-20 shadow-md shadow-indigo-500/10 animate-[float_6s_ease-in-out_infinite] select-none whitespace-nowrap flex items-center gap-1.5 backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping"></span>
               ✓ 100% Practical
             </div>
 
-            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-700 text-[9px] sm:text-xs px-2.5 py-1 rounded-full font-black absolute bottom-16 left-0 sm:bottom-20 sm:-left-2 z-20 shadow-md shadow-amber-500/10 animate-[float_7s_ease-in-out_infinite] select-none whitespace-nowrap flex items-center gap-1.5 backdrop-blur-md">
+            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-700 text-[9px] sm:text-xs px-2.5 py-1 rounded-full font-black absolute bottom-20 left-6 sm:bottom-24 sm:left-4 z-20 shadow-md shadow-amber-500/10 animate-[float_7s_ease-in-out_infinite] select-none whitespace-nowrap flex items-center gap-1.5 backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
               ✓ Verified Community
             </div>
@@ -215,8 +224,11 @@ export default function Leaders() {
               <div className="p-5 sm:p-6">
                 <div className="absolute -right-8 -bottom-8 w-28 h-28 bg-amber-400/10 rounded-full blur-2xl group-hover:bg-amber-400/20 transition-colors pointer-events-none"></div>
                 <span className="absolute top-5 right-5 text-[10px] font-black text-amber-400 group-hover:text-amber-600 transition-colors uppercase tracking-widest">03 / Success</span>
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white mb-3.5 shadow-lg shadow-amber-400/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                  {(() => { const Ic = PLATFORM_ICON_MAP[features[2]?.icon] || Star; return <Ic width={20} height={20} strokeWidth={2.5} />; })()}
+                <div className="relative w-11 h-11 mb-3.5">
+                  <span className="absolute inset-0 rounded-xl bg-amber-400/50 animate-pulse-ring" style={{ animationDelay: '1s' }}></span>
+                  <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-amber-400/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                    {(() => { const Ic = PLATFORM_ICON_MAP[features[2]?.icon] || Star; return <Ic width={20} height={20} strokeWidth={2.5} />; })()}
+                  </div>
                 </div>
                 <h4 className="text-base font-black text-slate-900 mb-1.5 group-hover:text-amber-600 transition-colors duration-300">{features[2]?.title}</h4>
                 <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-medium">{features[2]?.description}</p>
@@ -229,8 +241,11 @@ export default function Leaders() {
               <div className="p-5 sm:p-6">
                 <div className="absolute -right-8 -bottom-8 w-28 h-28 bg-emerald-400/10 rounded-full blur-2xl group-hover:bg-emerald-400/20 transition-colors pointer-events-none"></div>
                 <span className="absolute top-5 right-5 text-[10px] font-black text-emerald-400 group-hover:text-emerald-600 transition-colors uppercase tracking-widest">04 / Impact</span>
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white mb-3.5 shadow-lg shadow-emerald-400/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                  {(() => { const Ic = PLATFORM_ICON_MAP[features[3]?.icon] || Activity; return <Ic width={20} height={20} strokeWidth={2.5} />; })()}
+                <div className="relative w-11 h-11 mb-3.5">
+                  <span className="absolute inset-0 rounded-xl bg-emerald-500/50 animate-pulse-ring" style={{ animationDelay: '1.5s' }}></span>
+                  <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-400/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                    {(() => { const Ic = PLATFORM_ICON_MAP[features[3]?.icon] || Activity; return <Ic width={20} height={20} strokeWidth={2.5} />; })()}
+                  </div>
                 </div>
                 <h4 className="text-base font-black text-slate-900 mb-1.5 group-hover:text-emerald-600 transition-colors duration-300">{features[3]?.title}</h4>
                 <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-medium">{features[3]?.description}</p>

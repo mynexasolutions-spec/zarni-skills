@@ -7,7 +7,11 @@ export default function AdminLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-50">
+    <div className="relative flex flex-col h-screen overflow-hidden bg-gradient-to-b from-blue-50/60 via-white to-blue-50/40">
+      {/* Ambient background glow — same blue theme used across the public site */}
+      <div className="fixed top-20 right-[8%] w-96 h-96 bg-blue-300/20 rounded-full blur-[140px] pointer-events-none -z-10 animate-pulse"></div>
+      <div className="fixed bottom-10 left-[6%] w-96 h-96 bg-indigo-300/20 rounded-full blur-[140px] pointer-events-none -z-10 animate-pulse" style={{ animationDelay: '2s' }}></div>
+
       {/* Top Header */}
       <DashboardHeader onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)} />
 

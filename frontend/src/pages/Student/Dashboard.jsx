@@ -173,7 +173,7 @@ export default function StudentDashboard() {
            WELCOME BANNER
          ══════════════════════════════════════════════ */}
       <section
-        className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 rounded-[18px] sm:rounded-[22px] px-5 sm:px-8 py-5 sm:py-7 overflow-hidden group animate-gradient-x"
+        className="relative flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 rounded-[18px] sm:rounded-[22px] px-5 sm:px-8 py-5 sm:py-7 overflow-hidden group animate-gradient-x"
         style={{
           background: 'linear-gradient(115deg, #0f1f4d 0%, #1e3a8a 25%, #2563eb 50%, #1e3a8a 75%, #0f1f4d 100%)',
           boxShadow: '0 20px 45px -12px rgba(30, 64, 175, 0.45)'
@@ -203,37 +203,47 @@ export default function StudentDashboard() {
         {/* shimmer sweep */}
         <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
 
-        <div className="relative z-10 flex items-center gap-3.5 sm:gap-4 min-w-0">
-          <div className="relative flex-shrink-0">
-            <div className="absolute -inset-0.5 rounded-full bg-gradient-to-tr from-amber-300 via-blue-300 to-indigo-300 opacity-70 blur-[3px]"></div>
-            <div className="relative w-11 h-11 sm:w-[58px] sm:h-[58px] rounded-full border-2 border-white/50 overflow-hidden bg-white/10 flex items-center justify-center">
+        <div className="relative z-10 flex flex-col items-center text-center sm:flex-row sm:items-center sm:text-left gap-3 sm:gap-4 min-w-0">
+          <div className="relative flex-shrink-0 animate-float">
+            <span className="absolute -inset-2 rounded-full bg-blue-300/40 animate-pulse-ring"></span>
+            <div className="absolute -inset-0.5 rounded-full bg-gradient-to-tr from-amber-300 via-blue-300 to-indigo-300 opacity-70 blur-[3px] animate-gradient-x"></div>
+            <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full border-2 border-white/50 overflow-hidden bg-white/10 flex items-center justify-center">
               {user?.profile_image_url ? (
                 <img src={user.profile_image_url} alt={user.name} className="w-full h-full object-cover" />
               ) : (
-                <UserCircle className="w-6 h-6 sm:w-8 sm:h-8 text-white/80" />
+                <UserCircle className="w-16 h-16 sm:w-[4.5rem] sm:h-[4.5rem] text-white/80" />
               )}
             </div>
+            {/* Online status dot */}
+            <span className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 w-4 h-4 rounded-full bg-emerald-400 border-2 border-[#1e3a8a] shadow-[0_0_10px_rgba(52,211,153,0.9)]">
+              <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping"></span>
+            </span>
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-[0.65rem] sm:text-[0.7rem] font-bold text-blue-200/90 uppercase tracking-wider mb-1">
-              <greeting.Icon className="w-3.5 h-3.5 text-amber-300 shrink-0" strokeWidth={2.5} />
+            <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[0.65rem] sm:text-[0.7rem] font-bold text-blue-200/90 uppercase tracking-wider mb-1">
+              <greeting.Icon className="w-3.5 h-3.5 text-amber-300 shrink-0 animate-pulse" />
               {greeting.text}
             </div>
             <h1 className="text-[1.1rem] sm:text-[1.55rem] font-extrabold text-white tracking-tight leading-snug truncate">
-              Welcome back, {user?.name?.split(' ')[0]} <span className="inline-block animate-[wave_2s_ease-in-out_infinite]">👋</span>
+              Welcome back,{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-white to-blue-200 animate-gradient-x">
+                {user?.name?.split(' ')[0]}
+              </span>{' '}
+              <span className="inline-block animate-[wave_2s_ease-in-out_infinite]">👋</span>
             </h1>
             <p className="text-[0.78rem] sm:text-[0.85rem] text-white/70 font-medium mt-0.5">Here's a snapshot of your performance today</p>
           </div>
         </div>
 
-        <div className="relative z-10 flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-4 sm:px-5 py-2.5 sm:py-3 w-full sm:w-auto shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
+        <div className="relative z-10 flex items-center justify-center sm:justify-start gap-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-4 sm:px-5 py-2.5 sm:py-3 w-full sm:w-auto shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] overflow-hidden">
+          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer-sweep pointer-events-none"></span>
           <div className="relative w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0">
             <div className="absolute -inset-1.5 rounded-xl bg-amber-400/50 blur-md animate-pulse"></div>
             <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
               <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-white" strokeWidth={2.2} />
             </div>
           </div>
-          <div>
+          <div className="relative text-left">
             <span className="block text-[0.6rem] sm:text-[0.65rem] text-white/70 uppercase tracking-wider font-bold">Your Rank</span>
             <AnimatedNumber value={data.leaderboardPosition} prefix="#" duration={900} className="block text-[1.05rem] sm:text-[1.2rem] text-white font-extrabold leading-tight tabular-nums" />
           </div>
@@ -246,10 +256,10 @@ export default function StudentDashboard() {
       <section>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {[
-            { label: 'All Time Earnings', value: data.allTimeEarnings, sub: 'Lifetime earnings', Icon: IndianRupee, from: '#fbbf24', to: '#f59e0b', shadow: 'rgba(245,158,11,0.35)' },
-            { label: 'All Time Paid', value: data.allTimePaid, sub: 'Payouts received', Icon: CheckCircle, from: '#34d399', to: '#059669', shadow: 'rgba(16,185,129,0.35)' },
-            { label: 'Last 30 Days', value: data.last30Earnings, sub: 'This month', Icon: TrendingUp, from: '#60a5fa', to: '#2563eb', shadow: 'rgba(59,130,246,0.35)' },
-            { label: 'Last 7 Days', value: data.last7Earnings, sub: 'This week', Icon: Zap, from: '#a78bfa', to: '#7c3aed', shadow: 'rgba(139,92,246,0.35)' },
+            { label: "Today's Earning", value: Math.round((data.activeIncome.today || 0) + (data.passiveIncome.today || 0)), sub: 'Earned today', Icon: Zap, from: '#a78bfa', to: '#7c3aed', shadow: 'rgba(139,92,246,0.35)' },
+            { label: 'Last 7 Days Earnings', value: data.last7Earnings, sub: 'This week', Icon: TrendingUp, from: '#60a5fa', to: '#2563eb', shadow: 'rgba(59,130,246,0.35)' },
+            { label: 'Last 30 Days Earnings', value: data.last30Earnings, sub: 'This month', Icon: CheckCircle, from: '#34d399', to: '#059669', shadow: 'rgba(16,185,129,0.35)' },
+            { label: 'All Time Earning', value: data.allTimeEarnings, sub: 'Lifetime earnings', Icon: IndianRupee, from: '#fbbf24', to: '#f59e0b', shadow: 'rgba(245,158,11,0.35)' },
           ].map((kpi, i) => (
             <div
               key={i}

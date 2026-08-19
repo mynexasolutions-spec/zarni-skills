@@ -104,6 +104,24 @@
   animation: pulse-ring 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+@keyframes swipe-hint {
+  0%, 100% { transform: translateX(0); opacity: 0.55; }
+  50% { transform: translateX(7px); opacity: 1; }
+}
+
+.animate-swipe-hint {
+  animation: swipe-hint 1.3s ease-in-out infinite;
+}
+
+@keyframes swipe-hint-left {
+  0%, 100% { transform: translateX(0); opacity: 0.55; }
+  50% { transform: translateX(-7px); opacity: 1; }
+}
+
+.animate-swipe-hint-left {
+  animation: swipe-hint-left 1.3s ease-in-out infinite;
+}
+
 @keyframes gradient-border {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }

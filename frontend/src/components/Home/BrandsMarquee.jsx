@@ -102,35 +102,43 @@ export default function BrandsMarquee() {
   return (
     <section className="py-16 sm:py-24 bg-gradient-to-b from-white via-blue-50/40 to-white relative overflow-hidden">
 
+      {/* Top shimmer sweep line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent animate-shimmer-sweep pointer-events-none"></div>
+
       {/* Subtle background glow blobs */}
       <div className="absolute inset-0 pointer-events-none opacity-50">
         <div className="absolute top-1/2 left-1/4 w-[400px] h-[150px] bg-blue-400/15 blur-[120px] rounded-full -translate-y-1/2"></div>
         <div className="absolute top-1/2 right-1/4 w-[400px] h-[150px] bg-indigo-400/15 blur-[120px] rounded-full -translate-y-1/2"></div>
       </div>
 
+      {/* Floating neon particles */}
+      <span className="absolute top-14 left-[8%] w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6] animate-float pointer-events-none"></span>
+      <span className="absolute bottom-20 right-[10%] w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_12px_#6366f1] animate-float-delayed pointer-events-none"></span>
+      <span className="absolute top-1/3 right-[6%] w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_10px_#fbbf24] animate-float pointer-events-none"></span>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center relative z-10">
 
         {/* Pulsing eyebrow badge */}
-        <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-blue-50/90 border border-blue-200/80 shadow-sm shadow-blue-500/10 mb-4 mx-auto">
+        <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-blue-50/90 border border-blue-200/80 shadow-sm shadow-blue-500/10 mb-4 mx-auto animate-fade-in-up" style={{ animationDelay: '0ms' }}>
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-600 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
           </span>
-          <Sparkles className="w-3.5 h-3.5 text-blue-600" strokeWidth={2.5} />
+          <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-spin-slow" strokeWidth={2.5} />
           <span className="text-[11px] font-black text-blue-800 tracking-widest uppercase">Global Recognition & Hiring Partners</span>
         </div>
 
-        <h2 className="font-heading font-black text-2xl sm:text-4xl lg:text-5xl tracking-tight leading-tight mb-3">
-          <span className="bg-gradient-to-r from-slate-900 via-blue-700 to-indigo-800 bg-clip-text text-transparent">
+        <h2 className="font-heading font-black text-2xl sm:text-4xl lg:text-5xl tracking-tight leading-tight mb-3 animate-fade-in-up" style={{ animationDelay: '90ms' }}>
+          <span className="bg-gradient-to-r from-slate-900 via-blue-700 to-indigo-800 bg-clip-text text-transparent animate-gradient-x">
             Trusted by Leading Companies &amp; Brands
           </span>
         </h2>
-        <p className="text-slate-600 text-xs sm:text-base font-medium mb-10 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-slate-600 text-xs sm:text-base font-medium mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: '160ms' }}>
           Our learners gain high-demand skillsets and go on to work with, and build for, some of the most iconic companies worldwide.
         </p>
 
         {/* Logo Marquee Wrapper with edge-fade mask */}
-        <div className="relative w-full overflow-hidden hover-pause [mask-image:linear-gradient(to_right,transparent_0%,black_10%,black_90%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_10%,black_90%,transparent_100%)]">
+        <div className="relative w-full overflow-hidden hover-pause animate-fade-in-up [mask-image:linear-gradient(to_right,transparent_0%,black_10%,black_90%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_10%,black_90%,transparent_100%)]" style={{ animationDelay: '230ms' }}>
           <div className="flex gap-6 sm:gap-10 items-center animate-marquee whitespace-nowrap min-w-full w-max py-4">
             <BrandGroup />
             <BrandGroup hidden />
@@ -138,19 +146,28 @@ export default function BrandsMarquee() {
         </div>
 
         {/* Bottom Trust Indicators */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-6 sm:gap-12 text-xs sm:text-sm font-extrabold text-slate-600 uppercase tracking-wider">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-6 sm:gap-12 text-xs sm:text-sm font-extrabold text-slate-600 uppercase tracking-wider animate-fade-in-up" style={{ animationDelay: '300ms' }}>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+            <span className="relative flex w-2 h-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+              <span className="relative w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+            </span>
             100+ Enterprise Hiring Partners
           </div>
           <div className="hidden sm:block text-slate-300">•</div>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
+            <span className="relative flex w-2 h-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75" style={{ animationDelay: '0.6s' }}></span>
+              <span className="relative w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
+            </span>
             94% Career Growth Rate
           </div>
           <div className="hidden sm:block text-slate-300">•</div>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
+            <span className="relative flex w-2 h-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" style={{ animationDelay: '1.2s' }}></span>
+              <span className="relative w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
+            </span>
             Top Tier Skill Certifications
           </div>
         </div>

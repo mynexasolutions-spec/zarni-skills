@@ -47,16 +47,26 @@ export default function Team({ showStats = true }) {
   ];
 
   const trackRef = useRef(null);
+  const sectionRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [cardsPerPage, setCardsPerPage] = useState(getCardsPerPage);
+  const [paused, setPaused] = useState(false);
+  const [sliderInView, setSliderInView] = useState(false);
   const isDragging = useRef(false);
   const dragMoved = useRef(false);
   const startX = useRef(0);
   const startScrollLeft = useRef(0);
   const cardStepRef = useRef(280);
+  const currentPageRef = useRef(0);
 
   const totalPages = Math.max(1, Math.ceil(team.length / cardsPerPage));
   const maxPage = totalPages - 1;
+
+  // One extra "clone" page (same cards as page 0) appended at the tail so
+  // autoplay can keep scrolling forward past the last page, then silently
+  // snap back to the real page 0 once the clone is on screen — a seamless
+  // forward-only loop instead of a jarring reverse-scroll to the start.
+  const displayTeam = maxPage > 0 ? [...team, ...team.slice(0, cardsPerPage)] : team;
 
   const measureCardStep = useCallback(() => {
     const track = trackRef.current;
@@ -80,12 +90,55 @@ export default function Team({ showStats = true }) {
     measureCardStep();
   }, [cardsPerPage, measureCardStep]);
 
-  const goToPage = useCallback((pageIdx) => {
+  const scrollToRawIndex = useCallback((idx, instant = false) => {
     const track = trackRef.current;
     if (!track) return;
+    track.scrollTo({ left: idx * cardsPerPage * cardStepRef.current, behavior: instant ? 'auto' : 'smooth' });
+  }, [cardsPerPage]);
+
+  const goToPage = useCallback((pageIdx) => {
     const clamped = Math.max(0, Math.min(pageIdx, maxPage));
-    track.scrollTo({ left: clamped * cardsPerPage * cardStepRef.current, behavior: 'smooth' });
-  }, [maxPage, cardsPerPage]);
+    scrollToRawIndex(clamped);
+  }, [maxPage, scrollToRawIndex]);
+
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
+
+  // Pause/resume autoplay based on whether the slider is actually on screen
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setSliderInView(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setSliderInView(entry.isIntersecting),
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Auto-swipe — always moves forward. Past the last real page it scrolls into
+  // the cloned page (identical cards to page 0), then instantly snaps back to
+  // the real page 0 once that scroll settles, so the loop never runs backward.
+  useEffect(() => {
+    if (paused || !sliderInView || maxPage <= 0) return;
+    const id = setInterval(() => {
+      const next = currentPageRef.current + 1;
+      scrollToRawIndex(next);
+      currentPageRef.current = next;
+      if (next > maxPage) {
+        setTimeout(() => {
+          scrollToRawIndex(0, true);
+          setCurrentPage(0);
+          currentPageRef.current = 0;
+        }, 550);
+      }
+    }, 3500);
+    return () => clearInterval(id);
+  }, [paused, sliderInView, maxPage, scrollToRawIndex]);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -114,6 +167,7 @@ export default function Team({ showStats = true }) {
     dragMoved.current = false;
     startX.current = e.clientX;
     startScrollLeft.current = track.scrollLeft;
+    setPaused(true);
   };
   const onMouseMove = (e) => {
     if (!isDragging.current || !trackRef.current) return;
@@ -123,10 +177,11 @@ export default function Team({ showStats = true }) {
   };
   const stopDragging = () => {
     isDragging.current = false;
+    setPaused(false);
   };
 
   return (
-    <section className="py-24 sm:py-32 relative overflow-hidden bg-gradient-to-b from-blue-50/60 via-white to-blue-50/40" id="team">
+    <section ref={sectionRef} className="py-24 sm:py-32 relative overflow-hidden bg-gradient-to-b from-blue-50/60 via-white to-blue-50/40" id="team">
 
       {/* Background artwork */}
       <div className="absolute inset-0 bg-cover bg-center pointer-events-none z-0 opacity-70" style={{ backgroundImage: 'url(/static/img/bgimage.png)' }}></div>
@@ -176,7 +231,13 @@ export default function Team({ showStats = true }) {
       </div>
 
       {/* Team Cards Slider */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 group/slider z-10">
+      <div
+        className="relative max-w-7xl mx-auto px-4 sm:px-6 group/slider z-10"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onTouchStart={() => setPaused(true)}
+        onTouchEnd={() => setPaused(false)}
+      >
 
         {/* Navigation Arrows (Desktop) */}
         <button
@@ -198,22 +259,29 @@ export default function Team({ showStats = true }) {
 
         <div
           ref={trackRef}
-          className="grid grid-cols-2 md:flex gap-3 sm:gap-6 pb-4 px-1 -mx-1 md:overflow-x-auto md:snap-x md:snap-mandatory cursor-grab active:cursor-grabbing select-none no-scrollbar"
+          className="flex gap-3 sm:gap-6 pb-4 px-1 -mx-1 overflow-x-auto snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none no-scrollbar"
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={stopDragging}
           onMouseLeave={stopDragging}
         >
-          {team.map((m) => (
+          {displayTeam.map((m, idx) => {
+            const isClone = idx >= team.length;
+            return (
             <Link
-              key={m.id}
+              key={`${m.id}-${idx}`}
               to={`/team/${m.slug || m.id}`}
               draggable={false}
-              onClick={(e) => { if (dragMoved.current) e.preventDefault(); }}
-              className="group relative flex flex-col bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-slate-100 hover:border-blue-300 hover:shadow-[0_16px_36px_rgba(37,99,235,0.14)] hover:-translate-y-1.5 transition-all duration-300 w-full md:shrink-0 md:snap-start md:w-[calc((100%-3rem)/3)] lg:w-[calc((100%-4.5rem)/4)] xl:w-[calc((100%-6rem)/5)]"
+              aria-hidden={isClone ? 'true' : undefined}
+              tabIndex={isClone ? -1 : undefined}
+              onClick={(e) => { if (isClone || dragMoved.current) e.preventDefault(); }}
+              className="group relative flex flex-col bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-slate-100 hover:border-blue-300 hover:shadow-[0_16px_36px_rgba(37,99,235,0.14)] hover:-translate-y-1.5 transition-all duration-300 shrink-0 snap-start w-[calc((100%-0.75rem)/2)] sm:w-[calc((100%-1.5rem)/2)] md:w-[calc((100%-3rem)/3)] lg:w-[calc((100%-4.5rem)/4)] xl:w-[calc((100%-6rem)/5)] animate-fade-in-up"
+              style={{ animationDelay: `${Math.min(idx, 10) * 70}ms` }}
             >
               {/* Photo block */}
               <div className="relative w-full overflow-hidden" style={{ aspectRatio: '3/4' }}>
+                {/* Shine sweep on hover */}
+                <span className="absolute inset-0 z-10 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none"></span>
                 <img
                   src={m.image_display_url || FALLBACK_IMG}
                   alt={m.name}
@@ -240,11 +308,37 @@ export default function Team({ showStats = true }) {
               </div>
 
             </Link>
-          ))}
+            );
+          })}
           {team.length === 0 && (
             <div className="w-full text-center py-12 text-slate-400 font-medium">Loading team...</div>
           )}
         </div>
+
+        {/* Mobile swipe hint */}
+        {team.length > 0 && (
+          <div className="flex md:hidden items-center justify-center gap-2 mt-1 mb-2 text-[11px] font-bold text-blue-600/80 uppercase tracking-wider select-none">
+            <ChevronLeft className="w-3.5 h-3.5 animate-swipe-hint-left" />
+            <span>Swipe to explore</span>
+            <ChevronRight className="w-3.5 h-3.5 animate-swipe-hint" />
+          </div>
+        )}
+
+        {/* Pagination dots */}
+        {maxPage > 0 && (
+          <div className="flex items-center justify-center gap-2 mt-2">
+            {Array.from({ length: maxPage + 1 }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => goToPage(idx)}
+                aria-label={`Go to team page ${idx + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  idx === currentPage ? 'w-8 bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/40' : 'w-1.5 bg-blue-900/15 hover:bg-blue-900/30'
+                }`}
+              ></button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">

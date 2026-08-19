@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Award, Plus, Pencil, Trash2, X, CheckCircle2, Trophy, Users, Rocket, Star, Crown,
-  Medal, Target, Flame, Gem, Zap, ShieldCheck, Plane, Save, Upload, Image as ImageIcon
+  Medal, Target, Flame, Gem, Zap, ShieldCheck, Plane, Save, Upload, Image as ImageIcon, Lock
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -69,6 +69,8 @@ function MilestonesTab() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -88,6 +90,8 @@ function MilestonesTab() {
   const openCreate = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setImageFile(null);
+    setImagePreview(null);
     setError('');
     setShowForm(true);
   };
@@ -104,8 +108,17 @@ function MilestonesTab() {
       display_order: String(item.display_order ?? 0),
       is_active: item.is_active !== false,
     });
+    setImageFile(null);
+    setImagePreview(item.image_display_url || null);
     setError('');
     setShowForm(true);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
@@ -117,10 +130,21 @@ function MilestonesTab() {
     setSaving(true);
     setError('');
     try {
-      const payload = { ...form, target: form.target || '0', display_order: form.display_order || '0' };
+      const fd = new FormData();
+      fd.append('title', form.title);
+      fd.append('description', form.description);
+      fd.append('icon', form.icon);
+      fd.append('gradient', form.gradient);
+      fd.append('metric', form.metric);
+      fd.append('target', form.target || '0');
+      fd.append('display_order', form.display_order || '0');
+      fd.append('is_active', form.is_active ? 'true' : 'false');
+      if (imageFile) fd.append('image_file', imageFile);
+
+      const headers = { headers: { 'Content-Type': 'multipart/form-data' } };
       const response = editingId
-        ? await api.put(`/admin/achievements/${editingId}`, payload)
-        : await api.post('/admin/achievements', payload);
+        ? await api.put(`/admin/achievements/${editingId}`, fd, headers)
+        : await api.post('/admin/achievements', fd, headers);
 
       if (response.data.success) {
         setShowForm(false);
@@ -167,14 +191,20 @@ function MilestonesTab() {
           const metricLabel = METRIC_OPTIONS.find(m => m.value === item.metric)?.label || item.metric;
           return (
             <div key={item.id} className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-              <div className={`p-6 bg-gradient-to-br ${item.gradient} relative`}>
+              <div className={`relative h-36 overflow-hidden ${item.image_display_url ? '' : `bg-gradient-to-br ${item.gradient}`}`}>
+                {item.image_display_url ? (
+                  <>
+                    <img src={item.image_display_url} alt={item.title} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+                  </>
+                ) : null}
                 <span className={`absolute top-3 left-3 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
                   item.is_active !== false ? 'bg-emerald-500 text-white' : 'bg-slate-500 text-white'
                 }`}>{item.is_active !== false ? 'Active' : 'Inactive'}</span>
                 <span className="absolute top-3 right-3 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-900/50 text-white">
                   Order {item.display_order}
                 </span>
-                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center mt-6">
+                <div className="relative w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center mt-6">
                   <Icon className="w-7 h-7 text-white" strokeWidth={1.8} />
                 </div>
               </div>
@@ -223,6 +253,27 @@ function MilestonesTab() {
 
             <form id="achievement-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto admin-scrollbar px-6 sm:px-8 py-6 space-y-6">
               {error && <div className="p-3 bg-red-50 border border-red-100 text-red-700 rounded-xl text-xs font-bold">{error}</div>}
+
+              <div>
+                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Reward Image</p>
+                <div className="flex items-center gap-4">
+                  <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-gradient-to-br from-red-50 to-rose-50 border border-slate-100 flex items-center justify-center shrink-0">
+                    {imagePreview ? <img src={imagePreview} className="w-full h-full object-cover" alt="" /> : <ImageIcon className="w-6 h-6 text-red-200" />}
+                    {imagePreview && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <Lock className="w-5 h-5 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <label className="inline-block px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 cursor-pointer hover:border-red-300 hover:text-red-600 transition-colors">
+                      {imagePreview ? 'Replace Photo' : 'Upload Photo'}
+                      <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                    </label>
+                    <p className="text-[11px] text-slate-400 mt-2">Shown behind a lock icon until the student unlocks this milestone (falls back to the icon/color below if left empty).</p>
+                  </div>
+                </div>
+              </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Title *</label>
