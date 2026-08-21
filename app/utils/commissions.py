@@ -132,14 +132,18 @@ def process_commissions(order: Order):
     buyer = order.buyer
     amount_paid = float(order.amount_paid)
 
+    # Standalone course purchases (buying a single skill outside a package)
+    # never pay referral commission — the full price goes to the platform.
+    # Only package purchases (and non-package/non-course orders like product
+    # or affiliate-activation purchases) go through the commission split below.
+    if order.course:
+        db.session.commit()
+        return
+
     if order.package:
         l1_default = float(order.package.level1_commission_percent or 10.0)
         l2_default = float(order.package.level2_commission_percent or 5.0)
         min_threshold = float(order.package.min_income_for_level2 or 0.0)
-    elif order.course:
-        l1_default = float(order.course.level1_commission_percent) if order.course.level1_commission_percent is not None else float(SiteSettings.get('global_level1_commission_percent', 10.0))
-        l2_default = float(order.course.level2_commission_percent) if order.course.level2_commission_percent is not None else float(SiteSettings.get('global_level2_commission_percent', 5.0))
-        min_threshold = 0.0
     else:
         l1_default = float(SiteSettings.get('global_level1_commission_percent', 10.0))
         l2_default = float(SiteSettings.get('global_level2_commission_percent', 5.0))
@@ -263,7 +267,7 @@ def approve_withdrawal(withdrawal, admin_user_id: int, approved: bool, note: str
     other still-pending requests, or a since-reversed commission, from
     letting total payouts exceed what they've actually earned.
     """
-    from app.models import Withdrawal, WalletTransaction
+    from app.models import Withdrawal, WalletTransaction, User
 
     withdrawal.processed_by = admin_user_id
     withdrawal.processed_at = datetime.now(timezone.utc)
@@ -298,7 +302,6 @@ def approve_withdrawal(withdrawal, admin_user_id: int, approved: bool, note: str
     # Email notification
     try:
         from app.utils.email import send_withdrawal_status_email
-        from app.models import User
         user = User.query.get(withdrawal.user_id)
         if user:
             send_withdrawal_status_email(user, withdrawal)

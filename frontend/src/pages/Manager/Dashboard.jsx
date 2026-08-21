@@ -45,7 +45,8 @@ export default function ManagerDashboard() {
 
   const kpis = [
     { label: 'Your Team', value: data.total_team ?? 0, sub: `${data.active_team ?? 0} active`, icon: Users, color: 'from-violet-500 to-purple-600' },
-    { label: 'Team Revenue', value: `₹${(data.team_revenue || 0).toLocaleString('en-IN')}`, sub: 'from team purchases', icon: TrendingUp, color: 'from-blue-500 to-indigo-600' },
+    { label: 'Team Revenue', value: `₹${(data.team_revenue || 0).toLocaleString('en-IN')}`, sub: 'total from team purchases', icon: TrendingUp, color: 'from-blue-500 to-indigo-600' },
+    { label: `Team Override (${data.manager_override_percent ?? 10}%)`, value: `₹${(data.manager_override_amount || 0).toLocaleString('en-IN')}`, sub: `${data.manager_override_percent ?? 10}% of team revenue`, icon: Percent, color: 'from-fuchsia-500 to-pink-600' },
     { label: 'All-Time Earnings', value: `₹${(data.all_time_earnings || 0).toLocaleString('en-IN')}`, sub: 'approved commissions', icon: IndianRupee, color: 'from-emerald-500 to-green-600' },
     { label: 'Available Balance', value: `₹${(data.available_balance || 0).toLocaleString('en-IN')}`, sub: `₹${(data.pending_earnings || 0).toLocaleString('en-IN')} pending`, icon: Wallet, color: 'from-amber-500 to-orange-600' },
   ];
@@ -86,7 +87,7 @@ export default function ManagerDashboard() {
       </div>
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         {kpis.map((kpi, idx) => (
           <div
             key={kpi.label}

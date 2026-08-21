@@ -14,6 +14,8 @@ import InstructorDetail from './pages/Public/InstructorDetail';
 import TeamMemberDetail from './pages/Public/TeamMemberDetail';
 import About from './pages/Public/About';
 import Contact from './pages/Public/Contact';
+import RefundPolicy from './pages/Public/RefundPolicy';
+import TermsConditions from './pages/Public/TermsConditions';
 import Packages from './pages/Public/Packages';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
@@ -39,9 +41,9 @@ import Tools from './pages/Student/Tools';
 import Community from './pages/Student/Community';
 import Marketing from './pages/Student/Marketing';
 import Upgrade from './pages/Student/Upgrade';
-import StudentPlaceholder from './pages/Student/StudentPlaceholder';
 import Products from './pages/Student/Products';
 import Checkout from './pages/Student/Checkout';
+import MasterclassRegister from './pages/Public/MasterclassRegister';
 import StudentPackages from './pages/Student/StudentPackages';
 import StudentPackageDetail from './pages/Student/StudentPackageDetail';
 import MyTeam from './pages/Student/MyTeam';
@@ -67,6 +69,7 @@ import AdminReferrals from './pages/Admin/AdminReferrals';
 import AdminManagers from './pages/Admin/AdminManagers';
 import AdminTeamMembers from './pages/Admin/AdminTeamMembers';
 import AdminWalletDetails from './pages/Admin/AdminWalletDetails';
+import Offers from './pages/Student/Offers';
 import AdminAchievements from './pages/Admin/AdminAchievements';
 import AdminCertificateTemplate from './pages/Admin/AdminCertificateTemplate';
 import AdminManagerEarnings from './pages/Admin/AdminManagerEarnings';
@@ -91,6 +94,7 @@ import AdminLayout from './layouts/AdminLayout';
 import ManagerLayout from './layouts/ManagerLayout';
 
 import BrandedLoader from './components/BrandedLoader';
+import ImpersonationBar from './components/ImpersonationBar';
 import ScrollToTop from './components/ScrollToTop';
 
 // Protected Route wrapper
@@ -116,6 +120,7 @@ export default function App() {
   return (
     <Router>
       <ScrollToTop />
+      <ImpersonationBar />
       <Routes>
         {/* Public Routes wrapped in PublicLayout */}
         <Route element={<PublicLayout />}>
@@ -128,6 +133,8 @@ export default function App() {
           <Route path="/packages" element={<Packages />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route path="/terms-and-conditions" element={<TermsConditions />} />
         </Route>
 
         {/* Auth Routes */}
@@ -161,7 +168,7 @@ export default function App() {
           <Route path="community" element={<Community />} />
           <Route path="marketing" element={<Marketing />} />
           <Route path="upgrade" element={<Upgrade />} />
-          <Route path="offers" element={<StudentPlaceholder section="offers" />} />
+          <Route path="offers" element={<Offers />} />
           <Route path="products" element={<Products />} />
           <Route path="packages" element={<StudentPackages />} />
           <Route path="packages/:id" element={<StudentPackageDetail />} />
@@ -178,6 +185,11 @@ export default function App() {
             <Checkout />
           </ProtectedRoute>
         } />
+
+        {/* Masterclass referral registration — public, unauthenticated, and
+            deliberately standalone (no navbar/footer/sidebar) so a guest who
+            opens a student's referral link can't browse the rest of the site. */}
+        <Route path="/masterclass/:code" element={<MasterclassRegister />} />
 
         {/* Protected Admin Routes wrapped in AdminLayout */}
         <Route path="/admin" element={

@@ -1,8 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Users, GraduationCap, UserCog, Briefcase, ShieldCheck, Power, ChevronDown, Loader2, Search, X, Wallet, Clock, Share2, ShoppingBag, BadgeCheck, User, Calendar, Mail, Phone, Tag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, GraduationCap, UserCog, Briefcase, ShieldCheck, Power, ChevronDown, Loader2, Search, X, Wallet, Clock, Share2, ShoppingBag, BadgeCheck, User, Calendar, Mail, Phone, Tag, KeyRound, Copy, Check, MapPin, Cake, Users2, FileText, Info, Dices, LogIn } from 'lucide-react';
 import api from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 import AnimatedNumber from '../../components/AnimatedNumber';
+
+const CATEGORY_LABELS = {
+  housewife: 'Housewife',
+  student: 'Student',
+  job_person: 'Job Person',
+  business_owner: 'Business Owner',
+};
 
 const ROLE_TABS = [
   { key: '', label: 'All Users' },
@@ -47,6 +56,14 @@ export default function AdminUsers() {
   const [busyId, setBusyId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [showResetPw, setShowResetPw] = useState(false);
+  const [customPassword, setCustomPassword] = useState('');
+  const [resettingPw, setResettingPw] = useState(false);
+  const [newPasswordResult, setNewPasswordResult] = useState('');
+  const [pwCopied, setPwCopied] = useState(false);
+  const [impersonatingUser, setImpersonatingUser] = useState(false);
+  const navigate = useNavigate();
+  const { impersonate } = useAuth();
 
   const fetchUsers = async (role) => {
     try {
@@ -90,6 +107,9 @@ export default function AdminUsers() {
   const openDetail = async (id) => {
     setDetail({ loading: true });
     setDetailLoading(true);
+    setShowResetPw(false);
+    setCustomPassword('');
+    setNewPasswordResult('');
     try {
       const response = await api.get(`/admin/users/${id}`);
       setDetail(response.data);
@@ -100,6 +120,52 @@ export default function AdminUsers() {
     } finally {
       setDetailLoading(false);
     }
+  };
+
+  const handleResetPassword = async () => {
+    if (!detail?.user?.id) return;
+    setResettingPw(true);
+    setNewPasswordResult('');
+    try {
+      const response = await api.post(`/admin/users/${detail.user.id}/reset-password`, {
+        new_password: customPassword.trim() || undefined,
+      });
+      if (response.data.success) {
+        setNewPasswordResult(response.data.new_password);
+        setCustomPassword('');
+      } else {
+        alert(response.data.message || 'Failed to reset password.');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reset password.');
+    } finally {
+      setResettingPw(false);
+    }
+  };
+
+  const handleImpersonate = async () => {
+    if (!detail?.user?.id) return;
+    setImpersonatingUser(true);
+    try {
+      const res = await impersonate(detail.user.id);
+      if (res.success) {
+        const role = res.user?.role;
+        navigate(role === 'manager' ? '/manager' : '/student');
+      } else {
+        alert(res.message || 'Could not sign in as this user.');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Could not sign in as this user.');
+    } finally {
+      setImpersonatingUser(false);
+    }
+  };
+
+  const handleCopyPassword = () => {
+    if (!newPasswordResult) return;
+    navigator.clipboard.writeText(newPasswordResult);
+    setPwCopied(true);
+    setTimeout(() => setPwCopied(false), 2000);
   };
 
   const handleRoleChange = async (id, role) => {
@@ -412,10 +478,50 @@ export default function AdminUsers() {
                         <Calendar className="w-4 h-4 text-slate-400" />
                         <span>Joined: <strong className="text-slate-700">{detail.user.created_at}</strong></span>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-slate-400" />
+                        <span>Email: <strong className="text-slate-700">{detail.user.email}</strong></span>
+                      </div>
                       {detail.user.phone && (
                         <div className="flex items-center gap-2">
                           <Phone className="w-4 h-4 text-slate-400" />
                           <span>Mobile: <strong className="text-slate-700">{detail.user.phone}</strong></span>
+                        </div>
+                      )}
+                      {detail.user.age && (
+                        <div className="flex items-center gap-2">
+                          <Cake className="w-4 h-4 text-slate-400" />
+                          <span>Age: <strong className="text-slate-700">{detail.user.age}</strong></span>
+                        </div>
+                      )}
+                      {detail.user.gender && (
+                        <div className="flex items-center gap-2">
+                          <Users2 className="w-4 h-4 text-slate-400" />
+                          <span>Gender: <strong className="text-slate-700 capitalize">{detail.user.gender}</strong></span>
+                        </div>
+                      )}
+                      {detail.user.category && (
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="w-4 h-4 text-slate-400" />
+                          <span>Category: <strong className="text-slate-700">{CATEGORY_LABELS[detail.user.category] || detail.user.category}</strong></span>
+                        </div>
+                      )}
+                      {detail.user.address && (
+                        <div className="flex items-start gap-2 sm:col-span-2">
+                          <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                          <span>Address: <strong className="text-slate-700">{detail.user.address}</strong></span>
+                        </div>
+                      )}
+                      {detail.user.bio && (
+                        <div className="flex items-start gap-2 sm:col-span-2">
+                          <FileText className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                          <span>Bio: <strong className="text-slate-700">{detail.user.bio}</strong></span>
+                        </div>
+                      )}
+                      {detail.user.about && (
+                        <div className="flex items-start gap-2 sm:col-span-2">
+                          <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                          <span>About: <strong className="text-slate-700">{detail.user.about}</strong></span>
                         </div>
                       )}
                       {detail.user.referrer_name && (
@@ -425,6 +531,85 @@ export default function AdminUsers() {
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Password reset */}
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <KeyRound className="w-4 h-4 text-rose-500" /> Password
+                      </p>
+                      {!showResetPw && (
+                        <button
+                          onClick={() => setShowResetPw(true)}
+                          className="text-[10px] font-black uppercase tracking-wider text-rose-600 hover:text-rose-700 transition-colors"
+                        >
+                          Reset Password
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-1.5">
+                      Passwords are stored as one-way hashes — the original can never be shown as-is. To help this user, sign in as them below, or set a new password.
+                    </p>
+
+                    {/* Support access — removes the need to know the user's
+                        password at all. */}
+                    {detail.user.role !== 'admin' && (
+                      <div className="mt-4 bg-indigo-50 border border-indigo-200 rounded-xl p-3.5">
+                        <p className="text-[10px] font-black text-indigo-700 uppercase tracking-wider mb-1">Sign in as this user</p>
+                        <p className="text-[11px] text-indigo-900/70 mb-3">
+                          Opens their dashboard exactly as they see it, without needing their password. A banner stays on screen so you can come straight back.
+                        </p>
+                        <button
+                          onClick={handleImpersonate}
+                          disabled={impersonatingUser || !detail.user.is_active}
+                          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[11px] uppercase tracking-wider transition-colors disabled:opacity-60"
+                        >
+                          {impersonatingUser ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogIn className="w-3.5 h-3.5" />}
+                          {impersonatingUser ? 'Signing in...' : 'Login as User'}
+                        </button>
+                        {!detail.user.is_active && (
+                          <p className="text-[11px] font-bold text-rose-600 mt-2">This account is deactivated — activate it first.</p>
+                        )}
+                      </div>
+                    )}
+
+                    {showResetPw && (
+                      <div className="mt-4 space-y-3">
+                        {newPasswordResult ? (
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5">
+                            <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider mb-1.5">New password (shown once — copy and share it now)</p>
+                            <div className="flex items-center gap-2">
+                              <code className="flex-1 bg-white border border-emerald-200 rounded-lg px-3 py-2 text-sm font-mono font-bold text-slate-800 truncate">{newPasswordResult}</code>
+                              <button onClick={handleCopyPassword} className="shrink-0 p-2.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+                                {pwCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <input
+                                type="text"
+                                value={customPassword}
+                                onChange={(e) => setCustomPassword(e.target.value)}
+                                placeholder="Type a new password (min 8 chars) or leave blank to auto-generate"
+                                className="flex-1 px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-shadow"
+                              />
+                              <button
+                                onClick={handleResetPassword}
+                                disabled={resettingPw || (customPassword && customPassword.trim().length < 8)}
+                                className="shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-[11px] uppercase tracking-wider transition-colors disabled:opacity-60"
+                              >
+                                {resettingPw ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (customPassword ? <KeyRound className="w-3.5 h-3.5" /> : <Dices className="w-3.5 h-3.5" />)}
+                                {resettingPw ? 'Setting...' : customPassword ? 'Set Password' : 'Generate Random'}
+                              </button>
+                            </div>
+                            <button onClick={() => setShowResetPw(false)} className="text-[10px] font-bold text-slate-400 hover:text-slate-600">Cancel</button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Financial metrics breakdown */}

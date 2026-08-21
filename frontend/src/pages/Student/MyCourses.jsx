@@ -6,16 +6,20 @@ import AnimatedNumber from '../../components/AnimatedNumber';
 import Reveal from '../../components/Reveal';
 import useTilt from '../../hooks/useTilt';
 
-function CourseCard({ course, isOwned, idx, onAction }) {
+function CourseCard({ course, isOwned, onAction }) {
   const { ref, onMouseMove, onMouseLeave } = useTilt(5);
 
+  const p = course.progress || null;
+  const pct = p ? p.percent : 0;
+  const done = !!p?.is_completed;
+  const started = pct > 0;
+
   return (
-    <Reveal variant="scale-in" delay={idx * 80}>
-      <div
-        ref={ref}
-        onMouseMove={onMouseMove}
-        onMouseLeave={onMouseLeave}
-        className="group relative bg-white border border-slate-200/90 rounded-[2.25rem] overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_55px_rgba(37,99,235,0.15)] hover:border-blue-300 transition-all duration-500 flex flex-col justify-between [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform"
+    <div
+      ref={ref}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+      className="group relative bg-white border border-slate-200/90 rounded-[2.25rem] overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_18px_40px_rgba(37,99,235,0.13)] hover:border-blue-300 transition-[transform,box-shadow,border-color] duration-500 flex flex-col justify-between hover:[transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] hover:will-change-transform"
       >
         {/* Mouse Glare Overlay */}
         <span
@@ -30,6 +34,8 @@ function CourseCard({ course, isOwned, idx, onAction }) {
               <img
                 src={course.thumbnail_display_url}
                 alt={course.title}
+                loading="lazy"
+                decoding="async"
                 className={`w-full h-full object-cover transition-transform duration-700 ${
                   isOwned ? 'group-hover:scale-110' : 'grayscale-[40%] group-hover:grayscale-0 group-hover:scale-105'
                 }`}
@@ -44,12 +50,26 @@ function CourseCard({ course, isOwned, idx, onAction }) {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"></div>
 
             {isOwned ? (
-              <span className="absolute top-3.5 left-3.5 bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg shadow-emerald-500/20">
-                <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} /> Unlocked
+              <span className={`absolute top-3.5 left-3.5 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md ${
+                done ? 'bg-emerald-500 shadow-emerald-900/25' : started ? 'bg-blue-600 shadow-blue-900/25' : 'bg-slate-800 shadow-slate-900/25'
+              }`}>
+                {done
+                  ? <><CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} /> Completed</>
+                  : started
+                    ? <><Zap className="w-3.5 h-3.5" strokeWidth={2.5} /> {pct}% done</>
+                    : <><Play className="w-3 h-3 fill-current" /> Ready</>}
               </span>
             ) : (
-              <span className="absolute top-3.5 left-3.5 bg-slate-900/90 backdrop-blur-md text-slate-200 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 border border-white/10">
+              <span className="absolute top-3.5 left-3.5 bg-slate-900 text-slate-200 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 border border-white/10">
                 <Lock className="w-3.5 h-3.5 text-amber-400" strokeWidth={2.5} /> Premium Lock
+              </span>
+            )}
+
+            {isOwned && course.certificate_eligible && (
+              <span className={`absolute top-3.5 right-3.5 w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
+                done ? 'bg-amber-400 text-amber-950' : 'bg-slate-900/80 text-slate-400 border border-white/10'
+              }`} title={done ? 'Certificate unlocked' : 'Finish to earn a certificate'}>
+                <ShieldCheck className="w-4 h-4" strokeWidth={2.4} />
               </span>
             )}
 
@@ -82,6 +102,29 @@ function CourseCard({ course, isOwned, idx, onAction }) {
             <p className="text-xs text-slate-500 font-medium mt-2 line-clamp-2 leading-relaxed">
               {course.description || 'Comprehensive training course designed for actionable results and skill mastery.'}
             </p>
+
+            {isOwned && p && p.total > 0 && (
+              <div className="mt-4">
+                <div className="flex items-baseline justify-between gap-2 mb-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                    {p.completed} of {p.total} chapters
+                  </span>
+                  <span className={`text-[11px] font-black tabular-nums ${done ? 'text-emerald-600' : 'text-blue-600'}`}>
+                    {pct}%
+                  </span>
+                </div>
+                <div className="relative h-2 w-full rounded-full bg-slate-100 overflow-hidden ring-1 ring-inset ring-slate-200/70">
+                  <div
+                    className={`h-full rounded-full transition-[width] duration-700 ease-out bg-gradient-to-r ${
+                      done ? 'from-emerald-500 to-teal-500' : 'from-blue-500 to-indigo-600'
+                    }`}
+                    style={{ width: `${Math.max(pct, pct > 0 ? 6 : 0)}%` }}
+                  >
+                    <span className="block h-1/2 rounded-t-full bg-white/25"></span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -94,7 +137,7 @@ function CourseCard({ course, isOwned, idx, onAction }) {
             >
               <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></span>
               <Play className="w-4 h-4 fill-current relative" />
-              <span className="relative">Watch Course</span>
+              <span className="relative">{done ? 'Rewatch Course' : started ? 'Continue Learning' : 'Start Course'}</span>
             </button>
           ) : (
             <button
@@ -107,8 +150,7 @@ function CourseCard({ course, isOwned, idx, onAction }) {
             </button>
           )}
         </div>
-      </div>
-    </Reveal>
+    </div>
   );
 }
 
@@ -133,6 +175,9 @@ export default function MyCourses() {
     fetchCourses();
   }, []);
 
+  const completedCount = myCourses.filter((c) => c.progress?.is_completed).length;
+
+
   if (loading) {
     return (
       <div className="min-h-[65vh] flex items-center justify-center">
@@ -147,33 +192,50 @@ export default function MyCourses() {
   return (
     <div className="w-full space-y-10 text-slate-800 pb-12">
 
-      {/* HERO BANNER */}
+      {/* HERO — aurora field behind a glass panel, matching the rest of the
+          dashboard. The blur lives on this one element only, never per card. */}
       <Reveal variant="scale-in">
-        <div
-          className="relative overflow-hidden rounded-[2.5rem] p-8 sm:p-12 text-white shadow-xl shadow-blue-900/10"
-          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%)' }}
-        >
-          {/* Ambient Glow & Shimmer */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/20 rounded-full blur-[120px] pointer-events-none"></div>
-          <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
+        <div className="relative">
+          <div className="absolute -inset-3 sm:-inset-4 rounded-[3rem] overflow-hidden pointer-events-none">
+            <div className="absolute inset-0 bg-[#070d20]"></div>
+            <div className="absolute -top-20 -left-12 w-80 h-80 rounded-full bg-blue-600/55 blur-[80px] animate-blob"></div>
+            <div className="absolute -bottom-24 -right-12 w-80 h-80 rounded-full bg-indigo-600/45 blur-[80px] animate-blob" style={{ animationDelay: '3s' }}></div>
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(7,13,32,0.70) 0%, rgba(7,13,32,0.45) 45%, rgba(7,13,32,0.94) 100%)' }}></div>
+          </div>
 
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 border border-white/15 text-[10px] font-black uppercase tracking-widest text-blue-200 mb-4 backdrop-blur-md">
-                <GraduationCap className="w-4 h-4 text-blue-300 animate-pulse" /> Student Learning Workspace
+          <div className="relative overflow-hidden rounded-[2.5rem] p-7 sm:p-10 text-white bg-white/[0.07] backdrop-blur-2xl border border-white/25 shadow-[0_20px_60px_rgba(8,15,40,0.45)]">
+            <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent pointer-events-none"></span>
+            <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+              style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
+            <GraduationCap className="absolute right-5 top-5 w-28 h-28 sm:w-40 sm:h-40 text-blue-300/[0.07] rotate-6 pointer-events-none" strokeWidth={1} />
+
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div className="min-w-0">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-[10px] font-black uppercase tracking-widest text-blue-200 mb-3">
+                  <GraduationCap className="w-3.5 h-3.5 text-blue-300" /> Learning Workspace
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black tracking-tight bg-gradient-to-b from-white via-white to-blue-100 bg-clip-text text-transparent">
+                  My Course Vault
+                </h1>
+                <p className="text-blue-100/70 text-sm font-medium max-w-lg leading-relaxed mt-2.5">
+                  Continue your learning journey, watch video modules, or unlock new high-income courses.
+                </p>
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black mb-3 tracking-tight">
-                My Course Vault
-              </h1>
-              <p className="text-slate-300 text-sm sm:text-base font-medium max-w-lg leading-relaxed">
-                Continue your learning journey, watch video modules, or unlock new high-income courses.
-              </p>
-            </div>
 
-            {/* Enrolled Counter Card */}
-            <div className="relative shrink-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 text-center min-w-[180px] shadow-lg">
-              <AnimatedNumber value={myCourses.length} duration={1200} className="block text-4xl sm:text-5xl font-heading font-black leading-none text-white tracking-tight" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-blue-200 mt-2">Unlocked Courses</p>
+              {/* Enrolled / completed at a glance */}
+              <div className="grid grid-cols-2 gap-2.5 shrink-0 md:w-[280px]">
+                {[
+                  { label: 'Unlocked', value: myCourses.length, color: '#60a5fa', Icon: Layers },
+                  { label: 'Completed', value: completedCount, color: '#34d399', Icon: CheckCircle2 },
+                ].map(({ label, value, color, Icon }) => (
+                  <div key={label} className="rounded-2xl bg-black/35 border border-white/10 px-4 py-4 text-center">
+                    <Icon className="w-4 h-4 mx-auto mb-2" style={{ color }} strokeWidth={2.4} />
+                    <AnimatedNumber value={value} duration={1200}
+                      className="block text-3xl font-heading font-black leading-none tabular-nums" style={{ color }} />
+                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/45 mt-1.5">{label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -182,24 +244,32 @@ export default function MyCourses() {
       {/* CONTINUED LEARNING SECTION */}
       <section className="space-y-6">
         <Reveal variant="fade-up">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-heading font-black text-slate-900 tracking-tight flex items-center gap-3">
-              <span className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
-                <Play className="w-5 h-5 fill-current translate-x-0.5" strokeWidth={2.5} />
-              </span>
-              Enrolled Courses ({myCourses.length})
-            </h2>
+          <div className="flex items-center gap-3">
+            <span className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+              <Play className="w-4.5 h-4.5 fill-current translate-x-0.5" strokeWidth={2.5} />
+            </span>
+            <div className="min-w-0">
+              <h2 className="font-heading text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                Enrolled Courses
+              </h2>
+              <p className="text-[11px] font-semibold text-slate-400">
+                {myCourses.length} unlocked{completedCount > 0 ? ` · ${completedCount} completed` : ''}
+              </p>
+            </div>
+            <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
+            <span className="shrink-0 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-slate-100 border border-slate-200/60 text-slate-500 tabular-nums">
+              {myCourses.length}
+            </span>
           </div>
         </Reveal>
 
         {myCourses.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myCourses.map((course, idx) => (
+            {myCourses.map((course) => (
               <CourseCard
                 key={course.id}
                 course={course}
                 isOwned={true}
-                idx={idx}
                 onAction={(id) => navigate(`/student/watch-course/${id}`)}
               />
             ))}
@@ -229,21 +299,29 @@ export default function MyCourses() {
       {availableCourses.length > 0 && (
         <section className="space-y-6 pt-4">
           <Reveal variant="fade-up">
-            <h2 className="text-2xl font-heading font-black text-slate-900 tracking-tight flex items-center gap-3">
-              <span className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 shadow-sm">
-                <Sparkles className="w-5 h-5" strokeWidth={2.5} />
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 shrink-0">
+                <Sparkles className="w-4.5 h-4.5" strokeWidth={2.5} />
               </span>
-              Available to Unlock ({availableCourses.length})
-            </h2>
+              <div className="min-w-0">
+                <h2 className="font-heading text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                  Available to Unlock
+                </h2>
+                <p className="text-[11px] font-semibold text-slate-400">Included in a higher package</p>
+              </div>
+              <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
+              <span className="shrink-0 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-600 tabular-nums">
+                {availableCourses.length}
+              </span>
+            </div>
           </Reveal>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {availableCourses.map((course, idx) => (
+            {availableCourses.map((course) => (
               <CourseCard
                 key={course.id}
                 course={course}
                 isOwned={false}
-                idx={idx}
                 onAction={() => navigate('/student/packages')}
               />
             ))}

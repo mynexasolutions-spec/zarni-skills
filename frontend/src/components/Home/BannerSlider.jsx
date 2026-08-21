@@ -1,5 +1,4 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../../utils/api';
 
 const AUTOPLAY_DELAY = 4000;
@@ -84,20 +83,6 @@ export default function BannerSlider() {
     }
   }, [totalPages]);
 
-  const handlePrev = useCallback(() => {
-    if (totalPages <= 1) return;
-    const prevIdx = currentIndexRef.current - 1;
-    scrollToIndex(prevIdx);
-    
-    // If scrolling into the prepended clone (index 0)
-    if (prevIdx === 0) {
-      setTimeout(() => {
-        scrollToIndex(totalPages, true);
-        setCurrentIndex(totalPages);
-      }, 500);
-    }
-  }, [totalPages]);
-
   // Sync scroll position with index
   useEffect(() => {
     const track = trackRef.current;
@@ -159,36 +144,17 @@ export default function BannerSlider() {
     : 0;
 
   return (
-    <section ref={sectionRef} className="py-10 sm:py-16 relative overflow-hidden" id="banner-slider">
+    <section ref={sectionRef} className="py-4 sm:py-16 relative overflow-hidden" id="banner-slider">
       <div className="absolute inset-0 bg-cover bg-center pointer-events-none z-0 opacity-40" style={{ backgroundImage: 'url(/static/img/bgimage.png)' }}></div>
-      <div className="max-w-[1440px] mx-auto px-2 sm:px-6 relative z-10">
+      <div className="max-w-[1440px] mx-auto px-0 sm:px-6 lg:max-w-none lg:px-0 relative z-10">
         <div
           className="relative group/slider"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          {totalPages > 1 && (
-            <>
-              <button
-                onClick={handlePrev}
-                aria-label="Previous banner"
-                className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-14 sm:h-14 bg-white/95 backdrop-blur-md rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.15)] border border-slate-200/80 flex items-center justify-center text-slate-800 transition-all duration-300 hover:bg-blue-600 hover:text-white hover:scale-110 active:scale-95 shadow-blue-500/20"
-              >
-                <ChevronLeft className="w-5 h-5 sm:w-7 sm:h-7" strokeWidth={2.5} />
-              </button>
-              <button
-                onClick={handleNext}
-                aria-label="Next banner"
-                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-14 sm:h-14 bg-white/95 backdrop-blur-md rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.15)] border border-slate-200/80 flex items-center justify-center text-slate-800 transition-all duration-300 hover:bg-blue-600 hover:text-white hover:scale-110 active:scale-95 shadow-blue-500/20"
-              >
-                <ChevronRight className="w-5 h-5 sm:w-7 sm:h-7" strokeWidth={2.5} />
-              </button>
-            </>
-          )}
-
           <div
             ref={trackRef}
-            className="flex gap-4 sm:gap-8 overflow-x-auto snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-[6%] sm:px-[10%] py-6"
+            className="flex gap-4 sm:gap-8 lg:gap-0 overflow-x-auto snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-0 sm:px-[10%] lg:px-0 py-2 sm:py-6 lg:py-0"
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
             onMouseUp={stopDragging}
@@ -201,18 +167,18 @@ export default function BannerSlider() {
               return (
                 <div 
                   key={`${b.id}-${idx}`} 
-                  className={`shrink-0 snap-center w-[88%] sm:w-[84%] lg:w-[82%] transition-all duration-500 ease-out ${
-                    isCenter 
-                      ? 'opacity-100 scale-100 z-20 shadow-[0_30px_70px_rgba(37,99,235,0.25)] ring-4 ring-blue-500/25 rounded-2xl sm:rounded-[2rem]' 
-                      : 'opacity-45 scale-[0.91] grayscale-[15%] hover:opacity-75 blur-[0.4px] hover:blur-none rounded-2xl sm:rounded-[2rem]'
+                  className={`shrink-0 snap-center w-full sm:w-[84%] lg:w-full transition-all duration-500 ease-out ${
+                    isCenter
+                      ? 'opacity-100 scale-100 z-20 shadow-[0_30px_70px_rgba(37,99,235,0.25)] ring-4 ring-blue-500/25 rounded-2xl sm:rounded-[2rem] lg:shadow-none lg:ring-0 lg:rounded-none'
+                      : 'opacity-45 scale-[0.91] grayscale-[15%] hover:opacity-75 blur-[0.4px] hover:blur-none rounded-2xl sm:rounded-[2rem] lg:opacity-100 lg:scale-100 lg:grayscale-0 lg:blur-none lg:rounded-none'
                   }`}
                 >
-                  <div className="aspect-[16/9] max-h-[820px] overflow-hidden rounded-2xl sm:rounded-[2rem] bg-slate-900 border border-white/60">
+                  <div className="overflow-hidden rounded-2xl sm:rounded-[2rem] lg:rounded-none bg-slate-900 border border-white/60 lg:border-0">
                     <img
                       src={b.image_display_url}
                       alt="Promotional banner"
                       draggable="false"
-                      className="w-full h-full object-contain transition-transform duration-700 hover:scale-[1.02]"
+                      className="w-full h-auto max-h-[820px] object-contain transition-transform duration-700 hover:scale-[1.02]"
                     />
                   </div>
                 </div>
@@ -222,7 +188,7 @@ export default function BannerSlider() {
 
           {/* Dots */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2.5 mt-5">
+            <div className="flex justify-center items-center gap-2.5 mt-5 lg:mt-7">
               {Array.from({ length: totalPages }).map((_, idx) => (
                 <button
                   key={idx}

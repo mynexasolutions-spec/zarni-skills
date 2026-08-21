@@ -2,15 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
 import { ArrowRight, Mail, MapPin, ChevronUp, Sparkles, Rocket } from 'lucide-react';
+import { FaFacebook, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const [courses, setCourses] = useState([]);
   const [showTop, setShowTop] = useState(false);
+  const [socialLinks, setSocialLinks] = useState({ facebook: '', instagram: '', whatsapp: '' });
+  const [supportEmail, setSupportEmail] = useState('support@zarniskills.com');
 
   useEffect(() => {
     api.get('/global-data').then(r => {
       setCourses(r.data.courses || []);
+      setSocialLinks(r.data.social_links || { facebook: '', instagram: '', whatsapp: '' });
+      if (r.data.support_email) setSupportEmail(r.data.support_email);
     }).catch(() => {});
   }, []);
 
@@ -103,13 +108,12 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-3 pt-1">
               {[
-                { label: 'Facebook', icon: <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /> },
-                { label: 'Instagram', icon: <path d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16.4a4.238 4.238 0 110-8.476 4.238 4.238 0 010 8.476zm6.406-11.845a1.44 1.44 0 110 2.88 1.44 1.44 0 010-2.88z" /> },
-                { label: 'Twitter / X', icon: <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.84 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" /> },
-                { label: 'YouTube', icon: <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /> }
+                { label: 'Facebook', Icon: FaFacebook, url: socialLinks.facebook },
+                { label: 'Instagram', Icon: FaInstagram, url: socialLinks.instagram },
+                { label: 'WhatsApp', Icon: FaWhatsapp, url: socialLinks.whatsapp },
               ].map((s, idx) => (
-                <a key={idx} href="#" aria-label={s.label} className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-500 hover:text-white hover:scale-115 hover:shadow-[0_0_15px_rgba(37,99,235,0.5)] transition-all duration-300">
-                  <svg className="w-4 h-4 fill-current">{s.icon}</svg>
+                <a key={idx} href={s.url || '#'} target={s.url ? '_blank' : undefined} rel="noopener noreferrer" aria-label={s.label} className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-500 hover:text-white hover:scale-115 hover:shadow-[0_0_15px_rgba(37,99,235,0.5)] transition-all duration-300">
+                  <s.Icon className="w-4 h-4" />
                 </a>
               ))}
             </div>
@@ -171,12 +175,12 @@ export default function Footer() {
               Contact Us
             </h4>
             
-            <a href="mailto:support@zarniskills.com" className="flex items-center gap-3.5 p-3 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-blue-500/50 hover:bg-white/[0.06] transition-all duration-300 group">
+            <a href={`mailto:${supportEmail}`} className="flex items-center gap-3.5 p-3 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-blue-500/50 hover:bg-white/[0.06] transition-all duration-300 group">
               <div className="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shadow-inner">
                 <Mail className="w-5 h-5" strokeWidth={2} />
               </div>
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-black text-white group-hover:text-cyan-300 transition-colors truncate">support@zarniskills.com</p>
+                <p className="text-xs sm:text-sm font-black text-white group-hover:text-cyan-300 transition-colors truncate">{supportEmail}</p>
                 <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                   <span>Available 24/7</span>
@@ -205,9 +209,9 @@ export default function Footer() {
           <div className="flex items-center gap-4 sm:gap-6 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-400">
             <a href="#" className="hover:text-cyan-300 transition-colors">Privacy Policy</a>
             <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-            <a href="#" className="hover:text-cyan-300 transition-colors">Terms of Service</a>
+            <Link to="/terms-and-conditions" className="hover:text-cyan-300 transition-colors">Terms of Service</Link>
             <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-            <a href="#" className="hover:text-cyan-300 transition-colors">Refund Policy</a>
+            <Link to="/refund-policy" className="hover:text-cyan-300 transition-colors">Refund Policy</Link>
           </div>
         </div>
       </div>

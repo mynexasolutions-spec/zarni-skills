@@ -128,32 +128,33 @@ export default function MyTeam() {
           ref={tiltRef}
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
-          className="relative overflow-hidden rounded-[2.5rem] p-6 sm:p-10 text-white shadow-2xl shadow-blue-950/20 group [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform transition-transform duration-300"
-          style={{ background: 'linear-gradient(135deg, #0b1428 0%, #1e3a8a 50%, #2563eb 100%)' }}
+          className="relative overflow-hidden rounded-[2.5rem] p-6 sm:p-10 text-slate-900 shadow-2xl shadow-blue-200/40 border border-blue-100 group [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform transition-transform duration-300"
+          style={{ background: 'linear-gradient(135deg, #ffffff 0%, #eef4ff 55%, #e0ebff 100%)' }}
         >
           {/* Ambient Blur Bursts */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/20 rounded-full blur-[140px] pointer-events-none"></div>
-          <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/20 rounded-full blur-[140px] pointer-events-none animate-blob"></div>
+          <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-indigo-400/15 rounded-full blur-[130px] pointer-events-none animate-blob" style={{ animationDelay: '2s' }}></div>
+          <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none"></span>
 
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-            
+
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/10 border border-white/20 text-white flex items-center justify-center shadow-lg backdrop-blur-md shrink-0">
-                <Network className="w-7 h-7 text-blue-300" strokeWidth={2.2} />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 shrink-0">
+                <Network className="w-7 h-7 text-white" strokeWidth={2.2} />
               </div>
               <div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-500/20 border border-blue-400/30 text-blue-200 backdrop-blur-md mb-2">
-                  <Sparkles className="w-3 h-3 text-amber-300" /> Affiliate Network
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-50 border border-blue-200 text-blue-700 mb-2">
+                  <Sparkles className="w-3 h-3 text-amber-500" /> Affiliate Network
                 </span>
-                <h1 className="font-heading text-2xl sm:text-4xl font-black tracking-tight text-white">My Team Network</h1>
-                <p className="text-xs sm:text-sm text-blue-100/80 font-medium mt-1">Track your direct sponsors and multi-level indirect team growth</p>
+                <h1 className="font-heading text-2xl sm:text-4xl font-black tracking-tight text-slate-900">My Team Network</h1>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">Track your direct sponsors and multi-level indirect team growth</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="bg-white/10 border border-white/15 rounded-2xl p-3.5 backdrop-blur-md min-w-[130px] text-center">
-                <p className="text-[10px] font-black text-blue-200 uppercase tracking-widest">Active Earners</p>
-                <p className="text-xl sm:text-2xl font-black text-white mt-0.5">{totalActive}</p>
+              <div className="bg-white border border-blue-200/80 rounded-2xl p-3.5 shadow-sm min-w-[130px] text-center">
+                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Active Earners</p>
+                <p className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">{totalActive}</p>
               </div>
             </div>
 
@@ -288,21 +289,21 @@ export default function MyTeam() {
         <Reveal variant="fade-up" delay={250}>
           <section className="bg-white border border-slate-200/90 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             
-            <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[90px] pointer-events-none"></div>
-              
+            <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-white text-slate-900 p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 relative overflow-hidden border-b border-blue-100">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/10 rounded-full blur-[90px] pointer-events-none"></div>
+
               <div className="flex items-center gap-3 sm:gap-4 relative z-10 min-w-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 shadow-lg backdrop-blur-md">
-                  <Users className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-blue-300" strokeWidth={2.2} />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/25">
+                  <Users className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-white" strokeWidth={2.2} />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-heading font-black text-base sm:text-xl text-white tracking-tight leading-snug">Direct Referrals (Level 1)</h3>
-                  <p className="text-[11px] sm:text-xs text-blue-200/80 font-medium mt-0.5 leading-normal">Students enrolled directly using your referral link</p>
+                  <h3 className="font-heading font-black text-base sm:text-xl text-slate-900 tracking-tight leading-snug">Direct Referrals (Level 1)</h3>
+                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5 leading-normal">Students enrolled directly using your referral link</p>
                 </div>
               </div>
 
               <div className="relative z-10 self-start sm:self-auto">
-                <span className="inline-flex items-center bg-white/10 border border-white/20 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[11px] sm:text-xs font-black text-white shrink-0 backdrop-blur-md shadow-inner">
+                <span className="inline-flex items-center bg-white border border-blue-200 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[11px] sm:text-xs font-black text-blue-700 shrink-0 shadow-sm">
                   {filteredLevel1.length} Direct Members
                 </span>
               </div>
@@ -421,21 +422,21 @@ export default function MyTeam() {
         <Reveal variant="fade-up" delay={300}>
           <section className="bg-white border border-slate-200/90 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
             
-            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[90px] pointer-events-none"></div>
-              
+            <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-white text-slate-900 p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 relative overflow-hidden border-b border-indigo-100">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/10 rounded-full blur-[90px] pointer-events-none"></div>
+
               <div className="flex items-center gap-3 sm:gap-4 relative z-10 min-w-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 shadow-lg backdrop-blur-md">
-                  <GitBranch className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-indigo-300" strokeWidth={2.2} />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/25">
+                  <GitBranch className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-white" strokeWidth={2.2} />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-heading font-black text-base sm:text-xl text-white tracking-tight leading-snug">Indirect Referrals (Level 2)</h3>
-                  <p className="text-[11px] sm:text-xs text-slate-300 font-medium mt-0.5 leading-normal">Students referred by your Level 1 direct team</p>
+                  <h3 className="font-heading font-black text-base sm:text-xl text-slate-900 tracking-tight leading-snug">Indirect Referrals (Level 2)</h3>
+                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5 leading-normal">Students referred by your Level 1 direct team</p>
                 </div>
               </div>
 
               <div className="relative z-10 self-start sm:self-auto">
-                <span className="inline-flex items-center bg-white/10 border border-white/20 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[11px] sm:text-xs font-black text-white shrink-0 backdrop-blur-md shadow-inner">
+                <span className="inline-flex items-center bg-white border border-indigo-200 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[11px] sm:text-xs font-black text-indigo-700 shrink-0 shadow-sm">
                   {filteredLevel2.length} Indirect Members
                 </span>
               </div>

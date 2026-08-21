@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, KeyRound, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Mail, KeyRound, ArrowRight, CheckCircle2, ShieldCheck, AlertTriangle } from 'lucide-react';
 import api from '../../utils/api';
 import Navbar from '../../components/Navbar';
 
@@ -8,19 +8,23 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     try {
       const response = await api.post('/auth/forgot-password', { email });
-      if (response.data.success) {
+      if (response.data?.success) {
         setSuccess(true);
+      } else {
+        setError(response.data?.message || 'Could not send the reset link.');
       }
     } catch (err) {
-      console.error(err);
-      // Fallback preview
-      setSuccess(true);
+      // Showing "link sent" on a failed request is what hid the fact that this
+      // endpoint was 404ing — the user waits for a mail that never went out.
+      setError(err.response?.data?.message || 'Could not send the reset link. Please try again in a moment.');
     } finally {
       setLoading(false);
     }
@@ -101,6 +105,12 @@ export default function ForgotPassword() {
             ) : (
               <>
                 <form onSubmit={handleSubmit} className="space-y-5">
+                  {error && (
+                    <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 border border-red-100 text-red-600">
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <p className="text-xs font-bold leading-relaxed">{error}</p>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1.5" htmlFor="email">Registered Email</label>
                     <div className="relative">

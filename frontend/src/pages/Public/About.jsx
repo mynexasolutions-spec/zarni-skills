@@ -167,7 +167,7 @@ export default function About() {
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800 -mt-24 pt-24 overflow-hidden relative selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen text-slate-800 -mt-24 pt-24 overflow-hidden relative selection:bg-blue-500 selection:text-white">
 
       {/* Animated Floating Neon Spheres */}
       <div className="absolute top-[15%] left-[8%] w-[550px] h-[550px] bg-blue-400/10 blur-[150px] rounded-full pointer-events-none z-0 animate-pulse"></div>

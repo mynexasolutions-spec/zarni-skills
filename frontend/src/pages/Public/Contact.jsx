@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import api from '../../utils/api';
 import Reveal from '../../components/Reveal';
 import useTilt from '../../hooks/useTilt';
@@ -17,6 +17,13 @@ export default function Contact() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState('');
+  const [supportEmail, setSupportEmail] = useState('support@zarniskills.com');
+
+  useEffect(() => {
+    api.get('/global-data')
+      .then(res => { if (res.data.support_email) setSupportEmail(res.data.support_email); })
+      .catch(() => {});
+  }, []);
 
   const panelRef = useRef(null);
   const { ref: tiltRef, onMouseMove, onMouseLeave } = useTilt(2.5);
@@ -56,7 +63,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800 -mt-24 pt-24 overflow-hidden relative">
+    <div className="min-h-screen text-slate-800 -mt-24 pt-24 overflow-hidden relative">
 
       {/* 1. HERO HEADER */}
       <section className="relative py-16 md:py-20 flex items-center justify-center overflow-hidden"
@@ -142,12 +149,12 @@ export default function Contact() {
                 </p>
 
                 <div className="space-y-3">
-                  <a href="mailto:support@zarniskills.com" className="group flex items-start gap-4 p-2.5 rounded-2xl hover:bg-white/10 transition-all duration-300">
+                  <a href={`mailto:${supportEmail}`} className="group flex items-start gap-4 p-2.5 rounded-2xl hover:bg-white/10 transition-all duration-300">
                     <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-primary group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
                       <Mail className="w-5 h-5 text-white group-hover:text-primary transition-colors duration-300 animate-bounce" strokeWidth={2} style={{ animationDelay: '0s' }} />
                     </div>
                     <div className="pt-1.5">
-                      <p className="text-white font-bold text-sm group-hover:underline">support@zarniskills.com</p>
+                      <p className="text-white font-bold text-sm group-hover:underline">{supportEmail}</p>
                       <p className="text-white/60 text-[11px] font-black uppercase tracking-widest mt-0.5">Email Us</p>
                     </div>
                   </a>
@@ -266,7 +273,7 @@ export default function Contact() {
                   )}
                   {status === 'error' && (
                     <div className="relative p-4 rounded-xl bg-red-50 border border-red-200 animate-pulse">
-                      <p className="text-center text-sm font-bold text-red-700">Could not send your message right now. Please email us directly at support@zarniskills.com.</p>
+                      <p className="text-center text-sm font-bold text-red-700">Could not send your message right now. Please email us directly at {supportEmail}.</p>
                     </div>
                   )}
 

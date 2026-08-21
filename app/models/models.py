@@ -10,6 +10,11 @@ def _gen_referral_code():
     return ''.join(secrets.choice(chars) for _ in range(8))
 
 
+def _gen_package_public_code():
+    chars = string.ascii_lowercase + string.digits
+    return ''.join(secrets.choice(chars) for _ in range(10))
+
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
@@ -21,6 +26,10 @@ class User(UserMixin, db.Model):
     profile_image = db.Column(db.String(256), nullable=True)
     bio = db.Column(db.Text, nullable=True)
     about = db.Column(db.Text, nullable=True)
+    age = db.Column(db.Integer, nullable=True)
+    gender = db.Column(db.String(20), nullable=True)
+    category = db.Column(db.String(30), nullable=True)
+    address = db.Column(db.Text, nullable=True)
     # role: admin | student | manager | team_member
     role = db.Column(db.String(20), default='student', nullable=False)
     referral_code = db.Column(db.String(20), unique=True, nullable=False, default=_gen_referral_code)
@@ -147,9 +156,12 @@ class Package(db.Model):
         return None
 
     id = db.Column(db.Integer, primary_key=True)
+    public_code = db.Column(db.String(16), unique=True, nullable=True, default=_gen_package_public_code)
     name = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text)
     price = db.Column(db.Numeric(10, 2), nullable=False)
+    market_price = db.Column(db.Numeric(10, 2), nullable=True)
+    gst_percent = db.Column(db.Numeric(5, 2), nullable=True, default=18.0)
     level1_commission_percent = db.Column(db.Numeric(5, 2), default=10.0)
     level2_commission_percent = db.Column(db.Numeric(5, 2), default=5.0)
     min_income_for_level2 = db.Column(db.Numeric(10, 2), default=500.0)
@@ -251,6 +263,7 @@ class Course(db.Model):
     prerequisites = db.Column(db.Text, nullable=True)
     what_you_learn = db.Column(db.Text, nullable=True)
     certificate = db.Column(db.Boolean, default=False)
+    certificate_template = db.Column(db.Text, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     price = db.Column(db.Numeric(10, 2), nullable=True)
     level1_commission_percent = db.Column(db.Numeric(5, 2), nullable=True)
@@ -952,6 +965,66 @@ class RewardItem(db.Model):
 
     def __repr__(self):
         return f'<RewardItem {self.id}>'
+
+
+class TripGoal(db.Model):
+    """One trip reward a student can qualify for by reaching an active-income
+    target before a deadline.
+
+    Replaces the single `trip_goal_*` SiteSettings keys, which could only ever
+    describe one trip — admins can now run several at once (and keep past ones
+    around), so a student can see which trips they have already earned and
+    which are still open.
+    """
+    __tablename__ = 'trip_goals'
+
+    @property
+    def image_display_url(self):
+        if self.image_filename:
+            if self.image_filename.startswith('http') or self.image_filename.startswith('/'):
+                return self.image_filename
+            return f"/static/img/uploads/{self.image_filename}"
+        return None
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    destination = db.Column(db.String(150), nullable=True)
+    goal_amount = db.Column(db.Numeric(12, 2), nullable=False, default=0)
+    goal_date = db.Column(db.Date, nullable=False)
+    image_filename = db.Column(db.String(500), nullable=True)
+    display_order = db.Column(db.Integer, default=0, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
+                           onupdate=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f'<TripGoal {self.id} {self.title}>'
+
+
+class EmailOtp(db.Model):
+    """One-time code proving someone controls an email address at signup.
+
+    The code is stored hashed, never in plaintext, so a leak of this table
+    can't be used to complete someone else's signup. Rows survive the
+    verification so `register` can check the address was verified recently —
+    otherwise a caller could skip the OTP step and post straight to register.
+    """
+    __tablename__ = 'email_otps'
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(150), nullable=False, index=True)
+    code_hash = db.Column(db.String(256), nullable=False)
+    attempts = db.Column(db.Integer, default=0, nullable=False)
+    verified = db.Column(db.Boolean, default=False, nullable=False)
+    verified_at = db.Column(db.DateTime, nullable=True)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f'<EmailOtp {self.email} verified={self.verified}>'
 
 
 class PlatformFeature(db.Model):

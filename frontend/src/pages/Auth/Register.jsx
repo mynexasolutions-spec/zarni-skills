@@ -27,8 +27,11 @@ export default function Register() {
   const [searchParams] = useSearchParams();
 
   const [packages, setPackages] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [packagesLoading, setPackagesLoading] = useState(true);
   const [selectedPkgId, setSelectedPkgId] = useState('');
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [planTab, setPlanTab] = useState('package');
   const [step, setStep] = useState(1);
   const [fieldConfig, setFieldConfig] = useState({});
 
@@ -39,6 +42,13 @@ export default function Register() {
   // Form State
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  // Email OTP: the address must be proven before the account is created.
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpBusy, setOtpBusy] = useState(false);
+  const [otpMsg, setOtpMsg] = useState({ type: '', text: '' });
+  const [otpCooldown, setOtpCooldown] = useState(0);
   const [confirmEmail, setConfirmEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [state, setState] = useState('');
@@ -67,9 +77,36 @@ export default function Register() {
     const fetchPackages = async () => {
       try {
         setPackagesLoading(true);
-        const response = await api.get('/global-data');
-        setPackages(response.data.packages || []);
-        setFieldConfig(response.data.registration_field_config || {});
+        const [globalRes, coursesRes] = await Promise.all([
+          api.get('/global-data'),
+          api.get('/courses'),
+        ]);
+        const fetchedPackages = globalRes.data.packages || [];
+        // Only courses the admin has priced for standalone purchase show up here —
+        // the rest are package-only and have no individual checkout path.
+        const fetchedCourses = (coursesRes.data.courses || []).filter((c) => c.price);
+        setPackages(fetchedPackages);
+        setCourses(fetchedCourses);
+        setFieldConfig(globalRes.data.registration_field_config || {});
+
+        // Affiliate deep links carry ?package_id=X or ?course_id=X so the referred
+        // student lands straight on that plan, pre-selected, instead of picking again.
+        const packageIdFromUrl = searchParams.get('package_id');
+        const courseIdFromUrl = searchParams.get('course_id');
+        if (courseIdFromUrl) {
+          const matchedCourse = fetchedCourses.find((c) => String(c.id) === courseIdFromUrl);
+          if (matchedCourse) {
+            setSelectedCourseId(matchedCourse.id);
+            setPlanTab('course');
+            setStep(2);
+          }
+        } else if (packageIdFromUrl) {
+          const matchedPkg = fetchedPackages.find((p) => p.public_code === packageIdFromUrl);
+          if (matchedPkg) {
+            setSelectedPkgId(matchedPkg.id);
+            setStep(2);
+          }
+        }
       } catch (err) {
         console.error('Error fetching packages', err);
       } finally {
@@ -140,14 +177,85 @@ export default function Register() {
   const isPasswordMatching = password !== '' && password === confirmPassword;
 
   const selectedPackage = packages.find(p => p.id === selectedPkgId);
+  const selectedCourse = courses.find(c => c.id === selectedCourseId);
 
   const handleSelectPackage = (pkgId) => {
     setSelectedPkgId(pkgId);
+    setSelectedCourseId('');
+  };
+
+  const handleSelectCourse = (courseId) => {
+    setSelectedCourseId(courseId);
+    setSelectedPkgId('');
+  };
+
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const t = setTimeout(() => setOtpCooldown((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [otpCooldown]);
+
+  // Editing the address after verifying has to invalidate it, otherwise a
+  // verified code for one email would wave through a different one.
+  const onEmailChange = (value) => {
+    setEmail(value);
+    if (otpVerified || otpSent) {
+      setOtpVerified(false);
+      setOtpSent(false);
+      setOtpCode('');
+      setOtpMsg({ type: '', text: '' });
+    }
+  };
+
+  const sendOtp = async () => {
+    if (!isEmailValid) {
+      setOtpMsg({ type: 'error', text: 'Enter a valid email address first.' });
+      return;
+    }
+    setOtpBusy(true);
+    setOtpMsg({ type: '', text: '' });
+    try {
+      const res = await api.post('/auth/send-otp', { email: email.trim(), name: name.trim() });
+      if (res.data?.success) {
+        setOtpSent(true);
+        setOtpCooldown(60);
+        setOtpMsg({ type: 'success', text: `Code sent to ${email.trim()}. Check your inbox.` });
+      } else {
+        setOtpMsg({ type: 'error', text: res.data?.message || 'Could not send the code.' });
+      }
+    } catch (err) {
+      if (err.response?.data?.retry_after) setOtpCooldown(err.response.data.retry_after);
+      setOtpMsg({ type: 'error', text: err.response?.data?.message || 'Could not send the code. Try again.' });
+    } finally {
+      setOtpBusy(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (otpCode.trim().length !== 6) {
+      setOtpMsg({ type: 'error', text: 'Enter the 6-digit code.' });
+      return;
+    }
+    setOtpBusy(true);
+    setOtpMsg({ type: '', text: '' });
+    try {
+      const res = await api.post('/auth/verify-otp', { email: email.trim(), code: otpCode.trim() });
+      if (res.data?.success) {
+        setOtpVerified(true);
+        setOtpMsg({ type: 'success', text: 'Email verified.' });
+      } else {
+        setOtpMsg({ type: 'error', text: res.data?.message || 'Incorrect code.' });
+      }
+    } catch (err) {
+      setOtpMsg({ type: 'error', text: err.response?.data?.message || 'Incorrect code.' });
+    } finally {
+      setOtpBusy(false);
+    }
   };
 
   const handleNextStep = () => {
-    if (!selectedPkgId) {
-      setError('Please select a package to continue');
+    if (!selectedPkgId && !selectedCourseId) {
+      setError(planTab === 'course' ? 'Please select a course to continue' : 'Please select a package to continue');
       return;
     }
     setError('');
@@ -183,6 +291,10 @@ export default function Register() {
       setError('Email addresses do not match');
       return;
     }
+    if (!otpVerified) {
+      setError('Please verify your email address with the code we sent.');
+      return;
+    }
     if (!isFieldHidden('phone') && isFieldRequired('phone') && !isPhoneValid) {
       if (phone.length < 10) {
         setError('Mobile number must be exactly 10 digits');
@@ -207,8 +319,8 @@ export default function Register() {
       setError('Passwords do not match');
       return;
     }
-    if (!selectedPkgId) {
-      setError('Please select a package to continue');
+    if (!selectedPkgId && !selectedCourseId) {
+      setError('Please select a package or a course to continue');
       setStep(1);
       return;
     }
@@ -226,7 +338,8 @@ export default function Register() {
       formData.append('state', state.trim());
       formData.append('dob', dob);
       formData.append('password', password);
-      formData.append('package_id', selectedPkgId);
+      if (selectedPkgId) formData.append('package_id', selectedPkgId);
+      if (selectedCourseId) formData.append('course_id', selectedCourseId);
       if (referralCode) {
         formData.append('referral_code', referralCode.trim());
       }
@@ -234,7 +347,18 @@ export default function Register() {
       const result = await register(formData);
       if (result.success) {
         const role = result.user?.role;
-        navigate(role === 'admin' ? '/admin' : '/student');
+        if (role === 'admin') {
+          navigate('/admin');
+        } else if (selectedCourseId) {
+          // No referral code on this account means buyer.referrer is null, so
+          // process_commissions() pays out nothing — the full amount stays
+          // with the company, exactly like a direct package purchase.
+          navigate(`/student/checkout?course_id=${selectedCourseId}`);
+        } else if (selectedPkgId) {
+          navigate(`/student/checkout?package_id=${selectedPackage?.public_code}`);
+        } else {
+          navigate('/student');
+        }
       } else {
         setError(result.message || 'Registration failed. Please try again.');
       }
@@ -306,19 +430,19 @@ export default function Register() {
               {/* Step 2 Tab */}
               <button
                 type="button"
-                onClick={() => selectedPkgId && setStep(2)}
-                disabled={!selectedPkgId}
+                onClick={() => (selectedPkgId || selectedCourseId) && setStep(2)}
+                disabled={!selectedPkgId && !selectedCourseId}
                 className={`flex-1 flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-xl transition-all duration-300 text-left ${
                   step === 2 
                     ? 'bg-primary/10 border border-primary/30 text-primary shadow-sm font-bold'
-                    : selectedPkgId 
-                    ? 'hover:bg-slate-100/80 text-slate-600 cursor-pointer' 
+                    : (selectedPkgId || selectedCourseId)
+                    ? 'hover:bg-slate-100/80 text-slate-600 cursor-pointer'
                     : 'opacity-50 cursor-not-allowed text-slate-400'
                 }`}
               >
                 <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center font-black text-xs sm:text-sm shrink-0 transition-all ${
-                  step === 2 
-                    ? 'bg-gradient-to-br from-primary to-indigo-600 text-white shadow-md shadow-primary/30' 
+                  step === 2
+                    ? 'bg-gradient-to-br from-primary to-indigo-600 text-white shadow-md shadow-primary/30'
                     : 'bg-slate-200 text-slate-500'
                 }`}>
                   2
@@ -346,14 +470,113 @@ export default function Register() {
         {/* Step 1: Package Selection */}
         {step === 1 ? (
           <div className="w-full max-w-5xl relative z-10 px-0 sm:px-0">
+            {/* Plan Type Tabs */}
+            <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
+              <div className="inline-flex p-1 rounded-full bg-white border border-slate-200 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setPlanTab('package')}
+                  className={`px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-bold transition-all ${
+                    planTab === 'package' ? 'bg-primary text-white shadow-md shadow-primary/25' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Packages
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlanTab('course')}
+                  className={`px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-bold transition-all ${
+                    planTab === 'course' ? 'bg-primary text-white shadow-md shadow-primary/25' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Individual Courses
+                </button>
+              </div>
+            </div>
+
             {packagesLoading ? (
               <div className="flex flex-col items-center justify-center py-16 sm:py-20 bg-white/80 backdrop-blur-xl rounded-3xl border border-slate-200 shadow-lg">
                 <div className="relative w-12 h-12 sm:w-16 sm:h-16 mb-4">
                   <div className="absolute inset-0 rounded-full border-4 border-slate-200"></div>
                   <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
                 </div>
-                <p className="text-slate-700 text-sm sm:text-base font-bold">Loading available packages...</p>
+                <p className="text-slate-700 text-sm sm:text-base font-bold">Loading available plans...</p>
                 <p className="text-xs text-slate-500 mt-1">Please wait a moment</p>
+              </div>
+            ) : planTab === 'course' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
+                {courses.length > 0 ? courses.map((course) => {
+                  const isSelected = selectedCourseId === course.id;
+                  return (
+                    <div
+                      key={course.id}
+                      onClick={() => handleSelectCourse(course.id)}
+                      className={`group relative rounded-2xl sm:rounded-3xl p-[2px] transition-all duration-300 cursor-pointer ${
+                        isSelected
+                          ? 'bg-gradient-to-b from-primary via-indigo-600 to-indigo-700 shadow-xl shadow-primary/20 -translate-y-1 sm:-translate-y-2'
+                          : 'bg-gradient-to-b from-slate-200/80 to-slate-200/40 hover:border-primary/50 hover:-translate-y-1 hover:shadow-lg'
+                      }`}
+                    >
+                      <div className={`h-full rounded-[calc(1rem-2px)] sm:rounded-[calc(1.5rem-2px)] p-5 sm:p-7 flex flex-col justify-between transition-colors ${
+                        isSelected ? 'bg-white' : 'bg-white/90 group-hover:bg-white'
+                      }`}>
+                        <div>
+                          <div className="flex items-center justify-between flex-wrap gap-2 mb-3 sm:mb-4">
+                            <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider border border-slate-200">
+                              <Layers className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" /> Single Course
+                            </span>
+                            {isSelected && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] sm:text-xs font-bold animate-pulse">
+                                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600" /> Selected
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2 group-hover:text-primary transition-colors">
+                            {course.title}
+                          </h3>
+
+                          <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-slate-100">
+                            <div className="flex items-baseline gap-2 flex-wrap">
+                              <span className="text-3xl sm:text-4xl font-black text-slate-900">₹{course.price}</span>
+                            </div>
+                            <p className="text-[11px] sm:text-xs text-slate-500 mt-1">One-time payment • Lifetime access to this course only</p>
+                          </div>
+
+                          {course.lesson_count > 0 && (
+                            <p className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 mb-5 sm:mb-6">
+                              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
+                              </div>
+                              {course.lesson_count} lesson{course.lesson_count === 1 ? '' : 's'}{course.level ? ` • ${course.level}` : ''}
+                            </p>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          className={`w-full py-3 sm:py-3.5 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg shadow-primary/30 ring-2 ring-primary/40'
+                              : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-900'
+                          }`}
+                        >
+                          {isSelected ? (
+                            <>
+                              <BadgeCheck className="w-4 h-4" /> Selected Course
+                            </>
+                          ) : (
+                            'Select Course'
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }) : (
+                  <div className="col-span-full text-center py-12 bg-white/80 rounded-3xl border border-slate-200">
+                    <p className="text-slate-600 font-semibold">No courses are available for individual purchase right now</p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
@@ -454,7 +677,7 @@ export default function Register() {
             )}
 
             {/* Bottom Action Button for Step 1 */}
-            {selectedPkgId && (
+            {(selectedPkgId || selectedCourseId) && (
               <div className="flex flex-col items-center justify-center gap-2.5 pt-2">
                 <button
                   type="button"
@@ -464,7 +687,11 @@ export default function Register() {
                   <span className="relative z-10">Proceed to Step 2: Fill Details</span>
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 relative z-10 transition-transform group-hover:translate-x-1" />
                 </button>
-                <p className="text-xs text-slate-500 font-medium text-center">Selected plan: <strong className="text-primary font-bold">{selectedPackage?.name}</strong> (₹{selectedPackage?.price})</p>
+                {selectedCourseId ? (
+                  <p className="text-xs text-slate-500 font-medium text-center">Selected course: <strong className="text-primary font-bold">{selectedCourse?.title}</strong> (₹{selectedCourse?.price})</p>
+                ) : (
+                  <p className="text-xs text-slate-500 font-medium text-center">Selected plan: <strong className="text-primary font-bold">{selectedPackage?.name}</strong> (₹{selectedPackage?.price})</p>
+                )}
               </div>
             )}
           </div>
@@ -472,16 +699,18 @@ export default function Register() {
           /* Step 2: Registration Form */
           <div className="w-full max-w-2xl relative z-10 px-0 sm:px-0">
             
-            {/* Selected Package Banner Summary */}
-            {selectedPackage && (
+            {/* Selected Plan Banner Summary */}
+            {(selectedPackage || selectedCourse) && (
               <div className="mb-4 sm:mb-6 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 border border-blue-200 backdrop-blur-xl shadow-sm sm:shadow-md flex flex-row items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
                     <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">Selected Plan</p>
-                    <p className="text-sm sm:text-base font-black text-slate-900 truncate">{selectedPackage.name} — <span className="text-primary">₹{selectedPackage.price}</span></p>
+                    <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">{selectedCourse ? 'Selected Course' : 'Selected Plan'}</p>
+                    <p className="text-sm sm:text-base font-black text-slate-900 truncate">
+                      {selectedCourse ? selectedCourse.title : selectedPackage.name} — <span className="text-primary">₹{selectedCourse ? selectedCourse.price : selectedPackage.price}</span>
+                    </p>
                   </div>
                 </div>
                 <button
@@ -569,7 +798,7 @@ export default function Register() {
                             required
                             placeholder="you@example.com"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => onEmailChange(e.target.value)}
                             onBlur={() => markTouched('email')}
                             className={`w-full pl-10 pr-9 py-2.5 sm:py-3 rounded-xl border text-sm font-medium bg-slate-50/70 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 transition-all ${
                               touched.email && isEmailValid
@@ -622,6 +851,87 @@ export default function Register() {
                         </div>
                         {confirmEmail && !isEmailMatching && (
                           <p className="text-[11px] text-red-600 font-semibold mt-1">Emails do not match</p>
+                        )}
+                      </div>
+
+                      {/* Email verification — the account can't be created until the
+                          address is proven, and the server re-checks this on register. */}
+                      <div className={`rounded-2xl border p-3.5 sm:p-4 transition-colors ${
+                        otpVerified ? 'border-emerald-200 bg-emerald-50/60' : 'border-slate-200 bg-slate-50/70'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-2.5">
+                          <span className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                            otpVerified ? 'bg-emerald-500' : 'bg-slate-200'
+                          }`}>
+                            {otpVerified
+                              ? <CheckCircle2 className="w-4 h-4 text-white" strokeWidth={2.6} />
+                              : <Mail className="w-3.5 h-3.5 text-slate-500" />}
+                          </span>
+                          <p className="text-xs font-black uppercase tracking-wider text-slate-700">
+                            {otpVerified ? 'Email Verified' : 'Verify Your Email *'}
+                          </p>
+                        </div>
+
+                        {otpVerified ? (
+                          <p className="text-[11px] font-semibold text-emerald-700 leading-relaxed">
+                            {email.trim()} is confirmed. You can finish creating your account.
+                          </p>
+                        ) : (
+                          <>
+                            {!otpSent ? (
+                              <>
+                                <p className="text-[11px] text-slate-500 leading-relaxed mb-2.5">
+                                  We'll email a 6-digit code to confirm this address is yours.
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={sendOtp}
+                                  disabled={otpBusy || !isEmailValid || otpCooldown > 0}
+                                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary to-indigo-600 text-white text-[11px] font-black uppercase tracking-widest shadow-md shadow-primary/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+                                >
+                                  {otpBusy ? 'Sending…' : otpCooldown > 0 ? `Resend in ${otpCooldown}s` : 'Send Verification Code'}
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={6}
+                                    placeholder="6-digit code"
+                                    value={otpCode}
+                                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                                    className="flex-1 min-w-0 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-black tracking-[0.3em] text-center text-slate-900 placeholder:tracking-normal placeholder:font-medium placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/15 focus:border-primary transition-all"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={verifyOtp}
+                                    disabled={otpBusy || otpCode.length !== 6}
+                                    className="shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-indigo-600 text-white text-[11px] font-black uppercase tracking-widest shadow-md shadow-primary/20 disabled:opacity-50 transition-all"
+                                  >
+                                    {otpBusy ? '…' : 'Verify'}
+                                  </button>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={sendOtp}
+                                  disabled={otpBusy || otpCooldown > 0}
+                                  className="text-[11px] font-bold text-primary hover:underline mt-2 disabled:text-slate-400 disabled:no-underline"
+                                >
+                                  {otpCooldown > 0 ? `Resend code in ${otpCooldown}s` : 'Resend code'}
+                                </button>
+                              </>
+                            )}
+                          </>
+                        )}
+
+                        {otpMsg.text && (
+                          <p className={`text-[11px] font-semibold mt-2 leading-relaxed ${
+                            otpMsg.type === 'success' ? 'text-emerald-700' : 'text-red-600'
+                          }`}>
+                            {otpMsg.text}
+                          </p>
                         )}
                       </div>
 

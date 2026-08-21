@@ -21,7 +21,7 @@ export default function TeamMemberDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Unlocking Team Details...</p>
@@ -32,7 +32,7 @@ export default function TeamMemberDetail() {
 
   if (notFound || !member) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 -mt-24 pt-24">
+      <div className="min-h-screen flex items-center justify-center px-4 -mt-24 pt-24">
         <div className="max-w-md w-full text-center bg-white border border-slate-200 rounded-3xl p-8 sm:p-10 shadow-lg">
           <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center mx-auto mb-4 text-amber-500">
             <Star className="w-8 h-8" strokeWidth={1.5} />
@@ -52,7 +52,7 @@ export default function TeamMemberDetail() {
   const accent = member.color || '#2563eb';
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800 -mt-24 pt-24 pb-24 relative overflow-hidden">
+    <div className="min-h-screen text-slate-800 -mt-24 pt-24 pb-24 relative overflow-hidden">
 
       {/* Animated Floating Neon Spheres */}
       <div className="absolute top-[12%] left-[10%] w-[500px] h-[500px] bg-blue-400/10 blur-[140px] rounded-full pointer-events-none z-0 animate-pulse"></div>

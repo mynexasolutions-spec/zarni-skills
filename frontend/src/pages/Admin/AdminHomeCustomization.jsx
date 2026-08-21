@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
-  GalleryHorizontal, Briefcase, Plus, Pencil, Trash2, X, ImagePlus, CheckCircle2, LayoutTemplate, Sparkles,
+  GalleryHorizontal, Briefcase, Plus, Pencil, Trash2, X, ImagePlus, CheckCircle2, Check, LayoutTemplate, Sparkles,
   HelpCircle, PlayCircle, Quote, Save, Star, Trophy, LayoutGrid, User, Activity, Shield, Award, TrendingUp, Zap, Target, Gift, Medal, ChevronDown, ExternalLink
 } from 'lucide-react';
 import api from '../../utils/api';
@@ -13,9 +13,60 @@ const EMPTY_HERO_FORM = { heading_line1: '', heading_line2: '', paragraph: '', d
 const EMPTY_FAQ_FORM = { question: '', answer: '', display_order: '0', is_active: true };
 const EMPTY_STORY_FORM = { name: '', role: '', headline: '', duration: '', display_order: '0', is_active: true };
 const EMPTY_TESTIMONIAL_FORM = { name: '', role: '', text: '', display_order: '0', is_active: true };
-const EMPTY_REWARD_FORM = { label: '', gradient: 'from-blue-600 to-indigo-600', is_popular: false, display_order: '0', is_active: true };
 const EMPTY_PLATFORM_FORM = { title: '', description: '', icon: 'Star', gradient: 'from-blue-600 to-indigo-600', display_order: '0', is_active: true };
+const EMPTY_REWARDS_CONTENT = {
+  badge_text: '', heading_line1: '', heading_line2: '', ribbon_text: '',
+  description: '', description_highlight: '',
+  intro_features: [], perks: [],
+  cta_title: '', cta_subtitle: '', cta_button_text: '', cta_button_link: '',
+  is_active: true,
+};
 const HERO_SLIDES_LIMIT = 5;
+
+// Small local editors for the Achievement Rewards content form.
+function RewardField({ label, value, onChange, placeholder, textarea }) {
+  const cls = 'w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow';
+  return (
+    <div>
+      <label className="block text-[11px] font-black text-slate-400 mb-1.5 uppercase tracking-widest">{label}</label>
+      {textarea ? (
+        <textarea rows={2} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`${cls} resize-none`} />
+      ) : (
+        <input value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={cls} />
+      )}
+    </div>
+  );
+}
+
+function RewardListEditor({ items, onChange, titlePlaceholder, descPlaceholder }) {
+  const list = items || [];
+  const update = (i, key, val) => onChange(list.map((it, idx) => (idx === i ? { ...it, [key]: val } : it)));
+  const remove = (i) => onChange(list.filter((_, idx) => idx !== i));
+  const inputCls = 'w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400';
+  return (
+    <div className="space-y-3">
+      {list.map((item, i) => (
+        <div key={i} className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+          <div className="flex justify-end -mt-1 -mr-1">
+            <button type="button" onClick={() => remove(i)} className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <input value={item.title || ''} onChange={(e) => update(i, 'title', e.target.value)} placeholder={titlePlaceholder} className={inputCls} />
+          <input value={item.desc || ''} onChange={(e) => update(i, 'desc', e.target.value)} placeholder={descPlaceholder} className={inputCls} />
+        </div>
+      ))}
+      {list.length === 0 && <p className="text-xs text-slate-400">No items — this block will be hidden on the site.</p>}
+      <button
+        type="button"
+        onClick={() => onChange([...list, { title: '', desc: '' }])}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wide hover:bg-red-100 transition-colors"
+      >
+        <Plus className="w-3.5 h-3.5" /> Add
+      </button>
+    </div>
+  );
+}
 
 const GRADIENT_OPTIONS = [
   'from-blue-600 to-indigo-600',
@@ -115,16 +166,11 @@ export default function AdminHomeCustomization() {
   const [statsSaving, setStatsSaving] = useState(false);
   const [statsMsg, setStatsMsg] = useState('');
 
-  // ── Reward Items state ───────────────────────────────────────
-  const [rewardItems, setRewardItems] = useState([]);
-  const [rewardsLoading, setRewardsLoading] = useState(true);
-  const [showRewardForm, setShowRewardForm] = useState(false);
-  const [editingRewardId, setEditingRewardId] = useState(null);
-  const [rewardForm, setRewardForm] = useState(EMPTY_REWARD_FORM);
-  const [rewardImageFile, setRewardImageFile] = useState(null);
-  const [rewardImagePreview, setRewardImagePreview] = useState(null);
-  const [rewardSaving, setRewardSaving] = useState(false);
-  const [rewardError, setRewardError] = useState('');
+  // ── Achievement Rewards section content (text-only, no imagery) ──
+  const [rewardsContent, setRewardsContent] = useState(EMPTY_REWARDS_CONTENT);
+  const [rewardsSaving, setRewardsSaving] = useState(false);
+  const [rewardsSaved, setRewardsSaved] = useState(false);
+  const [rewardsError, setRewardsError] = useState('');
 
   // ── Platform Features state ──────────────────────────────────
   const [platformFeatures, setPlatformFeatures] = useState([]);
@@ -205,14 +251,12 @@ export default function AdminHomeCustomization() {
     }
   };
 
-  const fetchRewardItems = async () => {
+  const fetchRewardsContent = async () => {
     try {
-      const res = await api.get('/admin/reward-items');
-      setRewardItems(res.data.reward_items || []);
+      const res = await api.get('/admin/achievement-rewards');
+      setRewardsContent({ ...EMPTY_REWARDS_CONTENT, ...(res.data.content || {}) });
     } catch (err) {
       console.error(err);
-    } finally {
-      setRewardsLoading(false);
     }
   };
 
@@ -230,7 +274,7 @@ export default function AdminHomeCustomization() {
   useEffect(() => {
     fetchHeroSlides(); fetchBanners(); fetchTeam();
     fetchFaqs(); fetchStories(); fetchTestimonials();
-    fetchRewardItems(); fetchPlatformFeatures();
+    fetchRewardsContent(); fetchPlatformFeatures();
   }, []);
 
   // ── Hero Slide handlers ───────────────────────────────────────
@@ -711,80 +755,26 @@ export default function AdminHomeCustomization() {
     }
   };
 
-  // ── Reward Item handlers ──────────────────────────────────────
-  const openCreateReward = () => {
-    setEditingRewardId(null);
-    setRewardForm(EMPTY_REWARD_FORM);
-    setRewardImageFile(null);
-    setRewardImagePreview(null);
-    setRewardError('');
-    setShowRewardForm(true);
-  };
+  // ── Achievement Rewards content handlers ──────────────────────
+  const setRewardsField = (key, value) => setRewardsContent(prev => ({ ...prev, [key]: value }));
 
-  const openEditReward = (item) => {
-    setEditingRewardId(item.id);
-    setRewardForm({
-      label: item.label || '',
-      gradient: item.gradient || 'from-blue-600 to-indigo-600',
-      is_popular: !!item.is_popular,
-      display_order: String(item.display_order ?? 0),
-      is_active: item.is_active !== false,
-    });
-    setRewardImageFile(null);
-    setRewardImagePreview(item.image_display_url || null);
-    setRewardError('');
-    setShowRewardForm(true);
-  };
-
-  const handleRewardImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setRewardImageFile(file);
-    setRewardImagePreview(URL.createObjectURL(file));
-  };
-
-  const handleRewardSubmit = async (e) => {
+  const handleRewardsSubmit = async (e) => {
     e.preventDefault();
-    if (!rewardForm.label.trim()) {
-      setRewardError('Label is required.');
-      return;
-    }
-    setRewardSaving(true);
-    setRewardError('');
+    setRewardsSaving(true);
+    setRewardsError('');
+    setRewardsSaved(false);
     try {
-      const fd = new FormData();
-      fd.append('label', rewardForm.label);
-      fd.append('gradient', rewardForm.gradient);
-      fd.append('is_popular', rewardForm.is_popular ? 'true' : 'false');
-      fd.append('display_order', rewardForm.display_order || '0');
-      fd.append('is_active', rewardForm.is_active ? 'true' : 'false');
-      if (rewardImageFile) fd.append('image_file', rewardImageFile);
-
-      const headers = { headers: { 'Content-Type': 'multipart/form-data' } };
-      const response = editingRewardId
-        ? await api.put(`/admin/reward-items/${editingRewardId}`, fd, headers)
-        : await api.post('/admin/reward-items', fd, headers);
-
+      const response = await api.post('/admin/achievement-rewards', rewardsContent);
       if (response.data.success) {
-        setShowRewardForm(false);
-        fetchRewardItems();
+        setRewardsSaved(true);
+        setTimeout(() => setRewardsSaved(false), 3000);
       } else {
-        setRewardError(response.data.message || 'Failed to save reward.');
+        setRewardsError(response.data.message || 'Failed to save section.');
       }
     } catch (err) {
-      setRewardError(err.response?.data?.message || 'Failed to save reward.');
+      setRewardsError(err.response?.data?.message || 'Failed to save section.');
     } finally {
-      setRewardSaving(false);
-    }
-  };
-
-  const handleRewardDelete = async (id) => {
-    if (!window.confirm('Permanently delete this reward? This cannot be undone.')) return;
-    try {
-      await api.delete(`/admin/reward-items/${id}`);
-      fetchRewardItems();
-    } catch (err) {
-      console.error(err);
+      setRewardsSaving(false);
     }
   };
 
@@ -847,7 +837,7 @@ export default function AdminHomeCustomization() {
     }
   };
 
-  const loading = heroLoading || bannersLoading || teamLoading || faqLoading || storiesLoading || testimonialsLoading || rewardsLoading || platformLoading;
+  const loading = heroLoading || bannersLoading || teamLoading || faqLoading || storiesLoading || testimonialsLoading || platformLoading;
 
   if (loading) {
     return (
@@ -988,11 +978,14 @@ export default function AdminHomeCustomization() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {banners.map((banner, idx) => (
               <div key={banner.id} className="group bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: `${idx * 70}ms` }}>
-                <div className="aspect-video bg-slate-100 relative overflow-hidden">
+                {/* No fixed aspect ratio / object-cover here — a homepage banner is
+                    a full designed graphic, so it must be previewed uncropped at its
+                    own proportions, exactly as it renders on the site. */}
+                <div className="bg-slate-100 relative overflow-hidden">
                   {banner.image_display_url ? (
-                    <img src={banner.image_display_url} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={banner.image_display_url} alt="" className="block w-full h-auto" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-red-200">
+                    <div className="w-full aspect-video flex items-center justify-center text-red-200">
                       <GalleryHorizontal className="w-10 h-10" />
                     </div>
                   )}
@@ -1257,56 +1250,97 @@ export default function AdminHomeCustomization() {
       )}
 
       {/* ── Achievement Rewards tab ───────────────────────────── */}
+      {/* Text-only section now — no reward imagery. Every string the public
+          "Achievement Rewards" block renders is edited from this one form. */}
       {tab === 'rewards' && (
-        <>
-          <div className="flex justify-end mb-4">
-            <button onClick={openCreateReward} className="group relative overflow-hidden px-4 py-2.5 bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-md shadow-red-600/25 hover:shadow-xl transition-all active:scale-[0.98]">
-              <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent"></span>
-              <Plus className="w-4 h-4 relative" /> <span className="relative">Add Reward</span>
-            </button>
-          </div>
+        <div className="max-w-3xl">
+          {rewardsSaved && (
+            <div className="p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-xs font-bold mb-6 flex items-center gap-2 animate-scale-in">
+              <Check className="w-4 h-4" /> Achievement Rewards section saved.
+            </div>
+          )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6">
-            {rewardItems.map((item, idx) => (
-              <div key={item.id} className="group bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: `${idx * 70}ms` }}>
-                <div className="aspect-square bg-slate-100 relative overflow-hidden flex items-center justify-center p-4">
-                  {item.image_display_url ? (
-                    <img src={item.image_display_url} alt={item.label} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-red-200">
-                      <Trophy className="w-10 h-10" />
-                    </div>
-                  )}
-                  <span className={`absolute top-3 left-3 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
-                    item.is_active !== false ? 'bg-emerald-500 text-white' : 'bg-slate-500 text-white'
-                  }`}>{item.is_active !== false ? 'Active' : 'Inactive'}</span>
-                  {item.is_popular && (
-                    <span className="absolute top-3 right-3 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                      Popular
-                    </span>
-                  )}
+          <form onSubmit={handleRewardsSubmit} className="space-y-6">
+
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-black text-slate-900">Section Header</h3>
+                  <p className="text-xs text-slate-400">Badge, the two-line heading, ribbon and intro paragraph.</p>
                 </div>
-                <div className="p-4">
-                  <h3 className="font-black text-slate-900 text-sm leading-snug break-words">{item.label}</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Order {item.display_order}</p>
-                  <div className="flex gap-2 mt-3">
-                    <button onClick={() => openEditReward(item)} className="flex-1 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:border-red-300 hover:text-red-600 flex items-center justify-center gap-1.5">
-                      <Pencil className="w-3.5 h-3.5" /> Edit
-                    </button>
-                    <button onClick={() => handleRewardDelete(item.id)} className="flex-1 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:border-red-300 hover:text-red-600 flex items-center justify-center gap-1.5">
-                      <Trash2 className="w-3.5 h-3.5" /> Delete
-                    </button>
-                  </div>
-                </div>
+                <label className="flex items-center gap-2 shrink-0 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={rewardsContent.is_active !== false}
+                    onChange={(e) => setRewardsField('is_active', e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-400"
+                  />
+                  <span className="text-xs font-bold text-slate-600">Show section</span>
+                </label>
               </div>
-            ))}
-            {rewardItems.length === 0 && (
-              <div className="col-span-full text-center py-16 bg-white rounded-3xl border border-slate-100 text-slate-400 font-medium">
-                No rewards yet. They'll appear in the "Achievement Rewards" milestone strip on the About page.
+
+              <RewardField label="Badge Text" value={rewardsContent.badge_text} onChange={(v) => setRewardsField('badge_text', v)} placeholder="Level Up & Cash In" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <RewardField label="Heading Line 1 (coloured)" value={rewardsContent.heading_line1} onChange={(v) => setRewardsField('heading_line1', v)} placeholder="Achievement" />
+                <RewardField label="Heading Line 2 (dark)" value={rewardsContent.heading_line2} onChange={(v) => setRewardsField('heading_line2', v)} placeholder="Rewards" />
               </div>
+              <RewardField label="Ribbon Text" value={rewardsContent.ribbon_text} onChange={(v) => setRewardsField('ribbon_text', v)} placeholder="Earn More, Achieve More!" />
+              <RewardField label="Description" value={rewardsContent.description} onChange={(v) => setRewardsField('description', v)} placeholder="Your hard work deserves the best rewards..." textarea />
+              <RewardField label="Description Highlight (shown in blue)" value={rewardsContent.description_highlight} onChange={(v) => setRewardsField('description_highlight', v)} placeholder="unlock exciting gifts along the way!" />
+            </div>
+
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+              <div>
+                <h3 className="font-black text-slate-900">Intro Features</h3>
+                <p className="text-xs text-slate-400">The small icon cards under the heading. Remove all to hide them.</p>
+              </div>
+              <RewardListEditor
+                items={rewardsContent.intro_features}
+                onChange={(v) => setRewardsField('intro_features', v)}
+                titlePlaceholder="Achieve"
+                descPlaceholder="Set your income goals and keep growing."
+              />
+            </div>
+
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+              <div>
+                <h3 className="font-black text-slate-900">Perks Strip</h3>
+                <p className="text-xs text-slate-400">The white bar of benefits. Remove all to hide the strip.</p>
+              </div>
+              <RewardListEditor
+                items={rewardsContent.perks}
+                onChange={(v) => setRewardsField('perks', v)}
+                titlePlaceholder="No Time Limit"
+                descPlaceholder="Achieve at your own pace."
+              />
+            </div>
+
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+              <div>
+                <h3 className="font-black text-slate-900">Bottom CTA Bar</h3>
+                <p className="text-xs text-slate-400">The dark call-to-action band at the end of the section.</p>
+              </div>
+              <RewardField label="CTA Title" value={rewardsContent.cta_title} onChange={(v) => setRewardsField('cta_title', v)} placeholder="Your Success, Your Reward!" />
+              <RewardField label="CTA Subtitle" value={rewardsContent.cta_subtitle} onChange={(v) => setRewardsField('cta_subtitle', v)} placeholder="The more you achieve, the more you earn." />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <RewardField label="Button Text" value={rewardsContent.cta_button_text} onChange={(v) => setRewardsField('cta_button_text', v)} placeholder="Start Your Journey" />
+                <RewardField label="Button Link" value={rewardsContent.cta_button_link} onChange={(v) => setRewardsField('cta_button_link', v)} placeholder="/register" />
+              </div>
+            </div>
+
+            {rewardsError && (
+              <div className="p-3 bg-red-50 border border-red-100 text-red-700 rounded-xl text-xs font-bold">{rewardsError}</div>
             )}
-          </div>
-        </>
+
+            <button
+              type="submit"
+              disabled={rewardsSaving}
+              className="px-6 py-3 bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md shadow-red-600/25 hover:shadow-xl transition-all disabled:opacity-60"
+            >
+              {rewardsSaving ? 'Saving...' : 'Save Section'}
+            </button>
+          </form>
+        </div>
       )}
 
       {/* ── About Platform tab ────────────────────────────────── */}
@@ -1461,8 +1495,8 @@ export default function AdminHomeCustomization() {
               <div>
                 <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Banner Image *</p>
                 <div className="flex items-center gap-4">
-                  <div className="w-40 aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-red-50 to-rose-50 border border-slate-100 flex items-center justify-center shrink-0">
-                    {bannerImagePreview ? <img src={bannerImagePreview} className="w-full h-full object-cover" alt="" /> : <ImagePlus className="w-7 h-7 text-red-200" />}
+                  <div className="w-56 aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-red-50 to-rose-50 border border-slate-100 flex items-center justify-center shrink-0">
+                    {bannerImagePreview ? <img src={bannerImagePreview} className="max-w-full max-h-full object-contain" alt="" /> : <ImagePlus className="w-7 h-7 text-red-200" />}
                   </div>
                   <label className="px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 cursor-pointer hover:border-red-300 hover:text-red-600 transition-colors">
                     {bannerImagePreview ? 'Replace Image' : 'Upload Image'}
@@ -1838,91 +1872,6 @@ export default function AdminHomeCustomization() {
               <button type="submit" form="testimonial-form" disabled={testimonialSaving} className="group relative overflow-hidden flex-1 py-3 bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-60 flex items-center justify-center gap-2 shadow-md shadow-red-600/25 hover:shadow-xl transition-all active:scale-[0.98]">
                 {!testimonialSaving && <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent"></span>}
                 <span className="relative flex items-center gap-2">{testimonialSaving ? 'Saving...' : <><CheckCircle2 className="w-4 h-4" /> {editingTestimonialId ? 'Save Changes' : 'Add Testimonial'}</>}</span>
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Reward Item Create/Edit Modal */}
-      {showRewardForm && createPortal(
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <div className="shrink-0 flex items-center justify-between gap-4 px-6 sm:px-8 py-5 text-white"
-              style={{ background: 'linear-gradient(135deg, #0b1428 0%, #3d0d1e 60%, #7f1d1d 100%)' }}>
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
-                  <Trophy className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-lg font-black truncate">{editingRewardId ? 'Edit Reward' : 'Add Reward'}</h3>
-                  <p className="text-[11px] text-white/60 truncate">Shown in the "Achievement Rewards" milestone strip</p>
-                </div>
-              </div>
-              <button onClick={() => setShowRewardForm(false)} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors shrink-0">
-                <X className="w-[18px] h-[18px]" />
-              </button>
-            </div>
-
-            <form id="reward-form" onSubmit={handleRewardSubmit} className="flex-1 overflow-y-auto admin-scrollbar px-6 sm:px-8 py-6 space-y-6">
-              {rewardError && <div className="p-3 bg-red-50 border border-red-100 text-red-700 rounded-xl text-xs font-bold">{rewardError}</div>}
-
-              <div>
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Reward Image</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-br from-red-50 to-rose-50 border border-slate-100 flex items-center justify-center shrink-0 p-2">
-                    {rewardImagePreview ? <img src={rewardImagePreview} className="max-w-full max-h-full object-contain" alt="" /> : <ImagePlus className="w-7 h-7 text-red-200" />}
-                  </div>
-                  <label className="px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 cursor-pointer hover:border-red-300 hover:text-red-600 transition-colors">
-                    {rewardImagePreview ? 'Replace Image' : 'Upload Image'}
-                    <input type="file" accept="image/*" className="hidden" onChange={handleRewardImageChange} />
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Label *</label>
-                <input type="text" value={rewardForm.label} onChange={(e) => setRewardForm({ ...rewardForm, label: e.target.value })} placeholder="Smartphone" className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Icon Badge Gradient</label>
-                <select value={rewardForm.gradient} onChange={(e) => setRewardForm({ ...rewardForm, gradient: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow bg-white">
-                  {GRADIENT_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Display Order</label>
-                <input type="number" value={rewardForm.display_order} onChange={(e) => setRewardForm({ ...rewardForm, display_order: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-                <p className="text-[11px] text-slate-400 mt-1">Lower numbers appear first in the milestone strip.</p>
-              </div>
-
-              <label className="flex items-center justify-between gap-3 cursor-pointer bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                <span className="text-sm font-bold text-slate-700">Mark as "Most Popular"</span>
-                <span className="relative inline-flex items-center">
-                  <input type="checkbox" checked={rewardForm.is_popular} onChange={(e) => setRewardForm({ ...rewardForm, is_popular: e.target.checked })} className="sr-only peer" />
-                  <span className="w-10 h-6 bg-slate-300 peer-checked:bg-red-600 rounded-full transition-colors"></span>
-                  <span className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></span>
-                </span>
-              </label>
-
-              <label className="flex items-center justify-between gap-3 cursor-pointer bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                <span className="text-sm font-bold text-slate-700">Active (visible on About page)</span>
-                <span className="relative inline-flex items-center">
-                  <input type="checkbox" checked={rewardForm.is_active} onChange={(e) => setRewardForm({ ...rewardForm, is_active: e.target.checked })} className="sr-only peer" />
-                  <span className="w-10 h-6 bg-slate-300 peer-checked:bg-red-600 rounded-full transition-colors"></span>
-                  <span className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></span>
-                </span>
-              </label>
-            </form>
-
-            <div className="shrink-0 flex gap-3 px-6 sm:px-8 py-5 border-t border-slate-100 bg-white">
-              <button type="button" onClick={() => setShowRewardForm(false)} className="flex-1 py-3 border border-slate-200 rounded-xl font-bold text-xs uppercase text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
-              <button type="submit" form="reward-form" disabled={rewardSaving} className="group relative overflow-hidden flex-1 py-3 bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-60 flex items-center justify-center gap-2 shadow-md shadow-red-600/25 hover:shadow-xl transition-all active:scale-[0.98]">
-                {!rewardSaving && <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent"></span>}
-                <span className="relative flex items-center gap-2">{rewardSaving ? 'Saving...' : <><CheckCircle2 className="w-4 h-4" /> {editingRewardId ? 'Save Changes' : 'Add Reward'}</>}</span>
               </button>
             </div>
           </div>

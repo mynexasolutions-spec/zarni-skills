@@ -18,7 +18,7 @@ const LEVEL_COLORS = {
 const EMPTY_FORM = {
   title: '', description: '', price: '', thumbnail_url: '',
   level: '', language: '', course_duration: '', certificate: false,
-  prerequisites: '', what_you_learn: '', level1_pct: '', level2_pct: '', is_active: true,
+  prerequisites: '', what_you_learn: '', is_active: true,
   instructor_name: '', instructor_id: '',
 };
 
@@ -79,7 +79,6 @@ export default function AdminCourses() {
       thumbnail_url: '', level: c.level || '', language: c.language || '',
       course_duration: c.course_duration || '', certificate: !!c.certificate,
       prerequisites: c.prerequisites || '', what_you_learn: c.what_you_learn || '',
-      level1_pct: c.level1_commission_percent ?? '', level2_pct: c.level2_commission_percent ?? '',
       is_active: c.is_active !== false,
       instructor_name: c.instructor_name || '',
       instructor_id: c.instructor_id ?? '',
@@ -141,8 +140,6 @@ export default function AdminCourses() {
       fd.append('certificate', form.certificate ? 'true' : 'false');
       fd.append('prerequisites', form.prerequisites);
       fd.append('what_you_learn', form.what_you_learn);
-      fd.append('level1_pct', form.level1_pct);
-      fd.append('level2_pct', form.level2_pct);
       fd.append('is_active', form.is_active ? 'true' : 'false');
       fd.append('instructor_name', form.instructor_name);
       fd.append('instructor_id', form.instructor_id);
@@ -427,9 +424,9 @@ export default function AdminCourses() {
                 </div>
               </div>
 
-              {/* SECTION: Pricing & Commissions */}
+              {/* SECTION: Pricing */}
               <div className="space-y-4">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-1.5">2. Pricing & Direct Affiliate Rates</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-1.5">2. Individual Pricing</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Individually Sold Price (₹) — leave blank if bundle-only</label>
@@ -437,20 +434,12 @@ export default function AdminCourses() {
                   </div>
                 </div>
 
-                <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-5 space-y-3">
-                  <p className="text-xs font-black text-emerald-800 flex items-center gap-1.5 uppercase">
-                    <Award className="w-4 h-4 text-emerald-600" /> Referral Override Commission % (leave blank to use defaults)
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-start gap-2.5">
+                  <Award className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    Standalone course purchases (buying just this one skill) don't pay referral commissions — 100% of the price goes to the platform.
+                    Referral commissions only apply to package purchases, using the rates set on that package.
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                    <div>
-                      <label className="block text-[10px] font-extrabold text-emerald-700 mb-1 uppercase">Direct Referral Level 1 %</label>
-                      <input type="number" min="0" max="100" step="0.01" value={form.level1_pct} onChange={(e) => setForm({ ...form, level1_pct: e.target.value })} placeholder="e.g. 50" className="w-full px-4 py-2.5 rounded-xl border border-emerald-250/30 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-extrabold text-emerald-700 mb-1 uppercase">Indirect Referral Level 2 %</label>
-                      <input type="number" min="0" max="100" step="0.01" value={form.level2_pct} onChange={(e) => setForm({ ...form, level2_pct: e.target.value })} placeholder="e.g. 10" className="w-full px-4 py-2.5 rounded-xl border border-emerald-250/30 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200" />
-                    </div>
-                  </div>
                 </div>
               </div>
 

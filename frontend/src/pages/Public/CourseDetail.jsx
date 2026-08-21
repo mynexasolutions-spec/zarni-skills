@@ -5,6 +5,34 @@ import { useAuth } from '../../context/AuthContext';
 import Reveal from '../../components/Reveal';
 import useTilt from '../../hooks/useTilt';
 import { BadgeCheck, Check, Clock, Zap, PlayCircle, List, Play, Lock, HelpCircle, ArrowRight, ShieldCheck, Infinity as InfinityIcon, Sparkles, ChevronRight, Video, CheckCircle2, User, Star, Flame, Award, BookOpen } from 'lucide-react';
+import ScaledCertificate from '../../components/Certificate/ScaledCertificate';
+import { DEFAULT_CERT_TEMPLATE } from '../../components/Certificate/CertificateFace';
+
+function ChapterRow({ ch, idx, owned }) {
+  return (
+    <div className="flex items-center gap-4 px-6 py-4.5 min-h-[76px] [@media(hover:hover)]:hover:bg-blue-50/50 [@media(hover:hover)]:hover:translate-x-1 transition-all duration-300 group">
+      <div className={`flex items-center justify-center w-9 h-9 rounded-xl text-xs font-black shrink-0 transition-transform [@media(hover:hover)]:group-hover:scale-110 ${
+        owned ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'bg-slate-100 text-slate-500 [@media(hover:hover)]:group-hover:bg-blue-600 [@media(hover:hover)]:group-hover:text-white'
+      }`}>
+        {ch.order || idx + 1}
+      </div>
+      <p className="flex-1 min-w-0 text-sm font-black text-slate-900 [@media(hover:hover)]:group-hover:text-blue-600 transition-colors">{ch.title}</p>
+      <div className="flex items-center gap-3 shrink-0">
+        {ch.duration && (
+          <span className="inline-flex items-center gap-1 text-xs text-slate-400 font-bold">
+            <Clock className="w-3.5 h-3.5 text-slate-300" strokeWidth={2} />
+            {ch.duration}
+          </span>
+        )}
+        {owned ? (
+          <Play className="w-4 h-4 text-blue-600 shrink-0 fill-current" />
+        ) : (
+          <Lock className="w-4 h-4 text-slate-300 [@media(hover:hover)]:group-hover:text-blue-600 shrink-0 transition-colors" strokeWidth={2} />
+        )}
+      </div>
+    </div>
+  );
+}
 
 function TiltCourseHero({ course, chapters }) {
   const { ref, onMouseMove, onMouseLeave } = useTilt(4);
@@ -14,7 +42,7 @@ function TiltCourseHero({ course, chapters }) {
         ref={ref}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
-        className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-200/90 shadow-[0_15px_40px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_70px_rgba(37,99,235,0.18)] transition-all duration-500 [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform"
+        className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-200/90 shadow-[0_15px_40px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_70px_rgba(37,99,235,0.18)] transition-[transform,box-shadow,border-color] duration-500 hover:[transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] hover:will-change-transform"
       >
         {/* Shimmer line */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 z-30"></div>
@@ -28,17 +56,15 @@ function TiltCourseHero({ course, chapters }) {
           {course.thumbnail_display_url ? (
             <div className="relative aspect-[16/9] sm:aspect-[2/1]">
               <img src={course.thumbnail_display_url} alt={course.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/25 via-transparent to-transparent"></div>
             </div>
           ) : (
-            <div className="relative aspect-[16/9] sm:aspect-[2/1] bg-gradient-to-br from-blue-600 via-indigo-600 to-sky-500 flex items-center justify-center p-8">
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
-            </div>
+            <div className="relative aspect-[16/9] sm:aspect-[2/1] bg-gradient-to-br from-blue-600 via-indigo-600 to-sky-500 flex items-center justify-center p-8"></div>
           )}
 
           {/* Floating Badges */}
           <div className="absolute top-5 left-5 flex flex-wrap items-center gap-2 z-20">
-            <span className="px-3.5 py-1.5 bg-white/95 backdrop-blur-md text-blue-600 text-[10px] font-black rounded-full uppercase tracking-widest shadow-md border border-white flex items-center gap-1.5">
+            <span className="px-3.5 py-1.5 bg-white text-blue-600 text-[10px] font-black rounded-full uppercase tracking-widest shadow-md border border-white flex items-center gap-1.5">
               <Flame className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
               {course.level || 'All Levels'}
             </span>
@@ -48,25 +74,25 @@ function TiltCourseHero({ course, chapters }) {
                 Certificate Included
               </span>
             )}
-            <span className="px-3.5 py-1.5 bg-slate-900/70 backdrop-blur-md text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-md border border-white/10">
+            <span className="px-3.5 py-1.5 bg-slate-900/90 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-md border border-white/10">
               {course.language || 'Hindi'}
             </span>
           </div>
+        </div>
 
-          {/* Hero Title Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 z-20">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-[10px] font-black tracking-[0.25em] text-blue-200 uppercase mb-3 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-blue-300 animate-spin-slow" strokeWidth={2.5} />
-              Mastery Skill Course
-            </div>
-            <h1 className="font-heading font-black text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-tight drop-shadow-md max-w-2xl">
-              {course.title}
-            </h1>
+        {/* Title block — sits below the image so the thumbnail artwork stays fully visible */}
+        <div className="relative z-10 bg-white px-6 sm:px-8 pt-5 pb-4 border-t border-slate-100">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[9px] sm:text-[10px] font-black tracking-[0.2em] text-blue-600 uppercase mb-2.5">
+            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-500 animate-spin-slow" strokeWidth={2.5} />
+            Mastery Skill Course
           </div>
+          <h1 className="font-heading font-black text-slate-900 text-xl sm:text-2xl md:text-3xl leading-tight">
+            {course.title}
+          </h1>
         </div>
 
         {/* Quick-Stat Ribbon Bar */}
-        <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 divide-x divide-slate-100 bg-white border-t border-slate-100">
+        <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 divide-x divide-slate-100 bg-white">
           <div className="flex items-center gap-3 px-5 py-4 hover:bg-blue-50/30 transition-colors">
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100 shadow-sm">
               <Clock className="w-5 h-5" strokeWidth={2.5} />
@@ -95,17 +121,60 @@ function TiltCourseHero({ course, chapters }) {
             </div>
           </div>
           <div className="flex items-center gap-3 px-5 py-4 hover:bg-emerald-50/30 transition-colors">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100 shadow-sm">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border shadow-sm ${course.certificate ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
               <BadgeCheck className="w-5 h-5" strokeWidth={2.5} />
             </div>
             <div className="min-w-0 leading-tight">
               <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Certificate</p>
-              <p className="text-xs font-black text-emerald-600 truncate">Yes, Included</p>
+              <p className={`text-xs font-black truncate ${course.certificate ? 'text-emerald-600' : 'text-slate-400'}`}>{course.certificate ? 'Yes, Included' : 'Not Included'}</p>
             </div>
           </div>
         </div>
       </div>
     </Reveal>
+  );
+}
+
+// The admin types the description as free text with line breaks and "✓"
+// bullets. Rendering it raw collapses all of that into one block, so split it
+// back into paragraphs and a proper list.
+function DescriptionBody({ text }) {
+  const lines = String(text || '')
+    .split(/\r?\n|(?=✓)/)          // real newlines, and before each tick
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const blocks = [];
+  for (const line of lines) {
+    const isBullet = /^[✓✔•\-]\s*/.test(line);
+    const body = line.replace(/^[✓✔•\-]\s*/, '').trim();
+    if (!body) continue;
+    if (isBullet && blocks.length && blocks[blocks.length - 1].type === 'list') {
+      blocks[blocks.length - 1].items.push(body);
+    } else if (isBullet) {
+      blocks.push({ type: 'list', items: [body] });
+    } else {
+      blocks.push({ type: 'p', text: body });
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {blocks.map((b, i) =>
+        b.type === 'p' ? (
+          <p key={i} className="text-slate-600 leading-relaxed text-sm sm:text-base font-medium">{b.text}</p>
+        ) : (
+          <ul key={i} className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {b.items.map((item, j) => (
+              <li key={j} className="flex items-start gap-2.5 bg-slate-50/80 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" strokeWidth={2.5} />
+                <span className="text-xs sm:text-sm text-slate-700 font-bold leading-snug">{item}</span>
+              </li>
+            ))}
+          </ul>
+        )
+      )}
+    </div>
   );
 }
 
@@ -117,6 +186,7 @@ export default function CourseDetail() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [certTemplate, setCertTemplate] = useState(DEFAULT_CERT_TEMPLATE);
 
   useEffect(() => {
     setLoading(true);
@@ -126,6 +196,9 @@ export default function CourseDetail() {
         setCourse(res.data.course);
         setChapters(res.data.chapters || []);
         setPackages(res.data.packages || []);
+        if (res.data.course?.certificate_template) {
+          setCertTemplate({ ...DEFAULT_CERT_TEMPLATE, ...res.data.course.certificate_template });
+        }
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
@@ -133,7 +206,7 @@ export default function CourseDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Course Details...</p>
@@ -144,7 +217,7 @@ export default function CourseDetail() {
 
   if (notFound || !course) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 -mt-24 pt-24">
+      <div className="min-h-screen flex items-center justify-center px-4 -mt-24 pt-24">
         <div className="max-w-md w-full text-center bg-white border border-slate-200 rounded-3xl p-8 sm:p-10 shadow-lg">
           <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center mx-auto mb-4 text-amber-500">
             <Video className="w-8 h-8" strokeWidth={1.5} />
@@ -163,10 +236,10 @@ export default function CourseDetail() {
   const prerequisites = (course.prerequisites || '').split('\n').map(s => s.trim()).filter(Boolean);
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800 -mt-24 pt-24 pb-24 relative overflow-hidden">
+    <div className="text-slate-800 -mt-24 pt-24 pb-16 relative overflow-hidden">
       {/* Background Animated Neon Blobs */}
-      <div className="absolute top-[10%] left-1/4 w-[600px] h-[600px] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none z-0 animate-pulse"></div>
-      <div className="absolute bottom-[20%] right-1/4 w-[500px] h-[500px] bg-indigo-500/10 blur-[150px] rounded-full pointer-events-none z-0 animate-pulse" style={{ animationDelay: '2s' }}></div>
+      <div className="absolute top-[10%] left-1/4 w-[420px] h-[420px] bg-blue-500/10 blur-[90px] rounded-full pointer-events-none z-0"></div>
+      <div className="absolute bottom-[20%] right-1/4 w-[380px] h-[380px] bg-indigo-500/10 blur-[90px] rounded-full pointer-events-none z-0" style={{ animationDelay: '2s' }}></div>
 
       {/* Floating Animated Particles */}
       <span className="absolute top-28 left-[12%] w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_12px_#3b82f6] animate-float pointer-events-none z-0"></span>
@@ -199,19 +272,15 @@ export default function CourseDetail() {
 
             {/* Description + Instructor Card */}
             <Reveal variant="fade-up" delay={150}>
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-                {course.description && (
-                  <p className="text-slate-600 leading-relaxed text-sm sm:text-base font-medium flex-1">
-                    {course.description}
-                  </p>
-                )}
+              <div className="relative overflow-hidden bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-6">
+                {course.description && <DescriptionBody text={course.description} />}
                 {(() => {
                   const InstructorWrapper = course.instructor_slug ? Link : 'div';
                   const wrapperProps = course.instructor_slug ? { to: `/instructor/${course.instructor_slug}` } : {};
                   return (
                     <InstructorWrapper
                       {...wrapperProps}
-                      className={`shrink-0 flex items-center gap-3.5 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-md transition-all ${course.instructor_slug ? 'hover:border-blue-300 hover:-translate-y-0.5' : ''}`}
+                      className={`flex items-center gap-3.5 bg-slate-50/80 border border-slate-200/60 rounded-2xl p-4 transition-all ${course.instructor_slug ? 'hover:bg-white hover:border-blue-300 hover:shadow-sm' : ''}`}
                     >
                       {course.instructor_image_display_url ? (
                         <img src={course.instructor_image_display_url} alt={course.instructor_name || 'Zarni Skills Team'} className="w-12 h-12 rounded-full object-cover shrink-0 border-2 border-blue-100 shadow-sm" />
@@ -237,12 +306,15 @@ export default function CourseDetail() {
               <Reveal variant="fade-up" delay={200}>
                 <div className="relative overflow-hidden bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
                   <div className="flex items-center gap-3 mb-6">
-                    <span className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 shadow-sm">
+                    <span className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                       <BadgeCheck className="w-5 h-5" strokeWidth={2.5} />
                     </span>
-                    <h2 className="text-xl font-heading font-black text-slate-900">
-                      What You'll Learn
-                    </h2>
+                    <div className="min-w-0">
+                      <h2 className="text-lg sm:text-xl font-heading font-black text-slate-900 leading-tight">What You'll Learn</h2>
+                      <p className="text-[11px] font-semibold text-slate-400">Skills you walk away with</p>
+                    </div>
+                    <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
+                    <span className="shrink-0 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-slate-100 border border-slate-200/60 text-slate-500 tabular-nums">{whatYouLearn.length}</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     {whatYouLearn.map((item, idx) => (
@@ -260,13 +332,15 @@ export default function CourseDetail() {
             {prerequisites.length > 0 && (
               <Reveal variant="fade-up" delay={250}>
                 <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                       <Zap className="w-5 h-5" strokeWidth={2.5} />
                     </span>
-                    <h2 className="text-xl font-heading font-black text-slate-900">
-                      Prerequisites
-                    </h2>
+                    <div className="min-w-0">
+                      <h2 className="text-lg sm:text-xl font-heading font-black text-slate-900 leading-tight">Prerequisites</h2>
+                      <p className="text-[11px] font-semibold text-slate-400">What to know before you start</p>
+                    </div>
+                    <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {prerequisites.map((item, idx) => (
@@ -284,46 +358,64 @@ export default function CourseDetail() {
             {chapters.length > 0 && (
               <Reveal variant="fade-up" delay={300}>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-sm">
-                        <List className="w-5 h-5" strokeWidth={2.5} />
-                      </span>
-                      <h2 className="text-xl font-heading font-black text-slate-900">
-                        Curriculum Syllabus ({chapters.length} Modules)
-                      </h2>
+                  <div className="flex items-center gap-3">
+                    <span className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                      <List className="w-5 h-5" strokeWidth={2.5} />
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="text-lg sm:text-xl font-heading font-black text-slate-900 leading-tight">Curriculum</h2>
+                      <p className="text-[11px] font-semibold text-slate-400">Every module in this course</p>
                     </div>
+                    <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
+                    <span className="shrink-0 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 tabular-nums">
+                      {chapters.length} modules
+                    </span>
                   </div>
 
                   <div className="bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] divide-y divide-slate-100">
                     {chapters.map((ch, idx) => (
-                      <div key={ch.id} className="flex items-center gap-4 px-6 py-4.5 hover:bg-blue-50/50 hover:translate-x-1 transition-all duration-300 group">
-                        <div className={`flex items-center justify-center w-9 h-9 rounded-xl text-xs font-black shrink-0 transition-transform group-hover:scale-110 ${
-                          course.owned ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'bg-slate-100 text-slate-500 group-hover:bg-blue-600 group-hover:text-white'
-                        }`}>
-                          {ch.order || idx + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-black text-slate-900 truncate group-hover:text-blue-600 transition-colors">{ch.title}</p>
-                          {ch.description && (
-                            <p className="text-xs text-slate-400 font-medium truncate mt-0.5">{ch.description}</p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          {ch.duration && (
-                            <span className="inline-flex items-center gap-1 text-xs text-slate-400 font-bold">
-                              <Clock className="w-3.5 h-3.5 text-slate-300" strokeWidth={2} />
-                              {ch.duration}
-                            </span>
-                          )}
-                          {course.owned ? (
-                            <Play className="w-4 h-4 text-blue-600 shrink-0 fill-current" />
-                          ) : (
-                            <Lock className="w-4 h-4 text-slate-300 group-hover:text-blue-600 shrink-0 transition-colors" strokeWidth={2} />
-                          )}
-                        </div>
-                      </div>
+                      <ChapterRow key={ch.id} ch={ch} idx={idx} owned={course.owned} />
                     ))}
+                  </div>
+                </div>
+              </Reveal>
+            )}
+
+            {/* Certificate You'll Earn */}
+            {course.certificate && (
+              <Reveal variant="fade-up" delay={340}>
+                <div className="relative overflow-hidden rounded-[2.5rem] p-6 sm:p-10 shadow-[0_20px_55px_rgba(37,99,235,0.18)]"
+                  style={{ background: 'linear-gradient(135deg, #0b1428 0%, #16244d 45%, #1e3a8a 100%)' }}>
+                  <div className="absolute -top-16 -right-16 w-64 h-64 bg-amber-400/20 rounded-full blur-[70px] pointer-events-none"></div>
+                  <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-blue-400/20 rounded-full blur-[70px] pointer-events-none"></div>
+                  <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
+
+                  <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-10">
+                    <div className="text-center lg:text-left lg:max-w-[280px] shrink-0">
+                      <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/15 border border-amber-300/30 text-amber-300 text-[10px] font-black uppercase tracking-widest mb-4">
+                        <Award className="w-3.5 h-3.5" />
+                        On Completion
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-heading font-black text-white leading-tight">
+                        You'll Earn This Official Certificate
+                      </h2>
+                      <p className="text-blue-100/70 text-xs sm:text-sm font-medium mt-3 leading-relaxed">
+                        Finish "{course.title}" and download a verified, shareable certificate of completion — proof of your new skill.
+                      </p>
+                    </div>
+
+                    <div className="relative w-full max-w-xl group/cert">
+                      <div className="absolute -inset-2 rounded-[2rem] bg-gradient-to-r from-amber-400/40 via-blue-400/30 to-amber-400/40 blur-xl opacity-70 group-hover/cert:opacity-100 transition-opacity duration-500"></div>
+                      <div className="relative rounded-2xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.5)] ring-1 ring-white/10 transition-transform duration-500 group-hover/cert:scale-[1.02] group-hover/cert:-rotate-1">
+                        <ScaledCertificate
+                          template={certTemplate}
+                          cert={{ course_title: course.title, student_name: 'Your Name Here', issued_date: 'Upon Completion' }}
+                        />
+                      </div>
+                      <span className="absolute -bottom-3 -right-3 inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg">
+                        <ShieldCheck className="w-3.5 h-3.5" /> Sample Preview
+                      </span>
+                    </div>
                   </div>
                 </div>
               </Reveal>
@@ -334,16 +426,18 @@ export default function CourseDetail() {
               <Reveal variant="fade-up" delay={350}>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <span className="w-10 h-10 rounded-2xl bg-purple-50 border border-purple-100 text-purple-600 flex items-center justify-center shrink-0 shadow-sm">
+                    <span className="w-10 h-10 rounded-2xl bg-purple-50 border border-purple-100 text-purple-600 flex items-center justify-center shrink-0">
                       <Check className="w-5 h-5" strokeWidth={2.5} />
                     </span>
-                    <h2 className="text-xl font-heading font-black text-slate-900">
-                      Bundled In Packages
-                    </h2>
+                    <div className="min-w-0">
+                      <h2 className="text-lg sm:text-xl font-heading font-black text-slate-900 leading-tight">Bundled In Packages</h2>
+                      <p className="text-[11px] font-semibold text-slate-400">Buy a package and this course is included</p>
+                    </div>
+                    <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     {packages.map(p => (
-                      <Link key={p.id} to={`/packages/${p.id}`}
+                      <Link key={p.id} to={`/packages/${p.public_code || p.id}`}
                         className="group relative inline-flex items-center gap-3 px-5 py-3.5 bg-white border border-slate-200/90 hover:border-blue-300 text-slate-800 hover:text-blue-600 rounded-2xl text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md transition-all duration-300">
                         <span className="relative">{p.name}</span>
                         <span className="text-xs font-bold text-emerald-600">₹{Number(p.price).toLocaleString()}</span>
@@ -414,7 +508,7 @@ export default function CourseDetail() {
                             {authLoading ? (
                               <div className="w-full py-2.5 bg-slate-100 rounded-xl animate-pulse h-[38px]"></div>
                             ) : user ? (
-                              <Link to={`/student/checkout?package_id=${p.id}`}
+                              <Link to={`/student/checkout?package_id=${p.public_code}`}
                                 className="w-full py-2.5 bg-slate-900 hover:bg-blue-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider inline-flex items-center justify-center gap-1.5 transition-colors">
                                 Buy Package
                               </Link>

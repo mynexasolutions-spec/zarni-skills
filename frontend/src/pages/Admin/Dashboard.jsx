@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import {
   Users, UserCog, Briefcase, ShoppingCart, IndianRupee, Clock, Landmark,
   FileText, Layers, BookOpen, Share2, Wallet, ArrowRight, Sparkles, ShieldCheck,
-  TrendingUp, ArrowUpRight, Activity, Search, Filter, RefreshCw
+  TrendingUp, ArrowUpRight, Activity, Search, Filter, RefreshCw,
+  Receipt, Percent, PiggyBank, Gift, Crown, CheckCircle2, Hourglass
 } from 'lucide-react';
 import api from '../../utils/api';
 import AnimatedNumber from '../../components/AnimatedNumber';
@@ -118,6 +119,29 @@ export default function AdminDashboard() {
   const alerts = [
     { label: 'Pending Commissions', value: stats.pending_commissions ?? 0, icon: Clock, path: '/admin/commissions', tint: 'amber' },
     { label: 'Pending Withdrawals', value: stats.pending_withdrawals ?? 0, icon: Landmark, path: '/admin/withdrawals', tint: 'rose' },
+  ];
+
+  const money = (v) => `₹${(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+
+  const financeCards = [
+    { label: 'Commissions Paid', value: money(stats.commissions_paid), icon: Wallet, color: 'from-emerald-500 to-green-600' },
+    { label: 'Pending Balance', value: money(stats.pending_balance), icon: Clock, color: 'from-amber-500 to-orange-600' },
+    { label: 'Wallet Balance', value: money(stats.wallet_balance), icon: PiggyBank, color: 'from-blue-500 to-indigo-600' },
+    { label: 'Payout Requests', value: money(stats.payout_request_amount), sub: `${stats.pending_withdrawals ?? 0} pending`, icon: Landmark, color: 'from-rose-500 to-red-600' },
+    { label: 'Including GST', value: money(stats.revenue_including_gst), icon: Receipt, color: 'from-indigo-500 to-violet-600' },
+    { label: 'Without GST', value: money(stats.revenue_excluding_gst), icon: Receipt, color: 'from-teal-500 to-cyan-600' },
+    { label: 'GST Amount', value: money(stats.gst_amount_total), icon: Percent, color: 'from-orange-500 to-amber-600' },
+    { label: 'Total Commission', value: money(stats.total_commission_alltime), icon: Share2, color: 'from-purple-500 to-fuchsia-600' },
+    { label: 'Total Reward', value: money(stats.total_reward), icon: Gift, color: 'from-pink-500 to-rose-600' },
+    { label: 'Total Profit', value: money(stats.total_profit), icon: TrendingUp, color: 'from-green-600 to-emerald-700' },
+  ];
+
+  const managerCards = [
+    { label: 'Total Manager Income', value: money(stats.manager_income_total), icon: UserCog, color: 'from-violet-500 to-purple-600' },
+    { label: `${stats.manager_override_l1_percent ?? 10}% Manager Income`, value: money(stats.manager_income_l1), icon: Percent, color: 'from-indigo-500 to-blue-600' },
+    { label: `${stats.manager_override_l2_percent ?? 15}% Senior Manager Income`, value: money(stats.manager_income_l2), icon: Crown, color: 'from-amber-500 to-yellow-600' },
+    { label: 'Paid Balance', value: money(stats.manager_income_paid), icon: CheckCircle2, color: 'from-emerald-500 to-teal-600' },
+    { label: 'Pending Income', value: money(stats.manager_income_pending), icon: Hourglass, color: 'from-rose-500 to-pink-600' },
   ];
 
   const quickLinks = [
@@ -324,6 +348,53 @@ export default function AdminDashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Financial Overview Section */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <Receipt className="w-5 h-5 text-rose-500" />
+          <h3 className="text-base font-extrabold text-slate-900 tracking-tight">Financial Overview</h3>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {financeCards.map((c, idx) => (
+            <div
+              key={c.label}
+              className="group relative overflow-hidden bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 animate-fade-in-up"
+              style={{ animationDelay: `${idx * 30}ms` }}
+            >
+              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${c.color} text-white flex items-center justify-center mb-3 shadow-md group-hover:scale-105 transition-transform`}>
+                <c.icon className="w-4.5 h-4.5" />
+              </div>
+              <p className="text-lg font-black text-slate-900 leading-none truncate">{c.value}</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mt-2">{c.label}</p>
+              {c.sub && <p className="text-[10px] text-slate-400 mt-0.5">{c.sub}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Manager Income Section */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <UserCog className="w-5 h-5 text-violet-500" />
+          <h3 className="text-base font-extrabold text-slate-900 tracking-tight">Manager Income</h3>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {managerCards.map((c, idx) => (
+            <div
+              key={c.label}
+              className="group relative overflow-hidden rounded-2xl p-4 text-white bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 animate-fade-in-up border border-white/5"
+              style={{ animationDelay: `${idx * 30}ms` }}
+            >
+              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${c.color} text-white flex items-center justify-center mb-3 shadow-md group-hover:scale-105 transition-transform`}>
+                <c.icon className="w-4.5 h-4.5" />
+              </div>
+              <p className="text-lg font-black leading-none truncate">{c.value}</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/60 mt-2">{c.label}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Quick Links / Actions Section */}

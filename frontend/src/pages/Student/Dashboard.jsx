@@ -224,7 +224,7 @@ export default function StudentDashboard() {
               <greeting.Icon className="w-3.5 h-3.5 text-amber-300 shrink-0 animate-pulse" />
               {greeting.text}
             </div>
-            <h1 className="text-[1.1rem] sm:text-[1.55rem] font-extrabold text-white tracking-tight leading-snug truncate">
+            <h1 className="text-[1.1rem] sm:text-[1.55rem] font-extrabold text-white tracking-tight leading-normal py-0.5 truncate">
               Welcome back,{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-white to-blue-200 animate-gradient-x">
                 {user?.name?.split(' ')[0]}

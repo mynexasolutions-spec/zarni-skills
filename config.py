@@ -37,16 +37,30 @@ class Config:
     FREELANCE_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'freelance_uploads')
     MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # 500 MB max upload
 
-    # ── Flask-Mail defaults (overridden at runtime via SiteSettings) ──────
+    # ── Flask-Mail extension defaults. Not actually used for sending anymore —
+    # app/utils/email.py sends via the Brevo HTTP API (BREVO_API_KEY etc. in
+    # .env) instead of SMTP. Left here only because flask_mail.Mail() is still
+    # initialized as an extension in app/__init__.py.
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
     MAIL_USE_TLS = True
     MAIL_USE_SSL = False
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@zarni.com')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@zarniskills.com')
     MAIL_SUPPRESS_SEND = False  # set True in testing
+
+    # ── Brevo transactional email (used by app/utils/email.py) ────────────
+    # Where the React app is served from. Only needed when it isn't on the
+    # same origin as Flask — in dev Vite runs on :5173 while Flask is on :5001,
+    # so a link built from request.host_url lands on Flask and 404s.
+    FRONTEND_URL = os.environ.get('FRONTEND_URL', '').rstrip('/')
+
+    BREVO_API_KEY = os.environ.get('BREVO_API_KEY', '')
+    BREVO_SENDER_EMAIL = os.environ.get('BREVO_SENDER_EMAIL', 'no-reply@zarniskills.com')
+    BREVO_SENDER_NAME = os.environ.get('BREVO_SENDER_NAME', 'Zarni Skills')
 
     # ── Razorpay (read straight from .env — not admin-configurable) ───────
     RAZORPAY_KEY_ID = os.environ.get('razorpay_key', '')
     RAZORPAY_KEY_SECRET = os.environ.get('razorpay_secret', '')
+    RAZORPAY_WEBHOOK_SECRET = os.environ.get('razorpay_webhook_secret', '')

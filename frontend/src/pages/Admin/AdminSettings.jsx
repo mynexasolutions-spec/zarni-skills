@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, CreditCard, Percent, Landmark, Mail, CheckCircle2, Plane, ClipboardList, Shield, Save, Sparkles, Lock } from 'lucide-react';
+import { Settings, CreditCard, Percent, Landmark, Mail, CheckCircle2, Plane, ClipboardList, Shield, Save, Sparkles, Lock, Share2 } from 'lucide-react';
+import { FaFacebook, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import api from '../../utils/api';
 
 function Section({ icon: Icon, title, desc, children }) {
@@ -38,6 +39,8 @@ const DEFAULT_SETTINGS = {
   global_manager_override_percent: '', global_manager_override_level2_percent: '',
   trip_goal_title: '', trip_goal_amount: '', trip_goal_date: '',
   registration_field_config: {},
+  footer_facebook_url: '', footer_instagram_url: '', footer_whatsapp_url: '',
+  support_email: '', support_phone: '',
 };
 
 const REGISTRATION_FIELDS = [
@@ -169,6 +172,23 @@ export default function AdminSettings() {
         {/* Withdrawal Settings */}
         <Section icon={Landmark} title="Payout & Withdrawal Rules" desc="Minimum threshold amount students must reach before requesting payouts">
           <Field label="Minimum Withdrawal Threshold (₹)" type="number" value={settings.min_withdrawal_amount || ''} onChange={set('min_withdrawal_amount')} placeholder="500" />
+        </Section>
+
+        {/* Footer Social Links */}
+        <Section icon={Share2} title="Footer Social Links" desc="Facebook, Instagram & WhatsApp links shown as icons in the site footer (leave blank to hide that icon)">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label={<span className="inline-flex items-center gap-1.5"><FaFacebook className="w-3.5 h-3.5 text-blue-600" /> Facebook URL</span>} value={settings.footer_facebook_url || ''} onChange={set('footer_facebook_url')} placeholder="https://facebook.com/zarniskills" />
+            <Field label={<span className="inline-flex items-center gap-1.5"><FaInstagram className="w-3.5 h-3.5 text-pink-600" /> Instagram URL</span>} value={settings.footer_instagram_url || ''} onChange={set('footer_instagram_url')} placeholder="https://instagram.com/zarniskills" />
+            <Field label={<span className="inline-flex items-center gap-1.5"><FaWhatsapp className="w-3.5 h-3.5 text-emerald-600" /> WhatsApp URL</span>} value={settings.footer_whatsapp_url || ''} onChange={set('footer_whatsapp_url')} placeholder="https://wa.me/91XXXXXXXXXX" />
+          </div>
+        </Section>
+
+        {/* Support Contact Info */}
+        <Section icon={Mail} title="Support Contact Info" desc="Shown on the Contact page, footer, and legal pages (Terms, Refund Policy) wherever a support email/phone appears">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Support Email" type="email" value={settings.support_email || ''} onChange={set('support_email')} placeholder="support@zarniskills.com" />
+            <Field label="Support Phone" value={settings.support_phone || ''} onChange={set('support_phone')} placeholder="+91 98765 43210" />
+          </div>
         </Section>
 
         {/* Trip Goal Settings */}

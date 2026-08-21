@@ -353,88 +353,100 @@ function MilestonesTab() {
   );
 }
 
+const EMPTY_TRIP = {
+  title: '', description: '', destination: '', goal_amount: '', goal_date: '',
+  display_order: '0', is_active: true,
+};
+
 function TripGoalTab() {
-  const [form, setForm] = useState({ title: '', goal_amount: '', goal_date: '' });
-  const [imageUrl, setImageUrl] = useState('');
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(EMPTY_TRIP);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState('');
-  const [imageError, setImageError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [imageSuccess, setImageSuccess] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
-  const fetchGoal = async () => {
+  const fetchTrips = async () => {
     try {
-      const res = await api.get('/admin/trip-goal');
-      setForm({
-        title: res.data.title || '',
-        goal_amount: res.data.goal_amount || '',
-        goal_date: res.data.goal_date || '',
-      });
-      setImageUrl(res.data.image_url || '');
+      const res = await api.get('/admin/trip-goals');
+      setTrips(res.data.trips || []);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching trip goals', err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchGoal(); }, []);
+  useEffect(() => { fetchTrips(); }, []);
+
+  const openCreate = () => {
+    setEditing(null);
+    setForm({ ...EMPTY_TRIP, display_order: String(trips.length + 1) });
+    setImageFile(null);
+    setImagePreview('');
+    setError('');
+    setShowForm(true);
+  };
+
+  const openEdit = (trip) => {
+    setEditing(trip);
+    setForm({
+      title: trip.title || '',
+      description: trip.description || '',
+      destination: trip.destination || '',
+      goal_amount: trip.goal_amount ?? '',
+      goal_date: trip.goal_date || '',
+      display_order: String(trip.display_order ?? 0),
+      is_active: !!trip.is_active,
+    });
+    setImageFile(null);
+    setImagePreview('');
+    setError('');
+    setShowForm(true);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError('');
-    setSuccess(false);
     try {
-      const response = await api.post('/admin/trip-goal', form);
-      if (response.data.success) {
-        setSuccess(true);
-        setTimeout(() => setSuccess(false), 2500);
+      // multipart because the image rides along with the fields
+      const fd = new FormData();
+      Object.entries(form).forEach(([k, v]) => fd.append(k, k === 'is_active' ? (v ? 'true' : 'false') : v));
+      if (imageFile) fd.append('image_file', imageFile);
+
+      const url = editing ? `/admin/trip-goals/${editing.id}` : '/admin/trip-goals';
+      const res = editing
+        ? await api.put(url, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+        : await api.post(url, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+
+      if (res.data.success) {
+        setShowForm(false);
+        fetchTrips();
       } else {
-        setError(response.data.message || 'Failed to save trip goal.');
+        setError(res.data.message || 'Failed to save trip.');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save trip goal.');
+      setError(err.response?.data?.message || 'Failed to save trip.');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleImageSelect = (file) => {
-    if (!file) return;
-    setImageFile(file);
-    setImageError('');
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const handleImageUpload = async () => {
-    if (!imageFile) return;
-    setUploadingImage(true);
-    setImageError('');
-    setImageSuccess(false);
+  const handleDelete = async (trip) => {
+    if (!window.confirm(`Delete "${trip.title}"? Students will stop seeing this trip.`)) return;
+    setDeletingId(trip.id);
     try {
-      const fd = new FormData();
-      fd.append('image_file', imageFile);
-      const response = await api.post('/admin/trip-goal/image', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      if (response.data.success) {
-        setImageUrl(response.data.image_url);
-        setImageFile(null);
-        setImagePreview('');
-        setImageSuccess(true);
-        setTimeout(() => setImageSuccess(false), 2500);
-      } else {
-        setImageError(response.data.message || 'Failed to upload image.');
-      }
+      await api.delete(`/admin/trip-goals/${trip.id}`);
+      fetchTrips();
     } catch (err) {
-      setImageError(err.response?.data?.message || 'Failed to upload image.');
+      console.error('Error deleting trip', err);
     } finally {
-      setUploadingImage(false);
+      setDeletingId(null);
     }
   };
 
@@ -447,88 +459,177 @@ function TripGoalTab() {
   }
 
   return (
-    <div className="max-w-xl space-y-6">
-      {/* Trip image */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-11 h-11 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center">
-            <ImageIcon className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="font-black text-slate-900">Trip Reward Image</h3>
-            <p className="text-xs text-slate-400">Shown alongside the trip title on the student page</p>
-          </div>
-        </div>
-
-        {imageError && <div className="p-3 bg-red-50 border border-red-100 text-red-700 rounded-xl text-xs font-bold mb-4">{imageError}</div>}
-        {imageSuccess && <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-xs font-bold mb-4">Image updated.</div>}
-
-        <div className="flex items-center gap-5">
-          <div className="w-24 h-24 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
-            {imagePreview || imageUrl ? (
-              <img src={imagePreview || imageUrl} alt="Trip reward" className="w-full h-full object-contain" />
-            ) : (
-              <Plane className="w-8 h-8 text-slate-300" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0 space-y-2">
-            <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-slate-300 hover:border-violet-400 hover:bg-violet-50 transition-colors cursor-pointer">
-              <Upload className="w-4 h-4 text-violet-500 shrink-0" />
-              <span className="text-xs text-slate-500 truncate">{imageFile?.name || 'Choose PNG/JPG (transparent PNG looks best)'}</span>
-              <input type="file" accept="image/*" onChange={(e) => handleImageSelect(e.target.files?.[0] || null)} className="hidden" />
-            </label>
-            <button
-              type="button"
-              onClick={handleImageUpload}
-              disabled={!imageFile || uploadingImage}
-              className="w-full sm:w-auto px-5 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all"
-            >
-              {uploadingImage ? 'Uploading...' : <><Upload className="w-3.5 h-3.5" /> Upload Image</>}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Trip goal details */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-11 h-11 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
-            <Plane className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="font-black text-slate-900">Trip Reward Program</h3>
-            <p className="text-xs text-slate-400">Single site-wide travel goal shown on the student "Trip Achievements" page</p>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {error && <div className="p-3 bg-red-50 border border-red-100 text-red-700 rounded-xl text-xs font-bold">{error}</div>}
-          {success && <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-xs font-bold">Trip goal saved.</div>}
-
-          <div>
-            <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Trip Title</label>
-            <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Bali Rewards Trip 2026" className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Income Goal (₹)</label>
-            <input type="number" step="any" value={form.goal_amount} onChange={(e) => setForm({ ...form, goal_amount: e.target.value })} placeholder="50000" className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Target Date</label>
-            <input type="date" value={form.goal_date} onChange={(e) => setForm({ ...form, goal_date: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow" />
-          </div>
-
-          <p className="text-[11px] text-slate-400">
-            Leave the title, amount, or date empty to hide the trip program from students — they'll instead see a "not yet configured" placeholder with their current earnings.
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 className="font-black text-slate-900 text-lg">Trip Rewards</h3>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Each trip is unlocked by a student's active (direct-referral) income. Students see all of them with an earned / still-to-go status.
           </p>
-
-          <button type="submit" disabled={saving} className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-60 flex items-center justify-center gap-2 shadow-md shadow-red-600/25 hover:shadow-lg transition-all">
-            {saving ? 'Saving...' : <><Save className="w-4 h-4" /> Save Trip Goal</>}
-          </button>
-        </form>
+        </div>
+        <button
+          onClick={openCreate}
+          className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md shadow-red-600/25 hover:shadow-lg transition-all"
+        >
+          <Plus className="w-4 h-4" /> Add Trip
+        </button>
       </div>
+
+      {trips.length === 0 ? (
+        <div className="bg-white border border-slate-100 rounded-3xl p-10 text-center shadow-sm">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-violet-50 text-violet-500 flex items-center justify-center mb-4">
+            <Plane className="w-7 h-7" />
+          </div>
+          <p className="text-sm font-bold text-slate-700">No trip rewards yet</p>
+          <p className="text-xs text-slate-400 mt-1">Add one and students will see it on their Trip Achievements page.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {trips.map((trip) => (
+            <div key={trip.id} className="relative overflow-hidden bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex gap-4 p-4">
+                <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center">
+                  {trip.image_display_url
+                    ? <img src={trip.image_display_url} alt={trip.title} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                    : <Plane className="w-8 h-8 text-slate-300" />}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start gap-2">
+                    <h4 className="font-black text-slate-900 text-sm truncate flex-1">{trip.title}</h4>
+                    <span className={`shrink-0 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${
+                      trip.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'
+                    }`}>
+                      {trip.is_active ? 'Live' : 'Hidden'}
+                    </span>
+                  </div>
+                  {trip.destination && <p className="text-[11px] text-slate-400 font-semibold truncate mt-0.5">{trip.destination}</p>}
+                  <p className="text-base font-black text-slate-900 mt-1.5 tabular-nums">
+                    ₹{Number(trip.goal_amount).toLocaleString('en-IN')}
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    by {trip.goal_date ? new Date(`${trip.goal_date}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                    <span className="mx-1.5">·</span>order {trip.display_order}
+                  </p>
+
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => openEdit(trip)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider hover:bg-slate-200 transition-colors"
+                    >
+                      <Pencil className="w-3 h-3" /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(trip)}
+                      disabled={deletingId === trip.id}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wider hover:bg-red-100 transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3 h-3" /> {deletingId === trip.id ? '...' : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showForm && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowForm(false)}>
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-6 py-4 bg-white border-b border-slate-100">
+              <h3 className="font-black text-slate-900">{editing ? 'Edit Trip' : 'Add Trip'}</h3>
+              <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {error && (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-xs font-bold">
+                  <X className="w-4 h-4 shrink-0" /> {error}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Trip Title *</label>
+                <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="Bali International Trip"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Destination</label>
+                <input value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })}
+                  placeholder="Bali, Indonesia"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Description</label>
+                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2}
+                  placeholder="What the reward includes..."
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Target Income (₹) *</label>
+                  <input type="number" step="any" value={form.goal_amount} onChange={(e) => setForm({ ...form, goal_amount: e.target.value })}
+                    placeholder="50000"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Deadline *</label>
+                  <input type="date" value={form.goal_date} onChange={(e) => setForm({ ...form, goal_date: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Trip Photo</label>
+                <div className="flex items-center gap-3">
+                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 shrink-0 flex items-center justify-center">
+                    {imagePreview || editing?.image_display_url
+                      ? <img src={imagePreview || editing.image_display_url} alt="" className="w-full h-full object-cover" />
+                      : <ImageIcon className="w-6 h-6 text-slate-300" />}
+                  </div>
+                  <label className="flex-1 cursor-pointer">
+                    <div className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 text-xs font-bold text-slate-500 hover:border-red-300 hover:text-red-500 transition-colors">
+                      <Upload className="w-4 h-4" /> {imageFile ? imageFile.name.slice(0, 24) : 'Choose image'}
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      setImageFile(f);
+                      setImagePreview(URL.createObjectURL(f));
+                    }} />
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 items-end">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Display Order</label>
+                  <input type="number" value={form.display_order} onChange={(e) => setForm({ ...form, display_order: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400" />
+                </div>
+                <label className="flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-200 cursor-pointer select-none">
+                  <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+                    className="w-4 h-4 accent-red-600" />
+                  <span className="text-xs font-bold text-slate-600">Visible to students</span>
+                </label>
+              </div>
+
+              <button type="submit" disabled={saving}
+                className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-60 flex items-center justify-center gap-2 shadow-md shadow-red-600/25 hover:shadow-lg transition-all">
+                {saving ? 'Saving...' : <><Save className="w-4 h-4" /> {editing ? 'Update Trip' : 'Create Trip'}</>}
+              </button>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

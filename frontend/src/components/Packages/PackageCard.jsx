@@ -107,7 +107,7 @@ export default function PackageCard({ pkg, index, owned = false }) {
         )}
 
         <Link
-          to={owned ? `/student/packages/${pkg.id}` : `/packages/${pkg.id}`}
+          to={owned ? `/student/packages/${pkg.id}` : `/packages/${pkg.public_code || pkg.id}`}
           className={`group/btn relative w-full py-4 px-6 rounded-2xl font-black text-xs inline-flex items-center justify-center gap-2 text-center transition-all duration-300 uppercase tracking-widest overflow-hidden ${
             owned
               ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl active:scale-95'

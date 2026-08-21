@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
-import { ChevronDown, Layers, ChevronRight, ArrowRight, GraduationCap, Menu, X, Sparkles } from 'lucide-react';
+import { ChevronDown, Layers, ChevronRight, ArrowRight, Menu, X, Sparkles } from 'lucide-react';
 
 export default function Navbar() {
   const { user } = useAuth();
@@ -11,9 +11,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobilePackagesOpen, setMobilePackagesOpen] = useState(false);
-  const [mobileCoursesOpen, setMobileCoursesOpen] = useState(false);
   const [packages, setPackages] = useState([]);
-  const [courses, setCourses] = useState([]);
   const [navDataLoading, setNavDataLoading] = useState(true);
 
   const isActive = (path) => location.pathname === path;
@@ -28,7 +26,6 @@ export default function Navbar() {
   useEffect(() => {
     api.get('/global-data').then(r => {
       setPackages(r.data.packages || []);
-      setCourses(r.data.courses || []);
     }).catch(() => {}).finally(() => setNavDataLoading(false));
   }, []);
 
@@ -112,7 +109,7 @@ export default function Navbar() {
                   <p className="text-center text-xs text-slate-400 font-semibold py-6">No packages available right now.</p>
                 )}
                 {!navDataLoading && packages.map((pkg, idx) => (
-                  <Link key={pkg.id} to={`/packages/${pkg.id}`}
+                  <Link key={pkg.id} to={`/packages/${pkg.public_code || pkg.id}`}
                     className="relative flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 group/item hover:bg-gradient-to-r hover:from-primary/[0.06] hover:to-indigo-50/60 hover:shadow-[inset_2px_0_0_0_#2b80f0]">
                     <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-slate-100 border border-slate-100 shadow-sm transition-transform duration-300 group-hover/item:scale-105">
                       {pkg.thumbnail_display_url
@@ -140,63 +137,11 @@ export default function Navbar() {
             </div>
           </li>
 
-          {/* Courses Dropdown */}
-          <li className="relative group">
-            <button className={`flex items-center focus:outline-none ${navH}`}>
-              <span className={`relative flex items-center gap-1.5 px-4 py-2 rounded-lg text-[15px] font-bold transition-colors duration-200 hover:bg-primary/5 ${isActiveGroup('/courses') ? 'text-primary' : 'text-slate-600 hover:text-primary'}`}>
-                Courses
-                <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 opacity-60" strokeWidth={2.5} />
-                <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-primary rounded-full transition-all duration-300 ${isActiveGroup('/courses') ? 'w-4' : 'w-0 group-hover:w-4'}`}></span>
-              </span>
-            </button>
-            {/* Dropdown */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 w-[600px] bg-white rounded-2xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.2)] ring-1 ring-slate-100/80 overflow-hidden opacity-0 scale-95 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-[opacity,transform] duration-150 ease-out will-change-transform z-50">
-              <div className="absolute -top-[6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-slate-100/80 rotate-45"></div>
-              <div className="relative px-5 pt-4 pb-3 bg-gradient-to-br from-sky-50 via-white to-primary/5 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-sky-500 flex items-center justify-center shrink-0 shadow-md shadow-primary/25">
-                    <GraduationCap className="w-4 h-4 text-white" strokeWidth={2.5} />
-                  </div>
-                  <div>
-                    <p className="font-heading font-black text-sm text-slate-900 leading-tight">Popular Courses</p>
-                    <p className="text-[11px] text-slate-400 font-semibold">Handpicked to get you started fast</p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-5">
-                {navDataLoading && (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="w-6 h-6 rounded-full border-2 border-primary/20 border-t-primary animate-spin"></div>
-                  </div>
-                )}
-                {!navDataLoading && courses.length === 0 && (
-                  <p className="text-center text-xs text-slate-400 font-semibold py-6">No courses available right now.</p>
-                )}
-                <div className={`grid grid-cols-2 gap-1.5 ${navDataLoading ? 'hidden' : ''}`}>
-                  {!navDataLoading && courses.slice(0, 6).map(course => (
-                    <Link key={course.id} to={`/courses/${course.slug || course.id}`}
-                      className="flex items-center gap-2.5 p-2 rounded-xl transition-all duration-200 group/item hover:bg-gradient-to-r hover:from-primary/[0.06] hover:to-sky-50/60 hover:shadow-[inset_2px_0_0_0_#2b80f0]">
-                      <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-slate-100 border border-slate-100 shadow-sm transition-transform duration-300 group-hover/item:scale-105">
-                        {course.thumbnail_display_url
-                          ? <img src={course.thumbnail_display_url} alt={course.title} className="w-full h-full object-cover" loading="lazy" />
-                          : <div className="w-full h-full bg-gradient-to-br from-primary to-sky-500 flex items-center justify-center text-[10px] font-bold text-white">C</div>
-                        }
-                      </div>
-                      <div className="overflow-hidden">
-                        <p className="font-bold text-slate-700 text-xs truncate group-hover/item:text-primary transition-colors leading-snug">{course.title}</p>
-                        <span className="inline-block text-[8px] font-black uppercase tracking-wide text-primary bg-primary/10 px-1.5 py-0.5 rounded-full mt-1">Course</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-                <div className="border-t border-slate-100 mt-3 pt-3">
-                  <Link to="/courses" className="group/see-all flex items-center justify-center gap-2 py-2.5 bg-primary/5 hover:bg-primary/10 border border-dashed border-primary/20 hover:border-primary/40 rounded-xl transition-all">
-                    <span className="font-extrabold text-xs text-primary uppercase tracking-wider">See All Courses</span>
-                    <ArrowRight className="w-[13px] h-[13px] text-primary group-hover/see-all:translate-x-1 transition-transform" strokeWidth={2.5} />
-                  </Link>
-                </div>
-              </div>
-            </div>
+          <li>
+            <Link to="/courses" className={`relative group flex items-center px-4 py-2 text-[15px] font-bold transition-colors duration-200 rounded-lg hover:bg-primary/5 ${isActiveGroup('/courses') ? 'text-primary' : 'text-slate-600 hover:text-primary'}`}>
+              Courses
+              <span className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-primary rounded-full transition-all duration-300 ${isActiveGroup('/courses') ? 'w-4' : 'w-0 group-hover:w-4'}`}></span>
+            </Link>
           </li>
 
           <li>
@@ -266,7 +211,7 @@ export default function Navbar() {
               <div className="overflow-hidden transition-all duration-300 bg-slate-50 rounded-xl mt-1 mx-1" style={{ maxHeight: mobilePackagesOpen ? '600px' : '0px' }}>
                 <div className="flex flex-col gap-2 p-3">
                   {packages.map(pkg => (
-                    <Link key={pkg.id} to={`/packages/${pkg.id}`} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 p-2 hover:bg-white rounded-xl transition-all duration-150">
+                    <Link key={pkg.id} to={`/packages/${pkg.public_code || pkg.id}`} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 p-2 hover:bg-white rounded-xl transition-all duration-150">
                       <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-slate-100 border border-slate-200 shadow-sm">
                         {pkg.thumbnail_display_url ? <img src={pkg.thumbnail_display_url} alt={pkg.name} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-[8px] font-black text-white">Z</div>}
                       </div>
@@ -281,29 +226,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Courses Accordion */}
-            <div className="flex flex-col">
-              <button onClick={() => setMobileCoursesOpen(v => !v)} className="flex items-center justify-between px-4 py-3 text-sm font-bold text-slate-700 hover:text-primary hover:bg-primary/5 transition-all duration-150 rounded-xl w-full text-left">
-                <span>Courses</span>
-                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${mobileCoursesOpen ? 'rotate-180' : ''}`} strokeWidth={2.5} />
-              </button>
-              <div className="overflow-hidden transition-all duration-300 bg-slate-50 rounded-xl mt-1 mx-1" style={{ maxHeight: mobileCoursesOpen ? '600px' : '0px' }}>
-                <div className="flex flex-col gap-2 p-3">
-                  {courses.slice(0, 7).map(course => (
-                    <Link key={course.id} to={`/courses/${course.slug || course.id}`} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 p-2 hover:bg-white rounded-xl transition-all duration-150">
-                      <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-slate-100 border border-slate-200 shadow-sm">
-                        {course.thumbnail_display_url ? <img src={course.thumbnail_display_url} alt={course.title} className="w-full h-full object-cover" loading="lazy" /> : <div className="w-full h-full bg-gradient-to-br from-primary to-sky-500 flex items-center justify-center text-[8px] font-bold text-white">C</div>}
-                      </div>
-                      <div className="overflow-hidden">
-                        <p className="font-bold text-slate-700 text-xs truncate leading-snug">{course.title}</p>
-                        <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mt-0.5">Course</p>
-                      </div>
-                    </Link>
-                  ))}
-                  <Link to="/courses" onClick={() => setMobileOpen(false)} className="block text-center py-2 text-[10px] font-bold text-primary bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors uppercase tracking-wider mt-1">See All Courses</Link>
-                </div>
-              </div>
-            </div>
+            <Link to="/courses" onClick={() => setMobileOpen(false)} className="flex items-center px-4 py-3 text-sm font-bold text-slate-700 hover:text-primary hover:bg-primary/5 transition-all duration-150 rounded-xl">Courses</Link>
 
             <Link to="/about" onClick={() => setMobileOpen(false)} className="flex items-center px-4 py-3 text-sm font-bold text-slate-700 hover:text-primary hover:bg-primary/5 transition-all duration-150 rounded-xl">About</Link>
             <Link to="/contact" onClick={() => setMobileOpen(false)} className="flex items-center px-4 py-3 text-sm font-bold text-slate-700 hover:text-primary hover:bg-primary/5 transition-all duration-150 rounded-xl">Contact</Link>

@@ -51,7 +51,7 @@ export default function Courses() {
   const query = searchParams.get('q');
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800 overflow-hidden relative">
+    <div className="min-h-screen text-slate-800 overflow-hidden relative">
 
       {/* Page Banner */}
       <section className="relative py-20 md:py-28 flex items-center justify-center overflow-hidden -mt-24 pt-44"

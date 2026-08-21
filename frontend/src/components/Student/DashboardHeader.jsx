@@ -112,18 +112,21 @@ export default function DashboardHeader({ onToggleSidebar }) {
 
       {/* Left: logo */}
       <div className="relative flex items-center gap-3 flex-shrink-0">
+        {/* No plate behind the logo — it sits straight on the header gradient so
+            the bar reads as one unbroken colour. The PNG is transparent and its
+            artwork is dark blue, so it's knocked out to solid white to stay
+            readable on the dark gradient (same treatment the footer uses). */}
         <Link
           to="/"
-          className="relative flex items-center bg-white px-3 py-1.5 rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-transform hover:-translate-y-0.5"
+          className="relative flex items-center transition-transform hover:-translate-y-0.5"
         >
-          <span className="absolute -inset-1 rounded-xl bg-white/30 blur-md animate-pulse pointer-events-none -z-10"></span>
           <img
             src="/static/img/zarni-logo.png"
             alt="Zarni Skills"
             onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-            className="h-7 sm:h-8 w-auto object-contain"
+            className="h-9 sm:h-10 w-auto object-contain brightness-0 invert"
           />
-          <span className="hidden items-center font-black text-primary text-sm">ZS</span>
+          <span className="hidden items-center font-black text-white text-sm">ZS</span>
         </Link>
         {isAdmin && (
           <span className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/15 text-[10px] font-black uppercase tracking-widest text-white/80">

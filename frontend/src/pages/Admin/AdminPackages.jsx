@@ -8,7 +8,7 @@ import api from '../../utils/api';
 const LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'];
 
 const EMPTY_FORM = {
-  name: '', description: '', price: '', min_income: '0',
+  name: '', description: '', price: '', market_price: '', gst_percent: '18', min_income: '0',
   level1_pct: '10', level2_pct: '5', pkg_duration: '', level: '', language: '',
   what_you_get: '', requirements: '', is_active: true, course_ids: [],
 };
@@ -55,6 +55,7 @@ export default function AdminPackages() {
     setEditingId(pkg.id);
     setForm({
       name: pkg.name || '', description: pkg.description || '', price: pkg.price ?? '',
+      market_price: pkg.market_price ?? '', gst_percent: pkg.gst_percent ?? '18',
       min_income: pkg.min_income_for_level2 ?? '0',
       level1_pct: pkg.level1_commission_percent ?? '10', level2_pct: pkg.level2_commission_percent ?? '5',
       pkg_duration: pkg.pkg_duration || '', level: pkg.level || '', language: pkg.language || '',
@@ -90,6 +91,8 @@ export default function AdminPackages() {
       fd.append('name', form.name);
       fd.append('description', form.description);
       fd.append('price', form.price);
+      fd.append('market_price', form.market_price);
+      fd.append('gst_percent', form.gst_percent);
       fd.append('min_income', form.min_income);
       fd.append('level1_pct', form.level1_pct);
       fd.append('level2_pct', form.level2_pct);
@@ -195,7 +198,17 @@ export default function AdminPackages() {
               <div className="p-6 space-y-4">
                 <div>
                   <h4 className="font-extrabold text-slate-900 uppercase text-sm tracking-tight line-clamp-1">{pkg.name}</h4>
-                  <p className="text-xl font-black text-rose-600 mt-1">₹{(pkg.price || 0).toLocaleString('en-IN')}</p>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <p className="text-xl font-black text-rose-600">₹{(pkg.price || 0).toLocaleString('en-IN')}</p>
+                    {pkg.market_price > pkg.price && (
+                      <>
+                        <p className="text-xs font-bold text-slate-400 line-through">₹{pkg.market_price.toLocaleString('en-IN')}</p>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">
+                          {Math.round(((pkg.market_price - pkg.price) / pkg.market_price) * 100)}% OFF
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
                 
                 <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 h-8">{pkg.description || 'Professional training bundle compiled for advanced learning.'}</p>
@@ -302,7 +315,7 @@ export default function AdminPackages() {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Retail Price (₹) *</label>
+                    <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Retail Price (₹) — final, GST-inclusive *</label>
                     <input required type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
                   </div>
                   <div>
@@ -310,6 +323,41 @@ export default function AdminPackages() {
                     <input type="number" min="0" step="0.01" value={form.min_income} onChange={(e) => setForm({ ...form, min_income: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
                   </div>
                 </div>
+              </div>
+
+              {/* Market price / discount / GST */}
+              <div className="bg-emerald-500/5 border border-emerald-500/25 rounded-2xl p-4 sm:p-5 space-y-4">
+                <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest flex items-center gap-1.5">
+                  <Percent className="w-4 h-4" /> Discount &amp; GST Display
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-emerald-700 mb-1.5 uppercase tracking-wide">Market Price / MRP (₹)</label>
+                    <input type="number" min="0" step="0.01" value={form.market_price} onChange={(e) => setForm({ ...form, market_price: e.target.value })} placeholder="e.g. 3500 (leave blank to hide discount badge)" className="w-full px-4 py-2.5 rounded-xl border border-emerald-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-emerald-700 mb-1.5 uppercase tracking-wide">GST (%)</label>
+                    <input type="number" min="0" max="100" step="0.01" value={form.gst_percent} onChange={(e) => setForm({ ...form, gst_percent: e.target.value })} placeholder="18" className="w-full px-4 py-2.5 rounded-xl border border-emerald-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500" />
+                  </div>
+                </div>
+                {(() => {
+                  const priceNum = parseFloat(form.price);
+                  const mrpNum = parseFloat(form.market_price);
+                  const gstNum = parseFloat(form.gst_percent);
+                  if (!priceNum) return null;
+                  const gstAmount = gstNum ? priceNum - priceNum / (1 + gstNum / 100) : 0;
+                  const baseCost = priceNum - gstAmount;
+                  const discountPct = mrpNum && mrpNum > priceNum ? Math.round(((mrpNum - priceNum) / mrpNum) * 100) : null;
+                  return (
+                    <div className="text-[11px] text-emerald-800 font-semibold leading-relaxed bg-white border border-emerald-100 rounded-xl p-3.5 space-y-1">
+                      {discountPct !== null && <p>Market Price: <strong>₹{mrpNum.toLocaleString('en-IN')}</strong> — <strong>{discountPct}% OFF</strong></p>}
+                      <p>Package Cost (pre-GST): <strong>₹{baseCost.toFixed(2)}</strong></p>
+                      {gstNum > 0 && <p>GST ({gstNum}%): <strong>₹{gstAmount.toFixed(2)}</strong></p>}
+                      <p>Student Pays (Total): <strong>₹{priceNum.toLocaleString('en-IN')}</strong></p>
+                    </div>
+                  );
+                })()}
+                <p className="text-[10px] text-emerald-700/80 font-medium">Retail Price above is what the student actually pays — GST is shown as a breakdown, not added on top. Leave Market Price blank to hide the discount badge.</p>
               </div>
 
               {/* Commission settings */}
@@ -328,6 +376,43 @@ export default function AdminPackages() {
                   </div>
                   <p className="sm:col-span-2 text-[10px] text-amber-800 font-semibold leading-relaxed">Commission guidelines: L2 commissions are paid out to tier-2 referrers once their direct network earnings exceed the minimum milestone threshold set above.</p>
                 </div>
+
+                {/* Live commission breakdown across every package at this rate */}
+                {packages.length > 0 && (parseFloat(form.level1_pct) > 0 || parseFloat(form.level2_pct) > 0) && (
+                  <div className="pt-1">
+                    <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2">
+                      Live Preview — {form.level1_pct || 0}% Active / {form.level2_pct || 0}% Passive, applied to every package
+                    </p>
+                    <div className="bg-white border border-amber-200 rounded-xl overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-amber-50 text-amber-700 font-black uppercase text-[9px] tracking-wider">
+                            <th className="text-left px-3 py-2">Package</th>
+                            <th className="text-right px-3 py-2">Price</th>
+                            <th className="text-right px-3 py-2">Active ({form.level1_pct || 0}%)</th>
+                            <th className="text-right px-3 py-2">Passive ({form.level2_pct || 0}%)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-amber-100">
+                          {packages.map((pkg) => {
+                            const price = Number(pkg.price) || 0;
+                            const active = price * (parseFloat(form.level1_pct) || 0) / 100;
+                            const passive = price * (parseFloat(form.level2_pct) || 0) / 100;
+                            const isCurrent = pkg.id === editingId;
+                            return (
+                              <tr key={pkg.id} className={isCurrent ? 'bg-amber-50/60 font-bold' : ''}>
+                                <td className="px-3 py-2 text-slate-700 truncate max-w-[120px]">{pkg.name}{isCurrent && <span className="ml-1 text-amber-600">•</span>}</td>
+                                <td className="px-3 py-2 text-right text-slate-600">₹{price.toLocaleString('en-IN')}</td>
+                                <td className="px-3 py-2 text-right text-emerald-700 font-bold">₹{active.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                                <td className="px-3 py-2 text-right text-indigo-700 font-bold">₹{passive.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Course Features */}

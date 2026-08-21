@@ -1,10 +1,74 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Wallet as WalletIcon, CheckCircle2, Clock, Landmark, ArrowUpRight, ArrowDownRight, Sparkles, Zap, TrendingUp, IndianRupee, Layers, Users, Crown, CreditCard, ShieldCheck } from 'lucide-react';
+import { Wallet as WalletIcon, CheckCircle2, Clock, Landmark, ArrowUpRight, ArrowDownRight, Zap, TrendingUp, IndianRupee, Layers, Users, Crown, ShieldCheck } from 'lucide-react';
 import api from '../../utils/api';
 import AnimatedNumber from '../../components/AnimatedNumber';
 import Reveal from '../../components/Reveal';
 import useTilt from '../../hooks/useTilt';
+
+// Amounts on these tiles have no upper bound, so the type scale steps down as
+// the formatted figure gets longer — a crore-plus number stays on one line
+// inside the tile instead of overflowing or wrapping mid-digit.
+function amountClass(value) {
+  const len = `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`.length;
+  if (len <= 7) return 'text-3xl sm:text-4xl';
+  if (len <= 9) return 'text-2xl sm:text-3xl';
+  if (len <= 12) return 'text-xl sm:text-2xl';
+  return 'text-lg sm:text-xl';
+}
+
+// Every income figure on this page renders through the same dark-glass tile —
+// an accent hue is the only thing that changes between them, so the three
+// income sections read as one system instead of three separate designs.
+function KpiTile({ label, value, Icon, accent, deep }) {
+  return (
+    <div
+      className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 border border-white/[0.08] hover:border-white/[0.16]"
+      style={{
+        background: `linear-gradient(155deg, ${deep} 0%, #070d1f 65%)`,
+        boxShadow: '0 10px 30px rgba(8,15,38,0.3)',
+      }}
+    >
+      {/* A single restrained corner glow — brighter on hover only, so a row of
+          four tiles stays calm instead of four competing washes of colour. */}
+      <span
+        className="absolute -top-14 -right-10 w-36 h-36 rounded-full blur-[52px] pointer-events-none opacity-45 transition-opacity duration-500 group-hover:opacity-80"
+        style={{ background: accent }}
+      ></span>
+      <span
+        className="absolute inset-x-0 top-0 h-px pointer-events-none opacity-60"
+        style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }}
+      ></span>
+      <Icon
+        className="absolute -right-4 -bottom-4 w-24 h-24 pointer-events-none transition-transform duration-500 group-hover:scale-105"
+        style={{ color: accent, opacity: 0.08 }}
+        strokeWidth={1}
+      />
+
+      {/* Icon sits beside the figure on narrow screens (one tile per row) and
+          above it once the tiles sit four-across. */}
+      <div className="relative z-10 p-4 sm:p-5 flex items-center gap-4 lg:block">
+        <span
+          className="w-11 h-11 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shrink-0 lg:mb-4 border"
+          style={{ color: accent, borderColor: `${accent}40`, backgroundColor: `${accent}14` }}
+        >
+          <Icon className="w-5 h-5 lg:w-4 lg:h-4" strokeWidth={2.2} />
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[9px] font-black uppercase tracking-[0.22em] text-white/45 mb-1.5 truncate">
+            {label}
+          </p>
+          <AnimatedNumber
+            value={Math.round(value)}
+            prefix="₹"
+            className={`block ${amountClass(value)} font-heading font-black text-white leading-none tabular-nums whitespace-nowrap`}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const EMPTY_SUMMARY = {
   total: { today: 0, '7days': 0, '30days': 0, alltime: 0 },
@@ -102,85 +166,102 @@ export default function Wallet() {
 
       {/* ── 3D TILT HERO HERO BANNER ───────────────────────────────────────── */}
       <Reveal variant="scale-in">
-        <div
-          ref={tiltHeroRef}
-          onMouseMove={onHeroMove}
-          onMouseLeave={onHeroLeave}
-          className="relative rounded-[2.5rem] p-6 sm:p-10 text-white shadow-2xl shadow-blue-950/20 overflow-hidden group [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform transition-transform duration-300"
-          style={{ background: 'linear-gradient(135deg, #0b1428 0%, #1e3a8a 50%, #2563eb 100%)' }}
-        >
-          {/* Ambient Lighting & Pattern Sweep */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/20 rounded-full blur-[140px] pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-emerald-500/20 rounded-full blur-[120px] pointer-events-none"></div>
-          <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
+        {/* Aurora glow field sits OUTSIDE the card so the card's backdrop-blur
+            has something colourful to frost — that's what makes it read as
+            real glass rather than a flat translucent panel. */}
+        <div className="relative">
+          {/* Analogous hues only (violet → indigo → blue). Warm tones were
+              muddying to olive where they crossed the cool ones, so gold now
+              appears only in the card's own trim, never in the glow field. */}
+          <div className="absolute -inset-3 sm:-inset-5 rounded-[3rem] overflow-hidden pointer-events-none">
+            <div className="absolute inset-0 bg-[#070d20]"></div>
+            <div className="absolute -top-20 -left-12 w-80 h-80 rounded-full bg-violet-600/70 blur-[75px] animate-blob"></div>
+            <div className="absolute -bottom-24 -right-12 w-80 h-80 rounded-full bg-blue-600/70 blur-[75px] animate-blob" style={{ animationDelay: '3s' }}></div>
+            <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-56 h-56 rounded-full bg-indigo-500/55 blur-[80px] animate-blob" style={{ animationDelay: '6s' }}></div>
+            {/* Vignette keeps the centre readable and the edges rich */}
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(7,13,32,0.6) 0%, rgba(7,13,32,0.2) 45%, rgba(7,13,32,0.8) 100%)' }}></div>
+          </div>
 
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-            <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-[10px] font-black uppercase tracking-widest text-blue-200 mb-5 backdrop-blur-md shadow-inner">
-                <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" /> Official Earnings Vault
-              </div>
-              
-              <p className="text-blue-200/80 text-[11px] font-black uppercase tracking-[0.2em] mb-2">Available Payout Balance</p>
-              <AnimatedNumber
-                value={balanceData.availableBalance}
-                prefix="₹"
-                duration={1400}
-                className="block text-4xl sm:text-6xl font-heading font-black leading-none tabular-nums text-white"
-                style={{ textShadow: '0 4px 24px rgba(0,0,0,0.3)' }}
-              />
-              <p className="text-blue-100/80 text-xs sm:text-sm font-medium mt-4 leading-relaxed">
-                Track direct & passive referral payouts, manage instant withdrawals, and view full transaction logs.
-              </p>
+          <div
+            ref={tiltHeroRef}
+            onMouseMove={onHeroMove}
+            onMouseLeave={onHeroLeave}
+            className="relative w-full rounded-[2.5rem] p-6 sm:p-8 lg:px-12 lg:py-10 text-white bg-white/[0.07] backdrop-blur-2xl border border-white/25 shadow-[0_20px_60px_rgba(8,15,40,0.45)] overflow-hidden group [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform transition-transform duration-300"
+          >
+            {/* Glass sheen: bright top edge, soft top-down highlight, sweep */}
+            <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent pointer-events-none"></span>
+            <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent pointer-events-none"></div>
+            <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none"></span>
 
-              <div className="flex flex-wrap gap-3 mt-6">
-                <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md shadow-lg">
-                  <span className="w-7 h-7 rounded-xl bg-emerald-400/20 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                  </span>
-                  <div>
-                    <p className="text-[9px] uppercase tracking-widest font-black text-blue-200">Total Earned</p>
-                    <p className="text-sm font-black text-white tabular-nums">₹{Math.round(balanceData.totalEarnings).toLocaleString('en-IN')}</p>
+            {/* Fine dot-grid texture */}
+            <div className="absolute inset-0 opacity-[0.06] pointer-events-none" style={{
+              backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
+              backgroundSize: '18px 18px',
+            }}></div>
+
+            {/* Gold hairline just below the top edge */}
+            <span className="absolute top-[3px] left-10 right-10 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent pointer-events-none"></span>
+
+            {/* Corner brackets */}
+            {[
+              'top-4 left-4 border-t border-l rounded-tl-xl',
+              'top-4 right-4 border-t border-r rounded-tr-xl',
+              'bottom-4 left-4 border-b border-l rounded-bl-xl',
+              'bottom-4 right-4 border-b border-r rounded-br-xl',
+            ].map((pos) => (
+              <span key={pos} className={`absolute w-7 h-7 border-amber-300/30 pointer-events-none ${pos}`}></span>
+            ))}
+
+          {/* Partner card — stacked and centred on mobile, laid out across the
+              full width on desktop so the band never sits half-empty. */}
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-8">
+
+            {/* Avatar — slowly rotating gold ring, static portrait inside */}
+            <div className="relative shrink-0 mx-auto sm:mx-0">
+              <span className="absolute -inset-6 rounded-full bg-amber-300/20 blur-2xl"></span>
+              <span
+                className="absolute -inset-[7px] rounded-full animate-spin-slow"
+                style={{ background: 'conic-gradient(from 0deg, #fcd34d, #ffffff, #7dd3fc, #fcd34d)' }}
+              ></span>
+              <span className="absolute -inset-[3px] rounded-full bg-[#16295c]"></span>
+              <span className="absolute -inset-4 rounded-full border border-dashed border-amber-200/25 animate-spin-slow" style={{ animationDirection: 'reverse' }}></span>
+
+              <div className="relative w-24 h-24 lg:w-28 lg:h-28 rounded-full overflow-hidden ring-2 ring-white/60 shadow-2xl bg-white/20">
+                {user?.profile_image_url ? (
+                  <img src={user.profile_image_url} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-2xl font-black text-white">
+                    {(user?.name || 'Z').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md shadow-lg">
-                  <span className="w-7 h-7 rounded-xl bg-amber-400/20 flex items-center justify-center shrink-0">
-                    <Clock className="w-4 h-4 text-amber-300" />
-                  </span>
-                  <div>
-                    <p className="text-[9px] uppercase tracking-widest font-black text-blue-200">Pending</p>
-                    <p className="text-sm font-black text-white tabular-nums">₹{Math.round(balanceData.pendingEarnings).toLocaleString('en-IN')}</p>
-                  </div>
-                </div>
+                )}
               </div>
+              <span className="absolute bottom-0.5 right-0.5 w-6 h-6 rounded-full bg-emerald-400 border-[3px] border-[#12224a] flex items-center justify-center shadow-lg z-10">
+                <ShieldCheck className="w-3 h-3 text-white" strokeWidth={3} />
+              </span>
             </div>
 
-            {/* 3D Glassmorphic Debit Card Visual */}
-            <div className="group relative w-full lg:w-80 shrink-0 rounded-[2rem] p-6 bg-gradient-to-br from-white/15 to-white/5 border border-white/25 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:border-white/40 transition-all duration-500 overflow-hidden">
-              <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none rounded-[2rem]"></span>
-              
-              <div className="relative flex items-center justify-between mb-8">
-                <div className="w-10 h-7 rounded-md bg-gradient-to-br from-amber-300 via-amber-400 to-yellow-500 shadow-inner flex items-center justify-center">
-                  <div className="w-6 h-4 border border-amber-600/40 rounded"></div>
-                </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-[9px] font-black uppercase tracking-widest text-amber-300">
-                  <ShieldCheck className="w-3 h-3" /> Verified
-                </div>
-              </div>
+            {/* Identity */}
+            <div className="min-w-0 flex-1 text-center sm:text-left">
+              <h3 className="text-2xl lg:text-3xl font-heading font-black leading-tight truncate bg-gradient-to-b from-white via-white to-amber-100 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
+                {user?.name || 'Zarni Partner'}
+              </h3>
+              <p className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[9px] lg:text-[10px] font-black uppercase tracking-[0.2em] text-blue-100/80">
+                <Clock className="w-3 h-3 text-amber-200/80" strokeWidth={2.5} />
+                Member Since {user?.created_at || '—'}
+              </p>
+            </div>
 
-              <div className="relative flex items-center gap-2 mb-6">
-                {[0, 1, 2].map((g) => (
-                  <span key={g} className="flex items-center gap-1 mr-2">
-                    {[0, 1, 2, 3].map((d) => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/50"></span>)}
-                  </span>
-                ))}
-                <span className="text-base font-mono font-bold tracking-widest text-white">{String(user?.id || 0).padStart(4, '0')}</span>
-              </div>
-
-              <div className="relative flex items-center justify-between text-[10px] uppercase tracking-widest text-white/60 font-black pt-2 border-t border-white/10">
-                <span className="truncate max-w-[65%] text-white">{user?.name || 'Zarni Partner'}</span>
-                <span className="text-amber-300">{user?.role === 'manager' ? 'Manager' : 'Affiliate'}</span>
-              </div>
+            {/* Badge + brand line */}
+            <div className="flex flex-col items-center sm:items-end gap-3 shrink-0 pt-5 sm:pt-0 border-t sm:border-t-0 sm:border-l border-white/15 sm:pl-8">
+              <span className="relative inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-400/25 via-amber-300/15 to-amber-400/25 border border-amber-300/50 text-[9px] lg:text-[10px] font-black uppercase tracking-[0.15em] text-amber-100 whitespace-nowrap shadow-[0_0_20px_rgba(252,211,77,0.25)] overflow-hidden">
+                <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none"></span>
+                <ShieldCheck className="relative w-3 h-3" strokeWidth={2.5} />
+                <span className="relative">Verified Partner</span>
+              </span>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30">
+                zarniskills.com
+              </p>
+            </div>
             </div>
           </div>
         </div>
@@ -189,39 +270,23 @@ export default function Wallet() {
       {/* Total Income breakdown */}
       <Reveal variant="fade-up" delay={150}>
         <section>
-          <h2 className="flex items-center gap-3 font-heading text-lg font-black text-slate-900 mb-4">
-            <TrendingUp className="w-5 h-5 text-blue-600 shrink-0" />
-            Total Income Summary
+          <div className="flex items-center gap-3 mb-5">
+            <span className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-4 h-4 text-blue-600" strokeWidth={2.4} />
+            </span>
+            <div className="min-w-0">
+              <h2 className="font-heading text-base sm:text-lg font-black text-slate-900 leading-tight">Total Income Summary</h2>
+              <p className="text-[11px] font-semibold text-slate-400">Your complete earnings across every period</p>
+            </div>
             <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
-          </h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[
-              { label: "Today's Income", value: earningsSummary.total.today, Icon: Zap, from: '#34d399', to: '#059669', shadow: 'rgba(16,185,129,0.3)' },
-              { label: '7 Day Income', value: earningsSummary.total['7days'], Icon: TrendingUp, from: '#22d3ee', to: '#0891b2', shadow: 'rgba(8,145,178,0.3)' },
-              { label: '30 Day Income', value: earningsSummary.total['30days'], Icon: IndianRupee, from: '#60a5fa', to: '#2563eb', shadow: 'rgba(37,99,235,0.3)' },
-              { label: 'All Time Income', value: earningsSummary.total.alltime, Icon: CheckCircle2, from: '#a78bfa', to: '#7c3aed', shadow: 'rgba(124,58,237,0.3)' },
-            ].map((kpi, idx) => (
-              <div
-                key={kpi.label}
-                className="group relative rounded-3xl p-5 sm:p-6 border border-white/30 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 shadow-lg"
-                style={{
-                  background: `linear-gradient(135deg, ${kpi.from} 0%, ${kpi.to} 100%)`,
-                  boxShadow: `0 12px 28px ${kpi.shadow}, inset 0 1px 0 rgba(255,255,255,0.3)`,
-                }}
-              >
-                <kpi.Icon className="absolute -right-3 -bottom-3 w-20 h-20 text-white/10 pointer-events-none transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" strokeWidth={1.5} />
-                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"></span>
-                <div className="relative z-10">
-                  <span className="text-[10px] font-black text-white/85 uppercase tracking-widest">{kpi.label}</span>
-                  <AnimatedNumber
-                    value={Math.round(kpi.value)}
-                    prefix="₹"
-                    className="block text-2xl sm:text-3xl font-heading font-black text-white leading-none mt-2.5 tabular-nums"
-                    style={{ textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
-                  />
-                </div>
-              </div>
-            ))}
+              { label: "Today's Income", value: earningsSummary.total.today, Icon: Zap, accent: '#34d399', deep: '#043d2f' },
+              { label: '7 Day Income', value: earningsSummary.total['7days'], Icon: TrendingUp, accent: '#22d3ee', deep: '#053745' },
+              { label: '30 Day Income', value: earningsSummary.total['30days'], Icon: IndianRupee, accent: '#60a5fa', deep: '#0a2a5e' },
+              { label: 'All Time Income', value: earningsSummary.total.alltime, Icon: CheckCircle2, accent: '#c084fc', deep: '#2e1065' },
+            ].map((kpi) => <KpiTile key={kpi.label} {...kpi} />)}
           </div>
         </section>
       </Reveal>
@@ -249,7 +314,7 @@ export default function Wallet() {
               ].map((row) => (
                 <div key={row.label} className="rounded-2xl p-4 bg-purple-50/70 border border-purple-100 transition-transform hover:-translate-y-1">
                   <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">{row.label}</p>
-                  <AnimatedNumber value={Math.round(row.value)} prefix="₹" className="block text-xl font-black text-purple-900" />
+                  <AnimatedNumber value={Math.round(row.value)} prefix="₹" className="block text-xl font-black text-purple-900 tabular-nums whitespace-nowrap" />
                 </div>
               ))}
             </div>
@@ -319,78 +384,46 @@ export default function Wallet() {
         <Reveal variant="fade-up" delay={250}>
           <div className="space-y-8">
             <section>
-              <h2 className="flex items-center gap-3 font-heading text-lg font-black text-slate-900 mb-1">
-                <Users className="w-5 h-5 text-sky-600 shrink-0" />
-                Team's Income Overview
+              <div className="flex items-center gap-3 mb-5">
+                <span className="w-9 h-9 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center shrink-0">
+                  <Users className="w-4 h-4 text-sky-600" strokeWidth={2.4} />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="font-heading text-base sm:text-lg font-black text-slate-900 leading-tight">Team's Income Overview</h2>
+                  <p className="text-[11px] font-semibold text-slate-400">Combined earnings generated by your direct network</p>
+                </div>
                 <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
-              </h2>
-              <p className="text-xs text-slate-400 font-medium mb-4">Combined earnings generated by your direct network</p>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {[
-                  { label: "Today's Team Income", value: earningsSummary.team.today, Icon: Zap, from: '#38bdf8', to: '#0284c7', shadow: 'rgba(2,132,199,0.3)' },
-                  { label: '7 Day Team Income', value: earningsSummary.team['7days'], Icon: TrendingUp, from: '#22d3ee', to: '#0891b2', shadow: 'rgba(8,145,178,0.3)' },
-                  { label: '30 Day Team Income', value: earningsSummary.team['30days'], Icon: IndianRupee, from: '#60a5fa', to: '#2563eb', shadow: 'rgba(37,99,235,0.3)' },
-                  { label: 'All Time Team Income', value: earningsSummary.team.alltime, Icon: CheckCircle2, from: '#818cf8', to: '#4f46e5', shadow: 'rgba(79,70,229,0.3)' },
-                ].map((kpi) => (
-                  <div
-                    key={kpi.label}
-                    className="group relative rounded-3xl p-5 sm:p-6 border border-white/30 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 shadow-lg"
-                    style={{
-                      background: `linear-gradient(135deg, ${kpi.from} 0%, ${kpi.to} 100%)`,
-                      boxShadow: `0 12px 28px ${kpi.shadow}, inset 0 1px 0 rgba(255,255,255,0.3)`,
-                    }}
-                  >
-                    <kpi.Icon className="absolute -right-3 -bottom-3 w-20 h-20 text-white/10 pointer-events-none transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" strokeWidth={1.5} />
-                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"></span>
-                    <div className="relative z-10">
-                      <span className="text-[10px] font-black text-white/85 uppercase tracking-widest">{kpi.label}</span>
-                      <AnimatedNumber
-                        value={Math.round(kpi.value)}
-                        prefix="₹"
-                        className="block text-2xl sm:text-3xl font-heading font-black text-white leading-none mt-2.5 tabular-nums"
-                        style={{ textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  { label: "Today's Team Income", value: earningsSummary.team.today, Icon: Zap, accent: '#38bdf8', deep: '#082f49' },
+                  { label: '7 Day Team Income', value: earningsSummary.team['7days'], Icon: TrendingUp, accent: '#22d3ee', deep: '#053745' },
+                  { label: '30 Day Team Income', value: earningsSummary.team['30days'], Icon: IndianRupee, accent: '#60a5fa', deep: '#0a2a5e' },
+                  { label: 'All Time Team Income', value: earningsSummary.team.alltime, Icon: CheckCircle2, accent: '#818cf8', deep: '#1e1b4b' },
+                ].map((kpi) => <KpiTile key={kpi.label} {...kpi} />)}
               </div>
             </section>
 
             <section>
-              <h2 className="flex items-center gap-3 font-heading text-lg font-black text-slate-900 mb-1">
-                <Crown className="w-5 h-5 text-amber-500 shrink-0" />
-                Manager Income <span className="text-slate-400 font-medium normal-case text-sm">(Passive)</span>
+              <div className="flex items-center gap-3 mb-5">
+                <span className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+                  <Crown className="w-4 h-4 text-amber-500" strokeWidth={2.4} />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="font-heading text-base sm:text-lg font-black text-slate-900 leading-tight">
+                    Manager Income <span className="text-slate-400 font-semibold text-sm">(Passive)</span>
+                  </h2>
+                  <p className="text-[11px] font-semibold text-slate-400">Earnings derived from managers within your direct downline</p>
+                </div>
                 <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
-              </h2>
-              <p className="text-xs text-slate-400 font-medium mb-4">Earnings derived from managers within your direct downline</p>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {[
-                  { label: "Today's Manager Income", value: earningsSummary.manager.today, Icon: Zap, from: '#fbbf24', to: '#d97706', shadow: 'rgba(217,119,6,0.3)' },
-                  { label: '7 Day Manager Income', value: earningsSummary.manager['7days'], Icon: TrendingUp, from: '#fb923c', to: '#ea580c', shadow: 'rgba(234,88,12,0.3)' },
-                  { label: '30 Day Manager Income', value: earningsSummary.manager['30days'], Icon: IndianRupee, from: '#f472b6', to: '#db2777', shadow: 'rgba(219,39,119,0.3)' },
-                  { label: 'All Time Manager Income', value: earningsSummary.manager.alltime, Icon: CheckCircle2, from: '#a78bfa', to: '#7c3aed', shadow: 'rgba(124,58,237,0.3)' },
-                ].map((kpi) => (
-                  <div
-                    key={kpi.label}
-                    className="group relative rounded-3xl p-5 sm:p-6 border border-white/30 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 shadow-lg"
-                    style={{
-                      background: `linear-gradient(135deg, ${kpi.from} 0%, ${kpi.to} 100%)`,
-                      boxShadow: `0 12px 28px ${kpi.shadow}, inset 0 1px 0 rgba(255,255,255,0.3)`,
-                    }}
-                  >
-                    <kpi.Icon className="absolute -right-3 -bottom-3 w-20 h-20 text-white/10 pointer-events-none transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" strokeWidth={1.5} />
-                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"></span>
-                    <div className="relative z-10">
-                      <span className="text-[10px] font-black text-white/85 uppercase tracking-widest">{kpi.label}</span>
-                      <AnimatedNumber
-                        value={Math.round(kpi.value)}
-                        prefix="₹"
-                        className="block text-2xl sm:text-3xl font-heading font-black text-white leading-none mt-2.5 tabular-nums"
-                        style={{ textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  { label: "Today's Manager Income", value: earningsSummary.manager.today, Icon: Zap, accent: '#fbbf24', deep: '#451a03' },
+                  { label: '7 Day Manager Income', value: earningsSummary.manager['7days'], Icon: TrendingUp, accent: '#fb923c', deep: '#431407' },
+                  { label: '30 Day Manager Income', value: earningsSummary.manager['30days'], Icon: IndianRupee, accent: '#f472b6', deep: '#500724' },
+                  { label: 'All Time Manager Income', value: earningsSummary.manager.alltime, Icon: CheckCircle2, accent: '#c084fc', deep: '#2e1065' },
+                ].map((kpi) => <KpiTile key={kpi.label} {...kpi} />)}
               </div>
             </section>
           </div>

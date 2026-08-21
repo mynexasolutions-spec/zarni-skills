@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Link2, Share2, Copy, Check, Lightbulb, Loader2, Rocket, ArrowRight, Sparkles, QrCode, Target, Instagram, Zap, Forward, Package, ChevronDown, Terminal, ShieldCheck, Flame, ExternalLink } from 'lucide-react';
+import { Link2, Share2, Copy, Check, Lightbulb, Loader2, Rocket, Sparkles, QrCode, Target, Instagram, Zap, Forward, Package, ChevronDown, Terminal, ShieldCheck, Flame, ExternalLink } from 'lucide-react';
 import { FaWhatsapp, FaTelegramPlane, FaFacebookF } from 'react-icons/fa';
 import api from '../../utils/api';
 import Reveal from '../../components/Reveal';
@@ -14,13 +13,11 @@ const SHARE_APPS = [
 ];
 
 export default function LinkGenerator() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [packages, setPackages] = useState([]);
   const [selectedPkg, setSelectedPkg] = useState('');
   const [copiedField, setCopiedField] = useState('');
   const [loading, setLoading] = useState(true);
-  const [activated, setActivated] = useState(true);
   const [canNativeShare, setCanNativeShare] = useState(false);
 
   const { ref: tiltHeroRef, onMouseMove: onHeroMove, onMouseLeave: onHeroLeave } = useTilt(3);
@@ -29,12 +26,8 @@ export default function LinkGenerator() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [globalRes, statusRes] = await Promise.all([
-          api.get('/global-data'),
-          api.get('/student/affiliate-activation/status'),
-        ]);
+        const globalRes = await api.get('/global-data');
         setPackages(globalRes.data.packages || []);
-        setActivated(!!statusRes.data.activated);
       } catch (err) {
         console.error('Error fetching link generator data:', err);
       } finally {
@@ -49,6 +42,7 @@ export default function LinkGenerator() {
   const referralCode = user?.referral_code || '';
   const primaryLink = `${origin}/register?ref=${referralCode}`;
   const deepLink = selectedPkg ? `${primaryLink}&package_id=${selectedPkg}` : primaryLink;
+  const masterclassLink = `${origin}/masterclass/${referralCode}`;
 
   const shareMessage = `Hey! I've been learning high-income skills on Zarni Skills. You can also learn and start earning commissions!\n\nCheck it out here: `;
   const shareText = encodeURIComponent(shareMessage);
@@ -74,32 +68,8 @@ export default function LinkGenerator() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!activated) {
-    return (
-      <div className="max-w-xl mx-auto px-4 sm:px-6 py-12 sm:py-16 text-center text-slate-800">
-        <div className="relative overflow-hidden bg-white border border-slate-100 rounded-3xl sm:rounded-[2rem] p-8 sm:p-12 shadow-sm animate-scale-in">
-          <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-blue-500/10 blur-2xl pointer-events-none animate-blob"></div>
-          <div className="absolute -bottom-20 -left-16 w-56 h-56 rounded-full bg-indigo-500/10 blur-2xl pointer-events-none animate-blob" style={{ animationDelay: '2s' }}></div>
-          <div className="relative z-10">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/30 animate-float">
-              <Rocket className="w-9 h-9 text-white" strokeWidth={1.8} />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black mb-3">Activate to Unlock Your Referral Link</h2>
-            <p className="text-slate-500 text-sm mb-8">Complete the quick affiliate activation step to reveal your personal referral link and sharing tools.</p>
-            <button
-              onClick={() => navigate('/student/marketing')}
-              className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all"
-            >
-              <Rocket className="w-4 h-4" /> Activate Now <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </button>
-          </div>
-        </div>
       </div>
     );
   }
@@ -113,12 +83,14 @@ export default function LinkGenerator() {
           ref={tiltHeroRef}
           onMouseMove={onHeroMove}
           onMouseLeave={onHeroLeave}
-          className="relative rounded-[2.5rem] p-6 sm:p-10 text-white shadow-2xl shadow-blue-950/20 overflow-hidden group [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform transition-transform duration-300"
+          className="relative rounded-[2.5rem] p-6 sm:p-10 text-white shadow-2xl shadow-blue-950/20 hover:shadow-[0_30px_70px_-15px_rgba(37,99,235,0.45)] overflow-hidden group [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform transition-all duration-300"
           style={{ background: 'linear-gradient(135deg, #0b1428 0%, #1e3a8a 50%, #2563eb 100%)' }}
         >
           {/* Ambient Lighting & Pattern Sweep */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/20 rounded-full blur-[140px] pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none"></div>
+          <div className="absolute inset-0 opacity-[0.07] pointer-events-none"
+            style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/20 rounded-full blur-[140px] pointer-events-none animate-blob"></div>
+          <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none animate-blob" style={{ animationDelay: '2.5s' }}></div>
           <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
 
           <div className="relative z-10 max-w-3xl">
@@ -175,8 +147,9 @@ export default function LinkGenerator() {
             <div className="bg-white border border-slate-200/90 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
               <div className="p-6 sm:p-7 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 backdrop-blur-md">
-                    <Share2 className="w-5 h-5 text-blue-300" strokeWidth={2.2} />
+                  <div className="relative w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 backdrop-blur-md">
+                    <span className="absolute inset-0 rounded-2xl bg-blue-400/30 blur-md animate-pulse"></span>
+                    <Share2 className="relative w-5 h-5 text-blue-300" strokeWidth={2.2} />
                   </div>
                   <div>
                     <h2 className="font-heading font-black text-lg text-white">Instant Social Sharing</h2>
@@ -229,8 +202,9 @@ export default function LinkGenerator() {
             <div className="bg-white border border-slate-200/90 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
               <div className="p-6 sm:p-7 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 backdrop-blur-md">
-                    <QrCode className="w-5 h-5 text-indigo-300" strokeWidth={2.2} />
+                  <div className="relative w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 backdrop-blur-md">
+                    <span className="absolute inset-0 rounded-2xl bg-indigo-400/30 blur-md animate-pulse"></span>
+                    <QrCode className="relative w-5 h-5 text-indigo-300" strokeWidth={2.2} />
                   </div>
                   <div>
                     <h2 className="font-heading font-black text-lg text-white">Package Deep Link Generator</h2>
@@ -254,7 +228,7 @@ export default function LinkGenerator() {
                     >
                       <option value="">Full Registration Page (Default)</option>
                       {packages.map((pkg) => (
-                        <option key={pkg.id} value={pkg.id}>{pkg.name} — ₹{pkg.price}</option>
+                        <option key={pkg.id} value={pkg.public_code}>{pkg.name} — ₹{pkg.price}</option>
                       ))}
                     </select>
                     <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -289,7 +263,7 @@ export default function LinkGenerator() {
 
                   {selectedPkg && (
                     <p className="text-xs text-indigo-600 font-bold mt-2.5 flex items-center gap-1.5 animate-fade-in-up">
-                      <ExternalLink className="w-3.5 h-3.5" /> Direct checkout pre-selected for: <span className="underline">{packages.find(p => String(p.id) === selectedPkg)?.name}</span>
+                      <ExternalLink className="w-3.5 h-3.5" /> Direct checkout pre-selected for: <span className="underline">{packages.find(p => p.public_code === selectedPkg)?.name}</span>
                     </p>
                   )}
                 </div>
@@ -310,7 +284,7 @@ export default function LinkGenerator() {
               onMouseLeave={onCodeLeave}
               className="bg-white border border-slate-200/90 rounded-[2rem] p-6 text-center shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden relative group [transform:perspective(800px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform"
             >
-              <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-blue-500/5 blur-2xl pointer-events-none"></div>
+              <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-blue-500/5 blur-2xl pointer-events-none animate-blob"></div>
 
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60 text-[10px] font-black uppercase tracking-widest mb-3">
                 <ShieldCheck className="w-3.5 h-3.5 text-blue-600" /> Your Code
@@ -339,13 +313,17 @@ export default function LinkGenerator() {
           {/* Pro Tips Box */}
           <Reveal variant="fade-up" delay={300}>
             <div
-              className="rounded-[2rem] p-6 text-white shadow-xl overflow-hidden relative"
+              className="rounded-[2rem] p-6 text-white shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 overflow-hidden relative"
               style={{ background: 'linear-gradient(135deg, #0b1428 0%, #1e3a8a 60%, #2563eb 100%)' }}
             >
-              <div className="absolute -bottom-12 -right-12 w-44 h-44 rounded-full bg-amber-400/10 blur-2xl pointer-events-none"></div>
+              <div className="absolute -bottom-12 -right-12 w-44 h-44 rounded-full bg-amber-400/10 blur-2xl pointer-events-none animate-blob"></div>
 
               <h3 className="flex items-center gap-2 font-heading font-black text-base text-white mb-4">
-                <Lightbulb className="w-5 h-5 text-amber-300" strokeWidth={2.2} /> Pro Growth Tips
+                <span className="relative w-7 h-7 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+                  <span className="absolute inset-0 rounded-lg bg-amber-400/30 blur-md animate-pulse"></span>
+                  <Lightbulb className="relative w-4 h-4 text-amber-300" strokeWidth={2.2} />
+                </span>
+                Pro Growth Tips
               </h3>
 
               <ul className="space-y-3.5 text-xs text-blue-100/90 font-medium">
@@ -368,6 +346,44 @@ export default function LinkGenerator() {
         </div>
 
       </div>
+
+      {/* ── MASTERCLASS REGISTRATION LINK ──────────────────────────────────── */}
+      <Reveal variant="fade-up" delay={350}>
+        <div className="relative rounded-[2rem] p-6 sm:p-8 border border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-white to-white shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none animate-blob"></div>
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-black uppercase tracking-widest mb-3">
+              <Rocket className="w-3.5 h-3.5" /> ₹99 Masterclass Registration Link
+            </div>
+            <h2 className="font-heading font-black text-lg sm:text-xl text-slate-900 mb-1.5">Send this link — earn when they register</h2>
+            <p className="text-xs sm:text-sm text-slate-500 mb-5 max-w-2xl">
+              Anyone who opens this link sees a standalone ₹99 masterclass registration page — no other part of the site is visible to them. The moment they pay, that ₹99 is credited straight to your wallet as commission.
+            </p>
+            <div className="flex flex-col sm:flex-row items-stretch gap-2 bg-white border border-emerald-200 rounded-2xl p-2 shadow-sm">
+              <div className="flex items-center gap-3 flex-1 min-w-0 px-3.5 py-2">
+                <Link2 className="w-5 h-5 text-emerald-600 shrink-0" strokeWidth={2.2} />
+                <input
+                  type="text"
+                  readOnly
+                  value={masterclassLink}
+                  className="flex-1 min-w-0 bg-transparent border-0 text-slate-800 text-xs sm:text-sm font-extrabold focus:outline-none tracking-wide"
+                />
+              </div>
+              <button
+                onClick={() => handleCopy(masterclassLink, 'masterclass')}
+                className={`group relative overflow-hidden flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest whitespace-nowrap transition-all shadow-md active:scale-95 shrink-0 ${
+                  copiedField === 'masterclass'
+                    ? 'bg-emerald-500 text-white shadow-emerald-500/30'
+                    : 'bg-slate-900 text-white hover:bg-black'
+                }`}
+              >
+                {copiedField === 'masterclass' ? <Check className="w-4 h-4 animate-bounce" strokeWidth={3} /> : <Copy className="w-4 h-4" strokeWidth={2.5} />}
+                {copiedField === 'masterclass' ? 'Copied!' : 'Copy Masterclass Link'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Reveal>
 
     </div>
   );

@@ -27,7 +27,7 @@ const FEATURES = [
 
 export default function TripAchievement() {
   return (
-    <section className="relative py-24 sm:py-32 overflow-hidden bg-[#eaf4ff]" id="trip-achievement">
+    <section className="relative py-10 sm:py-32 overflow-hidden bg-[#eaf4ff]" id="trip-achievement">
 
       {/* Travel landmarks background */}
       <div className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" style={{ backgroundImage: 'url(/static/img/tripbg.png)' }}></div>
@@ -52,7 +52,7 @@ export default function TripAchievement() {
       <Plane className="hidden md:block absolute top-24 right-[8%] w-5 h-5 text-blue-500/40 rotate-45 animate-float pointer-events-none z-0" style={{ animationDelay: '1.5s' }} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-14 items-center">
 
           {/* LEFT: copy */}
           <div className="text-center lg:text-left">
@@ -100,15 +100,15 @@ export default function TripAchievement() {
           </div>
 
           {/* RIGHT: photo */}
-          <div className="relative flex items-center justify-center py-4">
-            <div className="group/photo relative w-full max-w-[480px] aspect-[3/4]">
+          <div className="relative flex items-center justify-center py-0 sm:py-4">
+            <div className="group/photo relative w-full max-w-[220px] sm:max-w-[480px] aspect-[3/4]">
 
               {/* Rotating Flight Compass Ring behind photo */}
               <div className="absolute inset-[-20px] rounded-full border border-blue-500/20 border-dashed pointer-events-none hidden sm:block animate-[spin_60s_linear_infinite]"></div>
               <div className="absolute inset-[-40px] rounded-full border border-cyan-400/15 border-dashed pointer-events-none hidden sm:block animate-[spin_40s_linear_infinite_reverse]"></div>
 
               {/* Glowing Background Radial Aura */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-blue-500/20 via-cyan-400/15 to-indigo-500/20 blur-[80px] pointer-events-none animate-pulse"></div>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 sm:w-80 sm:h-80 bg-gradient-to-tr from-blue-500/20 via-cyan-400/15 to-indigo-500/20 blur-[40px] sm:blur-[80px] pointer-events-none animate-pulse"></div>
 
               {/* Girl photo */}
               <div className="absolute inset-0 z-10 transition-transform duration-700 group-hover/photo:scale-[1.05]">
@@ -145,9 +145,9 @@ export default function TripAchievement() {
         </div>
 
         {/* OUR TRIP RULES */}
-        <div className="relative overflow-hidden mt-16 bg-gradient-to-br from-white/95 via-white to-blue-50/30 backdrop-blur-md border border-white shadow-[0_20px_50px_rgba(37,99,235,0.14)] rounded-[2rem] p-6 sm:p-8 hover:shadow-[0_30px_70px_rgba(37,99,235,0.22)] transition-all duration-500 group/rules">
+        <div className="relative overflow-hidden mt-6 sm:mt-16 bg-gradient-to-br from-white/95 via-white to-blue-50/30 backdrop-blur-md border border-white shadow-[0_20px_50px_rgba(37,99,235,0.14)] rounded-[2rem] p-4 sm:p-8 hover:shadow-[0_30px_70px_rgba(37,99,235,0.22)] transition-all duration-500 group/rules">
           <div className="absolute -top-16 -right-16 w-56 h-56 bg-blue-500/10 rounded-full blur-[70px] pointer-events-none"></div>
-          <div className="relative flex items-center justify-center gap-3 mb-6">
+          <div className="relative flex items-center justify-center gap-3 mb-3 sm:mb-6">
             <span className="hidden sm:block w-10 h-px bg-blue-500/30"></span>
             <h3 className="text-lg sm:text-xl font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
               <Navigation className="w-4 h-4 text-blue-600 animate-pulse" />
@@ -156,25 +156,31 @@ export default function TripAchievement() {
             <span className="hidden sm:block w-10 h-px bg-blue-500/30"></span>
           </div>
 
-          <div className="relative grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
-            <div className="group/rule flex items-center justify-center gap-3.5 py-4 sm:py-2 px-4 rounded-2xl hover:bg-blue-500/5 transition-all duration-300">
-              <span className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 transition-transform duration-300 group-hover/rule:scale-115 group-hover/rule:-rotate-6">
-                <Globe className="w-5.5 h-5.5 animate-pulse" strokeWidth={2} />
+          <div className="relative grid grid-cols-2 divide-x divide-slate-100">
+            <div className="group/rule flex items-center justify-center gap-1.5 sm:gap-3.5 py-2 px-1 sm:px-4 rounded-2xl hover:bg-blue-500/5 transition-all duration-300">
+              <span className="w-8 h-8 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 transition-transform duration-300 group-hover/rule:scale-115 group-hover/rule:-rotate-6">
+                <Globe className="w-4 h-4 sm:w-5.5 sm:h-5.5 animate-pulse" strokeWidth={2} />
               </span>
-              <p className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">1 International Trip <span className="block sm:inline text-blue-600 font-black">in a Year</span></p>
+              <p className="font-bold text-slate-800 uppercase tracking-wide whitespace-nowrap">
+                <span className="sm:hidden text-[10px]">1 Int'l Trip <span className="text-blue-600 font-black">/Year</span></span>
+                <span className="hidden sm:inline text-sm">1 International Trip <span className="text-blue-600 font-black">in a Year</span></span>
+              </p>
             </div>
-            <div className="group/rule flex items-center justify-center gap-3.5 py-4 sm:py-2 px-4 rounded-2xl hover:bg-blue-500/5 transition-all duration-300">
-              <span className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 transition-transform duration-300 group-hover/rule:scale-115 group-hover/rule:-rotate-6">
-                <Luggage className="w-5.5 h-5.5 animate-pulse" strokeWidth={2} />
+            <div className="group/rule flex items-center justify-center gap-1.5 sm:gap-3.5 py-2 px-1 sm:px-4 rounded-2xl hover:bg-blue-500/5 transition-all duration-300">
+              <span className="w-8 h-8 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 transition-transform duration-300 group-hover/rule:scale-115 group-hover/rule:-rotate-6">
+                <Luggage className="w-4 h-4 sm:w-5.5 sm:h-5.5 animate-pulse" strokeWidth={2} />
               </span>
-              <p className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">2 National Trips <span className="block sm:inline text-blue-600 font-black">in a Year</span></p>
+              <p className="font-bold text-slate-800 uppercase tracking-wide whitespace-nowrap">
+                <span className="sm:hidden text-[10px]">2 Natl Trips <span className="text-blue-600 font-black">/Year</span></span>
+                <span className="hidden sm:inline text-sm">2 National Trips <span className="text-blue-600 font-black">in a Year</span></span>
+              </p>
             </div>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-8 flex justify-center">
-          <div className="group/bar relative inline-flex items-center gap-2.5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white text-xs sm:text-sm font-bold px-7 py-3.5 rounded-full shadow-lg shadow-slate-900/30 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 overflow-hidden cursor-pointer">
+        <div className="mt-5 sm:mt-8 flex justify-center">
+          <div className="group/bar relative inline-flex items-center gap-2.5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white text-xs sm:text-sm font-bold px-5 py-2.5 sm:px-7 sm:py-3.5 rounded-full shadow-lg shadow-slate-900/30 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 overflow-hidden cursor-pointer">
             <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/bar:translate-x-full transition-transform duration-1000"></span>
             <Plane className="w-4 h-4 text-blue-400 shrink-0 relative animate-pulse" strokeWidth={2} />
             <span className="relative">Work Hard. Achieve More. <span className="text-blue-400 font-black">Explore The World.</span></span>

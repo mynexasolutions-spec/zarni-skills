@@ -32,7 +32,7 @@ export default function StudentPackageDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Package Details...</p>
@@ -249,7 +249,7 @@ export default function StudentPackageDetail() {
               </button>
             ) : (
               <button
-                onClick={() => navigate(`/student/checkout?package_id=${pkg.id}`)}
+                onClick={() => navigate(`/student/checkout?package_id=${pkg.public_code}`)}
                 className="group relative overflow-hidden w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98]"
               >
                 <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></span>

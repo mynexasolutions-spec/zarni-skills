@@ -7,7 +7,7 @@ export default function DashboardLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="relative flex flex-col h-screen overflow-hidden bg-gradient-to-b from-blue-50/60 via-white to-blue-50/40">
+    <div className="relative flex flex-col h-screen overflow-hidden bg-transparent">
       {/* Ambient background glow — same blue theme used across the public site */}
       <div className="fixed top-20 right-[8%] w-96 h-96 bg-blue-300/20 rounded-full blur-[140px] pointer-events-none -z-10 animate-pulse"></div>
       <div className="fixed bottom-10 left-[6%] w-96 h-96 bg-indigo-300/20 rounded-full blur-[140px] pointer-events-none -z-10 animate-pulse" style={{ animationDelay: '2s' }}></div>
@@ -19,13 +19,13 @@ export default function DashboardLayout() {
         {/* Mobile overlay */}
         {mobileSidebarOpen && (
           <div
-            className="fixed inset-0 bg-slate-900/40 z-30 lg:hidden"
+            className="fixed inset-0 bg-slate-900/55 backdrop-blur-sm z-30 lg:hidden animate-fade-in"
             onClick={() => setMobileSidebarOpen(false)}
           ></div>
         )}
 
-        {/* Sidebar — overlay drawer on mobile, static column on desktop */}
-        <div className={`${mobileSidebarOpen ? 'fixed left-0 top-16 bottom-0 z-40' : 'hidden'} lg:block`}>
+        {/* Sidebar — sliding overlay drawer on mobile, static column on desktop */}
+        <div className={`fixed left-0 top-16 bottom-0 z-40 transition-transform duration-300 ease-out lg:static lg:top-0 lg:z-0 lg:translate-x-0 ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <DashboardSidebar onNavigate={() => setMobileSidebarOpen(false)} />
         </div>
 

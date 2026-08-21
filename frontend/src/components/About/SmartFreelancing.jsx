@@ -318,10 +318,10 @@ export default function SmartFreelancing() {
         {/* Mobile & Tablet — Clean Native Vertical Card Layout (Zero Distortion, 100% Crisp Text) */}
         <div className="lg:hidden flex flex-col gap-6 items-center w-full max-w-md mx-auto">
           {/* Central Character Portrait */}
-          <div className="relative w-full max-w-[280px] aspect-[4/5] flex items-center justify-center">
+          <div className="relative w-full max-w-[220px] aspect-[4/5] flex items-center justify-center">
             {/* Smooth Breathing Spotlight Light Flares on Mobile */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-gradient-to-tr from-blue-600/40 via-cyan-400/30 to-indigo-500/40 blur-[70px] pointer-events-none animate-[pulse_4s_cubic-bezier(0.4,0,0.6,1)_infinite]"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full bg-gradient-to-br from-cyan-300/50 via-blue-400/40 to-indigo-400/50 blur-[45px] pointer-events-none animate-[spin_15s_linear_infinite]"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-gradient-to-tr from-blue-600/40 via-cyan-400/30 to-indigo-500/40 blur-[40px] pointer-events-none animate-[pulse_4s_cubic-bezier(0.4,0,0.6,1)_infinite]"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 rounded-full bg-gradient-to-br from-cyan-300/50 via-blue-400/40 to-indigo-400/50 blur-[25px] pointer-events-none animate-[spin_15s_linear_infinite]"></div>
             <img
               src="/static/img/manwithlaptop2.png"
               alt="Freelancer with laptop"

@@ -42,7 +42,7 @@ export default function Packages() {
   }
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800 overflow-hidden relative -mt-24 pt-24 pb-24">
+    <div className="min-h-screen text-slate-800 overflow-hidden relative -mt-24 pt-24 pb-24">
 
       {/* Background Animated Spheres */}
       <div className="absolute top-[8%] left-[10%] w-[600px] h-[600px] bg-blue-400/10 blur-[150px] rounded-full pointer-events-none z-0 animate-pulse"></div>

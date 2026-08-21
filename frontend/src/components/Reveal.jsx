@@ -27,7 +27,7 @@ export default function Reveal({
   return (
     <Tag
       ref={ref}
-      className={`transition-all ease-out ${inView ? 'opacity-100 translate-x-0 translate-y-0 scale-100' : HIDDEN[variant] || HIDDEN['fade-up']} ${className}`}
+      className={`transition-[opacity,transform] ease-out ${inView ? 'opacity-100 translate-x-0 translate-y-0 scale-100' : HIDDEN[variant] || HIDDEN['fade-up']} ${className}`}
       style={{ transitionDuration: `${duration}ms`, transitionDelay: inView ? `${delay}ms` : '0ms' }}
       {...rest}
     >

@@ -13,7 +13,7 @@ function TiltThumbnail({ pkg }) {
       ref={ref}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
-      className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-200/90 p-3.5 shadow-[0_15px_40px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_70px_rgba(37,99,235,0.15)] hover:border-blue-300 transition-all duration-500 [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform"
+      className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-200/90 p-3.5 shadow-[0_15px_40px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_70px_rgba(37,99,235,0.15)] hover:border-blue-300 transition-[transform,box-shadow,border-color] duration-500 hover:[transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] hover:will-change-transform"
     >
       <span
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"
@@ -22,7 +22,7 @@ function TiltThumbnail({ pkg }) {
       {pkg.thumbnail_display_url ? (
         <div className="aspect-square w-full relative rounded-[2rem] overflow-hidden">
           <img src={pkg.thumbnail_display_url} alt={pkg.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-          <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-blue-600 text-[10px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-blue-100">
+          <div className="absolute top-4 left-4 bg-white text-blue-600 text-[10px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-blue-100">
             <Layers className="w-3.5 h-3.5" strokeWidth={2.5} />
             Master Package
           </div>
@@ -72,7 +72,7 @@ export default function PackageDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Package...</p>
@@ -83,7 +83,7 @@ export default function PackageDetail() {
 
   if (notFound || !pkg) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 -mt-24 pt-24">
+      <div className="min-h-screen flex items-center justify-center px-4 -mt-24 pt-24">
         <div className="max-w-md w-full text-center bg-white border border-slate-200 rounded-3xl p-8 sm:p-10 shadow-lg">
           <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center mx-auto mb-4 text-amber-500">
             <Package className="w-8 h-8" strokeWidth={1.5} />
@@ -99,14 +99,12 @@ export default function PackageDetail() {
   }
 
   const whatYouGet = (pkg.what_you_get || '').split('\n').map(s => s.trim()).filter(Boolean);
-  const l1 = pkg.level1_commission_percent || 0;
-  const l2 = pkg.level2_commission_percent || 0;
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-800 -mt-24 pt-24 pb-24 relative overflow-hidden">
+    <div className="min-h-screen text-slate-800 -mt-24 pt-24 pb-24 relative overflow-hidden">
       {/* Background Glow Accents */}
-      <div className="absolute top-[10%] left-1/4 w-[600px] h-[600px] bg-blue-400/10 blur-[150px] rounded-full pointer-events-none z-0"></div>
-      <div className="absolute bottom-[20%] right-1/4 w-[500px] h-[500px] bg-indigo-400/10 blur-[150px] rounded-full pointer-events-none z-0"></div>
+      <div className="absolute top-[10%] left-1/4 w-[420px] h-[420px] bg-blue-400/10 blur-[90px] rounded-full pointer-events-none z-0"></div>
+      <div className="absolute bottom-[20%] right-1/4 w-[380px] h-[380px] bg-indigo-400/10 blur-[90px] rounded-full pointer-events-none z-0"></div>
 
       {/* Mesh Grid Pattern */}
       <div className="absolute inset-0 z-0 opacity-20 pointer-events-none"
@@ -233,16 +231,16 @@ export default function PackageDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {pkg.courses.map(course => (
                     <Link key={course.id} to={`/courses/${course.slug || course.id}`} className="group relative">
-                      <div className="relative bg-white rounded-3xl border border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgba(37,99,235,0.15)] hover:border-blue-300 hover:-translate-y-1.5 transition-all duration-500 overflow-hidden">
+                      <div className="relative bg-white rounded-3xl border border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgba(37,99,235,0.15)] hover:border-blue-300 hover:-translate-y-1.5 transition-[transform,box-shadow,border-color] duration-500 overflow-hidden">
                         <div className="aspect-video w-full relative overflow-hidden bg-slate-100">
                           {course.thumbnail_display_url ? (
-                            <img src={course.thumbnail_display_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                            <img src={course.thumbnail_display_url} alt={course.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
                               <Video className="w-12 h-12 text-blue-400" strokeWidth={1.5} />
                             </div>
                           )}
-                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-blue-600 uppercase tracking-widest shadow-sm border border-white">
+                          <div className="absolute top-3 left-3 bg-white px-3 py-1 rounded-full text-[10px] font-black text-blue-600 uppercase tracking-widest shadow-sm border border-white">
                             {course.level || 'All Levels'}
                           </div>
                         </div>
@@ -299,23 +297,6 @@ export default function PackageDetail() {
                     )}
                   </div>
 
-                  {/* Affiliate Earnings Box */}
-                  <div className="bg-blue-50/60 border border-blue-100 rounded-2xl p-4 space-y-3">
-                    <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-blue-600" strokeWidth={2.5} />
-                      Referral Earnings Potential
-                    </p>
-                    <div className="flex justify-between items-center text-xs font-bold text-slate-700">
-                      <span>Direct (Level 1):</span>
-                      <span className="font-black text-emerald-600 text-sm">{l1}% (₹{Number(Math.round(pkg.price * l1 / 100)).toLocaleString('en-IN')})</span>
-                    </div>
-                    <div className="border-t border-blue-100"></div>
-                    <div className="flex justify-between items-center text-xs font-bold text-slate-700">
-                      <span>Passive (Level 2):</span>
-                      <span className="font-black text-blue-600 text-sm">{l2}% (₹{Number(Math.round(pkg.price * l2 / 100)).toLocaleString('en-IN')})</span>
-                    </div>
-                  </div>
-
                   {/* Actions */}
                   <div className="space-y-3 pt-2">
                     {authLoading ? (
@@ -332,7 +313,7 @@ export default function PackageDetail() {
                         </Link>
                       ) : (
                         <Link
-                          to={`/student/checkout?package_id=${pkg.id}`}
+                          to={`/student/checkout?package_id=${pkg.public_code}`}
                           className="group relative w-full py-4 px-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 active:scale-95 text-center overflow-hidden"
                         >
                           <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></span>
@@ -343,7 +324,7 @@ export default function PackageDetail() {
                     ) : (
                       <>
                         <Link
-                          to="/register"
+                          to={`/register?package_id=${pkg.public_code || pkg.id}`}
                           className="group relative w-full py-4 px-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 active:scale-95 text-center overflow-hidden"
                         >
                           <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></span>
@@ -377,6 +358,55 @@ export default function PackageDetail() {
             </div>
           </div>
 
+        </div>
+      </div>
+
+      {/* MOBILE STICKY PURCHASE BAR — the right-column card ends up below the
+          whole course list once the grid stacks to one column, so mobile
+          needs its own always-visible buy bar instead of relying on scroll. */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0">
+            {pricingPreview?.upgrade_credit > 0 ? (
+              <>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide">You Pay</p>
+                <p className="text-lg font-black text-blue-600 leading-none">₹{Number(Math.round(pricingPreview.final_amount)).toLocaleString('en-IN')}</p>
+              </>
+            ) : (
+              <>
+                <p className="text-[9px] text-slate-400 line-through font-bold uppercase tracking-wide">₹{Number(Math.round(pkg.price * 2)).toLocaleString('en-IN')}</p>
+                <p className="text-lg font-black text-slate-900 leading-none">₹{Number(Math.round(pkg.price)).toLocaleString('en-IN')}</p>
+              </>
+            )}
+          </div>
+          <div className="flex-1">
+            {authLoading ? (
+              <div className="w-full py-3.5 bg-slate-100 rounded-xl animate-pulse h-[46px]"></div>
+            ) : user ? (
+              pkg.owned ? (
+                <Link
+                  to={`/student/packages/${pkg.id}`}
+                  className="w-full py-3.5 px-4 bg-emerald-600 active:bg-emerald-700 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                >
+                  <CheckCircle2 className="w-4 h-4 shrink-0" strokeWidth={2.5} /> Go to My Package
+                </Link>
+              ) : (
+                <Link
+                  to={`/student/checkout?package_id=${pkg.public_code}`}
+                  className="w-full py-3.5 px-4 bg-blue-600 active:bg-blue-700 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                >
+                  Buy Package Now <ArrowRight className="w-4 h-4 shrink-0" strokeWidth={2.5} />
+                </Link>
+              )
+            ) : (
+              <Link
+                to={`/register?package_id=${pkg.public_code || pkg.id}`}
+                className="w-full py-3.5 px-4 bg-blue-600 active:bg-blue-700 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 active:scale-95 transition-all"
+              >
+                Enroll Now <ArrowRight className="w-4 h-4 shrink-0" strokeWidth={2.5} />
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>

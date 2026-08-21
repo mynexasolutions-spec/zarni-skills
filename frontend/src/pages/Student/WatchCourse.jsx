@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Play, CheckCircle2, ArrowLeft, Video, BookOpen, AlertCircle, ChevronLeft, ChevronRight, Clock, Sparkles, Award, Layers, PartyPopper, Radio } from 'lucide-react';
 import api from '../../utils/api';
 import Reveal from '../../components/Reveal';
@@ -182,8 +182,17 @@ export default function WatchCourse() {
               </h1>
             </div>
 
-            {course?.instructor_name && (
-              <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl p-2 sm:p-2.5 shrink-0 self-start sm:self-auto">
+            {course?.instructor_name && (() => {
+              // Only the instructors that exist as their own record have a
+              // profile page; a free-text name on a course has nowhere to go.
+              const Wrapper = course.instructor_slug ? Link : 'div';
+              const wrapperProps = course.instructor_slug
+                ? { to: `/instructor/${course.instructor_slug}`, title: `View ${course.instructor_name}'s profile` }
+                : {};
+              return (
+              <Wrapper {...wrapperProps} className={`flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl p-2 sm:p-2.5 shrink-0 self-start sm:self-auto transition-all ${
+                course.instructor_slug ? 'hover:bg-white hover:border-blue-300 hover:shadow-md cursor-pointer group/inst' : ''
+              }`}>
                 {course.instructor_image_display_url ? (
                   <img src={course.instructor_image_display_url} alt={course.instructor_name} className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-blue-200" />
                 ) : (
@@ -192,11 +201,14 @@ export default function WatchCourse() {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="text-[11px] sm:text-xs font-black text-slate-900 truncate">{course.instructor_name}</p>
-                  <p className="text-[9px] text-blue-600 font-bold uppercase tracking-wider">Faculty Mentor</p>
+                  <p className="text-[11px] sm:text-xs font-black text-slate-900 truncate group-hover/inst:text-blue-600 transition-colors">{course.instructor_name}</p>
+                  <p className="text-[9px] text-blue-600 font-bold uppercase tracking-wider">
+                    {course.instructor_slug ? 'View profile →' : 'Faculty Mentor'}
+                  </p>
                 </div>
-              </div>
-            )}
+              </Wrapper>
+              );
+            })()}
           </div>
 
           {chapters.length > 0 && (

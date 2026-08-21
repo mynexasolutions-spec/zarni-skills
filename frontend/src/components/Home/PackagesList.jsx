@@ -277,7 +277,7 @@ export default function PackagesList({ packages, loading = false }) {
                         </ul>
 
                         <button
-                          onClick={() => navigate(user ? `/packages/${pkg.id}` : '/register')}
+                          onClick={() => navigate(user ? `/packages/${pkg.public_code || pkg.id}` : `/register?package_id=${pkg.public_code || pkg.id}`)}
                           className={`group/btn relative w-full py-4 px-6 rounded-xl font-black text-xs inline-flex items-center justify-center gap-2 text-center transition-all duration-300 hover:-translate-y-0.5 uppercase tracking-widest overflow-hidden shadow-lg ${
                             isPopular 
                               ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-blue-500/30 hover:shadow-blue-500/50' 

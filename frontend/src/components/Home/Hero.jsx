@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, Users, BookOpen, Star } from 'lucide-react';
+import { Globe, Users, BookOpen, Star, Code2, TrendingUp } from 'lucide-react';
 import useCountUp from '../../hooks/useCountUp';
 import api from '../../utils/api';
 
@@ -11,7 +11,7 @@ const DEFAULT_SLIDES = [
   {
     image: '/static/img/hero3.jpg',
     heading: (
-      <>Where Skills Transform<br /><span className="text-primary">Into Real Success.</span></>
+      <>Skills Transform<br /><span className="text-primary">Into Real Success.</span></>
     ),
     paragraph: (
       <>At <strong className="text-primary font-extrabold">Zarni Skills</strong>, we empower you with high-demand skills, smart strategies, and real opportunities through affiliate marketing and sales. Learn, grow, and build a successful online career with us.</>
@@ -86,47 +86,42 @@ export default function Hero() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* Banner with text overlaid on the image. Fixed 16:9 ratio (like laptop) from sm
-          upward; on mobile the box height instead grows to fit the text so nothing
-          gets clipped, with the image running full-bleed behind it. */}
-      <div className="relative block w-full overflow-hidden bg-white sm:aspect-[16/9]" style={{ maxHeight: 920 }}>
+      {/* Taller box on mobile (image letterboxed via object-contain, so nothing is
+          cropped) to leave room for the overlaid text; true 16:9 from sm upward. */}
+      <div className="relative block w-full overflow-hidden bg-white aspect-[4/3] sm:aspect-[16/9]" style={{ maxHeight: 920 }}>
         {slides.map((s, i) => (
           <img
             key={s.image}
             src={s.image}
             alt="Zarni Skills Banner"
-            className={`absolute inset-0 w-full h-full object-cover object-right sm:object-contain transition-opacity duration-1000 ease-in-out ${i === active ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-1000 ease-in-out ${i === active ? 'opacity-100' : 'opacity-0'}`}
           />
         ))}
 
-        <div className="relative sm:absolute sm:inset-0 flex items-center py-8 sm:py-0 sm:-mt-10 lg:-mt-14">
-          <div className="w-full max-w-7xl mx-auto px-6 lg:px-10">
-            <div key={active} className="max-w-[92%] sm:max-w-[48%] lg:max-w-[45%] xl:max-w-[42%] animate-fade-in-up">
-              <div className="inline-flex items-center gap-2 bg-white/85 backdrop-blur-sm border border-primary/15 shadow-sm shadow-primary/10 px-3.5 py-1.5 rounded-full mb-5">
-                <span className="relative flex h-2 w-2">
+        {/* Floating icon badges over the photo */}
+        <div className="absolute top-[24%] left-[58%] sm:left-[50%] lg:left-[52%] z-20 bg-white rounded-xl sm:rounded-2xl shadow-lg shadow-primary/20 p-2 sm:p-3 animate-float">
+          <Code2 className="w-4 h-4 sm:w-6 sm:h-6 text-primary" strokeWidth={2.5} />
+        </div>
+        <div className="absolute top-[42%] left-[53%] sm:left-[44%] lg:left-[46%] z-20 bg-white rounded-xl sm:rounded-2xl shadow-lg shadow-emerald-500/20 p-2 sm:p-3 animate-float" style={{ animationDelay: '1.2s' }}>
+          <TrendingUp className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-500" strokeWidth={2.5} />
+        </div>
+
+        <div className="absolute inset-0 flex items-center py-4 -mt-6 sm:mt-0 sm:-mt-10 lg:-mt-14">
+          <div className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-10">
+            <div key={active} className="max-w-[58%] sm:max-w-[48%] lg:max-w-[45%] xl:max-w-[42%] animate-fade-in-up">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-white/85 backdrop-blur-sm border border-primary/15 shadow-sm shadow-primary/10 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full mb-2.5 sm:mb-5">
+                <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500"></span>
                 </span>
-                <Globe className="w-3 h-3 text-slate-500 shrink-0" strokeWidth={2} />
-                <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">India's #1 EdTech Ecosystem</span>
+                <Globe className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-500 shrink-0" strokeWidth={2} />
+                <span className="text-[10px] sm:text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">India's #1 EdTech Ecosystem</span>
               </div>
 
-              <h1 className="font-heading font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[2.75rem] text-slate-900 leading-[1.18] tracking-tight">
+              <h1 className="font-heading font-black text-[1.35rem] sm:text-2xl md:text-3xl lg:text-4xl xl:text-[2.75rem] text-slate-900 leading-[1.2] tracking-tight">
                 {slide.heading}
               </h1>
-              <span className="block w-16 h-1 rounded-full bg-gradient-to-r from-primary to-indigo-600 mt-4"></span>
-            </div>
-
-            {/* Slide indicators */}
-            <div className="flex items-center gap-2 mt-8 lg:mt-10">
-              {slides.map((s, i) => (
-                <button
-                  key={s.image}
-                  onClick={() => setActive(i)}
-                  aria-label={`Show slide ${i + 1}`}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${i === active ? 'w-8 bg-primary' : 'w-1.5 bg-primary/25 hover:bg-primary/40'}`}
-                ></button>
-              ))}
+              <span className="block w-24 sm:w-36 lg:w-44 h-1 rounded-full bg-gradient-to-r from-emerald-500 via-orange-500 to-blue-500 mt-2.5 sm:mt-4"></span>
             </div>
           </div>
         </div>

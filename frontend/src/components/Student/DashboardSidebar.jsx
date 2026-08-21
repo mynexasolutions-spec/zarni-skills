@@ -82,9 +82,11 @@ export default function DashboardSidebar({ onNavigate }) {
 
   return (
     <aside
-      className="relative w-[280px] min-w-[280px] flex flex-col h-full border-r border-blue-100 shadow-[4px_0_24px_rgba(37,99,235,0.06)] z-20 overflow-hidden"
+      className="relative w-[280px] min-w-[280px] flex flex-col h-full border-r border-blue-100 rounded-r-[1.75rem] lg:rounded-none shadow-[12px_0_45px_rgba(37,99,235,0.22)] lg:shadow-[4px_0_24px_rgba(37,99,235,0.06)] z-20 overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 60%, #f1f5f9 100%)' }}
     >
+      {/* Accent edge glow — mobile drawer only */}
+      <span className="lg:hidden absolute top-0 right-0 w-[3px] h-full bg-gradient-to-b from-blue-500 via-indigo-500 to-blue-600 shadow-[0_0_14px_rgba(37,99,235,0.6)]"></span>
       {/* Ambient Light Blur Orb */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
 

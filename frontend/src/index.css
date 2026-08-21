@@ -175,6 +175,14 @@ html {
   scrollbar-width: thin;
   scrollbar-color: #2b80f0 transparent;
 }
+
+/* Site-wide backdrop: soft blue radial glow instead of plain white, fixed so it
+   shows behind every page and dashboard, in every gap between sections. */
+body {
+  background: radial-gradient(ellipse 80% 60% at 50% 30%, #ffffff 0%, #eaf3ff 45%, #cfe6ff 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
 html::-webkit-scrollbar {
   width: 10px;
 }

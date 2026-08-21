@@ -16,8 +16,32 @@ function CertificateModal({ cert, template, onClose }) {
     if (!certRef.current) return;
     setDownloading(true);
     try {
+      // The name/course/date are centered with transform: translate(-50%,-50%)
+      // based on their *rendered* text width, which depends on the custom
+      // webfonts (Playfair Display, Great Vibes, ...) having actually loaded.
+      // Snapshotting before that finishes captures fallback-font metrics —
+      // a different width — so the centering lands off from the live preview.
+      // Same idea for the logo/seal/signature <img>s: capture before they
+      // finish loading and they come out blank in the PNG.
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+      const images = Array.from(certRef.current.querySelectorAll('img'));
+      await Promise.all(images.map((img) => (
+        img.complete ? Promise.resolve() : new Promise((resolve) => {
+          img.addEventListener('load', resolve, { once: true });
+          img.addEventListener('error', resolve, { once: true });
+        })
+      )));
+
+      // Capturing the *visible* certificate directly (instead of a separate
+      // hidden clone) was tried and reverted: that node sits under an
+      // ancestor CSS transform: scale(...) (ScaledCertificate shrinks it to
+      // fit the modal), and html2canvas computed text layout at that scaled
+      // width — collapsing word spacing throughout the download. A hidden,
+      // unscaled, natural-size clone avoids that entirely.
       const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(certRef.current, { scale: 2, backgroundColor: '#ffffff' });
+      const canvas = await html2canvas(certRef.current, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
       const link = document.createElement('a');
       link.download = `${cert.course_title.replace(/\s+/g, '_')}_Certificate.png`;
       link.href = canvas.toDataURL('image/png');
@@ -53,7 +77,12 @@ function CertificateModal({ cert, template, onClose }) {
           <div className="w-full">
             <ScaledCertificate cert={cert} template={template} />
           </div>
-          <div style={{ position: 'absolute', left: -99999, top: 0 }}>
+          {/* Hidden capture target for html2canvas — deliberately its own,
+              unscaled (no CSS transform) copy at the certificate's natural
+              900x636 size, not the visible scaled-down one. Kept out of view
+              with a plain offscreen position (not display:none/opacity:0,
+              which html2canvas would capture as blank). */}
+          <div style={{ position: 'fixed', top: 0, left: -9999, pointerEvents: 'none' }}>
             <CertificateFace cert={cert} innerRef={certRef} template={template} />
           </div>
         </div>
@@ -76,7 +105,6 @@ function CertificateModal({ cert, template, onClose }) {
 
 export default function Certificates() {
   const [certificates, setCertificates] = useState([]);
-  const [template, setTemplate] = useState(DEFAULT_CERT_TEMPLATE);
   const [loading, setLoading] = useState(true);
   const [activeCert, setActiveCert] = useState(null);
 
@@ -86,8 +114,11 @@ export default function Certificates() {
     const fetchCertificates = async () => {
       try {
         const response = await api.get('/student/certificates');
-        setCertificates(response.data.certificates || []);
-        setTemplate({ ...DEFAULT_CERT_TEMPLATE, ...response.data.template });
+        const certs = (response.data.certificates || []).map((c) => ({
+          ...c,
+          template: { ...DEFAULT_CERT_TEMPLATE, ...c.template },
+        }));
+        setCertificates(certs);
       } catch (err) {
         console.error('Error fetching certificates', err);
       } finally {
@@ -174,7 +205,7 @@ export default function Certificates() {
                     style={{ aspectRatio: '900 / 636' }}
                   >
                     <div className="absolute inset-0 pointer-events-none">
-                      <ScaledCertificate cert={cert} template={template} />
+                      <ScaledCertificate cert={cert} template={cert.template} />
                     </div>
                     <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/40 flex items-center justify-center transition-all duration-300">
                       <span className="opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 inline-flex items-center gap-2 bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-xl">
@@ -220,7 +251,7 @@ export default function Certificates() {
         )}
       </Reveal>
 
-      {activeCert && <CertificateModal cert={activeCert} template={template} onClose={() => setActiveCert(null)} />}
+      {activeCert && <CertificateModal cert={activeCert} template={activeCert.template} onClose={() => setActiveCert(null)} />}
     </div>
   );
 }

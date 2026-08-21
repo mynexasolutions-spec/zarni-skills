@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { UserCog, Mail, Phone, ArrowUpRight, Users, Crown, Clock, XCircle, Send, UserCheck, MessageSquare, Sparkles, ShieldCheck, Headphones } from 'lucide-react';
+import { UserCog, Mail, Phone, ArrowUpRight, Users, Crown, Clock, XCircle, Send, UserCheck, MessageSquare, Sparkles, ShieldCheck, Headphones, Info, MapPin, UserCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import Reveal from '../../components/Reveal';
@@ -13,6 +13,26 @@ function PersonAvatar({ person, size = 'w-16 h-16' }) {
   ) : (
     <div className={`${size} rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black flex items-center justify-center shrink-0 shadow-md`}>
       {initials}
+    </div>
+  );
+}
+
+function PersonExtras({ person }) {
+  if (!person || (!person.about && !person.address)) return null;
+  return (
+    <div className="space-y-2 text-left">
+      {person.about && (
+        <p className="flex items-start gap-2 text-xs text-slate-500 font-medium">
+          <Info className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+          <span>{person.about}</span>
+        </p>
+      )}
+      {person.address && (
+        <p className="flex items-start gap-2 text-xs text-slate-500 font-medium">
+          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+          <span>{person.address}</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -128,8 +148,56 @@ export default function Support() {
         </div>
       </Reveal>
 
-      {/* ── GRID LAYOUT FOR SPONSOR & MANAGER ───────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+      {/* ── GRID LAYOUT FOR YOUR PROFILE, SPONSOR & MANAGER ───────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+
+        {/* SECTION 0: Your Own Profile */}
+        <Reveal variant="fade-up" delay={100}>
+          <div className="bg-white border border-slate-200/90 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col justify-between">
+            <div className="p-6 sm:p-7 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-800 to-blue-950 text-white">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 backdrop-blur-md">
+                  <UserCircle2 className="w-5 h-5 text-blue-300" strokeWidth={2.2} />
+                </div>
+                <div>
+                  <h2 className="font-heading font-black text-lg text-white">Your Profile</h2>
+                  <p className="text-xs text-blue-200/80 font-medium">What your sponsor & manager see</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between space-y-6">
+              {data?.me && (
+                <>
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                    <PersonAvatar person={data.me} size="w-20 h-20 text-2xl" />
+                    <div className="text-center sm:text-left min-w-0 flex-1">
+                      <h3 className="text-xl font-heading font-black text-slate-900 mb-2">{data.me.name}</h3>
+                      <div className="space-y-1.5">
+                        {data.me.phone && (
+                          <p className="flex items-center justify-center sm:justify-start gap-2 text-xs text-slate-500 font-bold">
+                            <Phone className="w-3.5 h-3.5 text-slate-400" /> {data.me.phone}
+                          </p>
+                        )}
+                        {data.me.email && (
+                          <p className="flex items-center justify-center sm:justify-start gap-2 text-xs text-slate-500 font-bold truncate">
+                            <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {data.me.email}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <PersonExtras person={data.me} />
+                  {!data.me.about && !data.me.address && (
+                    <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 text-center">
+                      Add your About & Address in Profile Settings so your sponsor/manager can reach you better.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </Reveal>
 
         {/* SECTION 1: Your Referrer / Sponsor */}
         <Reveal variant="fade-up" delay={150}>
@@ -172,6 +240,7 @@ export default function Support() {
                           Referral Code: <span className="font-mono font-extrabold text-blue-600 bg-blue-50 border border-blue-200/60 px-2.5 py-1 rounded-lg">{data.sponsor.referral_code}</span>
                         </p>
                       )}
+                      <PersonExtras person={data.sponsor} />
                     </div>
                   </div>
 
@@ -260,6 +329,9 @@ export default function Support() {
                             <Mail className="w-3.5 h-3.5" /> Email Manager
                           </a>
                         )}
+                      </div>
+                      <div className="mt-3">
+                        <PersonExtras person={data.manager} />
                       </div>
                     </div>
                   </div>

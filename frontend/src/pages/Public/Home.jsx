@@ -43,7 +43,7 @@ export default function Home() {
   // Only the sections that actually depend on fetched data show a loading state below —
   // the rest of the page renders immediately instead of blocking behind a full-page loader.
   return (
-    <div className="overflow-hidden bg-slate-50 text-slate-900">
+    <div className="overflow-hidden bg-transparent text-slate-900">
       <Hero />
       <BrandsMarquee />
       <BannerSlider />

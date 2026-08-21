@@ -1,12 +1,12 @@
 import os
 import re
 import json
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, session
 from flask_login import login_user, logout_user, current_user
 from werkzeug.utils import secure_filename
 from app.models import User, Package, Course, Instructor, Chapter, ChapterProgress, Banner, HomeTeamMember, HeroSlide, FAQItem, SuccessStory, Testimonial, TrainingSession, Achievement, WalletTransaction, Order, Withdrawal, Commission, Notification, FreelanceApplication, Coupon, ManagerRequest, AchievementRequest, ContactSubmission, Product, RewardItem, PlatformFeature
 from app.utils import process_commissions, approve_commission, approve_withdrawal, compute_checkout_price, validate_coupon
-from app.utils.payments import is_razorpay_enabled, create_razorpay_order, verify_razorpay_signature, get_razorpay_key_id, fetch_razorpay_order
+from app.utils.payments import is_razorpay_enabled, create_razorpay_order, verify_razorpay_signature, get_razorpay_key_id, fetch_razorpay_order, verify_razorpay_webhook_signature
 from app import db
 import string
 import secrets
@@ -50,17 +50,80 @@ def _unique_course_slug(title, exclude_id=None):
 api_bp = Blueprint('api', __name__)
 
 DEFAULT_CERT_TEMPLATE = {
-    'title': 'Certificate of Completion',
+    'title': 'Certificate',
+    'subtitle': 'Of Completion',
+    'tagline': 'EARN WHILE LEARN',
     'issuer': 'Zarni Skills',
-    'presented_line': 'This certificate is proudly presented to',
-    'completion_line': 'for successfully completing the course',
-    'name': {'x': 50, 'y': 46, 'font_size': 40},
-    'course': {'x': 50, 'y': 66, 'font_size': 20},
-    'date': {'x': 50, 'y': 84, 'font_size': 12},
+    'body_line': 'has successfully completed the',
+    'description': 'Successfully completed the course and demonstrated the required understanding of the training modules.',
+    'signatory_name': 'Suraj',
+    'signatory_title': 'CEO & Founder',
+    'primary_color': '#1e56d6',
+    'accent_color': '#d9a441',
+    'text_color': '#1e293b',
+    'name': {'x': 50, 'y': 46, 'font_size': 26},
+    'course': {'x': 50, 'y': 60, 'font_size': 30},
+    'date': {'x': 74, 'y': 91, 'font_size': 13},
+    # Position-only overlays (no font_size) — must stay in step with the
+    # DEFAULT_CERT_TEMPLATE in CertificateFace.jsx.
+    'seal': {'x': 15, 'y': 83},
+    'signature': {'x': 74, 'y': 82},
+    'cert_id': {'x': 13, 'y': 95},
+    # Layout options
+    'name_font': 'Playfair Display',
+    'name_underline_width': 500,
+    'logo_height': 54,
+    'seal_height': 78,
+    'signature_height': 46,
+    'id_prefix': 'ZS',
+    'show_medallion': True,
+    'show_seal': True,
+    'show_corners': True,
+    'show_cert_id': True,
+}
+
+_CERT_TEXT_FIELDS = (
+    'title', 'subtitle', 'tagline', 'issuer', 'body_line', 'description',
+    'signatory_name', 'signatory_title',
+)
+
+_CERT_COLOR_FIELDS = ('primary_color', 'accent_color', 'text_color')
+
+# Layout knobs beyond text and colour. Each carries its own kind so the save
+# handler can validate generically: bools are coerced, numbers are clamped to
+# a sane range, and 'font' only accepts a family the page actually loads.
+_CERT_FONTS = ('Playfair Display', 'Sora', 'DM Sans', 'Great Vibes', 'Georgia')
+
+# Elements the admin can drag around. name/course/date also carry font_size;
+# the rest are position-only, which the shared handler tolerates.
+_CERT_POS_FIELDS = ('name', 'course', 'date', 'seal', 'signature', 'cert_id')
+_CERT_OPTION_FIELDS = {
+    'name_font':            ('font', None),
+    'name_underline_width': ('num', (0, 640)),
+    'logo_height':          ('num', (0, 140)),
+    'seal_height':          ('num', (0, 160)),
+    'signature_height':     ('num', (0, 120)),
+    'id_prefix':            ('text', 12),
+    'show_medallion':       ('bool', None),
+    'show_seal':            ('bool', None),
+    'show_corners':         ('bool', None),
+    'show_cert_id':         ('bool', None),
+}
+_HEX_COLOR_RE = re.compile(r'^#[0-9a-fA-F]{6}$')
+
+
+# Certificate brand assets, each stored as its own SiteSettings key. Keeping
+# them out of the JSON template blob means an upload never has to read-modify-
+# write the whole template, so two admins editing at once can't clobber it.
+_CERT_ASSETS = {
+    'logo': 'certificate_logo_url',
+    'seal': 'certificate_seal_url',
+    'signature': 'certificate_signature_url',
+    'medallion': 'certificate_medallion_url',
 }
 
 
-def _get_certificate_template():
+def _get_certificate_template(course=None):
     from app.models import SiteSettings
     raw = SiteSettings.get('certificate_template', '')
     try:
@@ -68,10 +131,35 @@ def _get_certificate_template():
     except (TypeError, ValueError):
         saved = {}
     template = {**DEFAULT_CERT_TEMPLATE, **{
-        k: saved.get(k, DEFAULT_CERT_TEMPLATE[k]) for k in ('title', 'issuer', 'presented_line', 'completion_line')
+        k: saved.get(k, DEFAULT_CERT_TEMPLATE[k]) for k in _CERT_TEXT_FIELDS + _CERT_COLOR_FIELDS
     }}
-    for field in ('name', 'course', 'date'):
+    for field in _CERT_POS_FIELDS:
         template[field] = {**DEFAULT_CERT_TEMPLATE[field], **(saved.get(field) or {})}
+    for k in _CERT_OPTION_FIELDS:
+        template[k] = saved.get(k, DEFAULT_CERT_TEMPLATE[k])
+    template['background_image_url'] = SiteSettings.get('certificate_background_image_url', '') or ''
+    # Brand assets an admin can swap without touching code. Empty means the
+    # renderer falls back to the bundled default (or, for the signature,
+    # renders the signatory's name in script instead of an image).
+    for key, setting in _CERT_ASSETS.items():
+        template[f'{key}_url'] = SiteSettings.get(setting, '') or ''
+
+    if course is not None and getattr(course, 'certificate_template', None):
+        try:
+            course_saved = json.loads(course.certificate_template)
+        except (TypeError, ValueError):
+            course_saved = {}
+        for k in _CERT_TEXT_FIELDS + _CERT_COLOR_FIELDS:
+            if course_saved.get(k):
+                template[k] = course_saved[k]
+        for k in _CERT_OPTION_FIELDS:
+            # `in` rather than truthiness — False and 0 are real choices here.
+            if k in course_saved:
+                template[k] = course_saved[k]
+        for field in _CERT_POS_FIELDS:
+            if course_saved.get(field):
+                template[field] = {**template[field], **course_saved[field]}
+
     return template
 
 @api_bp.route('/global-data', methods=['GET'])
@@ -95,8 +183,11 @@ def get_global_data():
             'packages': [
                 {
                     'id': p.id,
+                    'public_code': p.public_code,
                     'name': p.name,
                     'price': float(p.price) if p.price else 0.0,
+                    'market_price': float(p.market_price) if p.market_price else None,
+                    'gst_percent': float(p.gst_percent) if p.gst_percent is not None else None,
                     'thumbnail_display_url': p.thumbnail_display_url,
                     'what_you_get': p.what_you_get,
                     'pkg_duration': p.pkg_duration,
@@ -130,6 +221,14 @@ def get_global_data():
                 } for c in courses
             ],
             'registration_field_config': registration_field_config,
+            'certificate_template': _get_certificate_template(),
+            'social_links': {
+                'facebook': SiteSettings.get('footer_facebook_url', '') or '',
+                'instagram': SiteSettings.get('footer_instagram_url', '') or '',
+                'whatsapp': SiteSettings.get('footer_whatsapp_url', '') or '',
+            },
+            'support_email': SiteSettings.get('support_email', '') or '',
+            'support_phone': SiteSettings.get('support_phone', '') or '',
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -150,13 +249,15 @@ def contact():
     db.session.commit()
 
     from app.utils.email import send_email
+    from app.models import SiteSettings
     html_body = f"""
         <p><strong>From:</strong> {name} ({email})</p>
         <p><strong>Subject:</strong> {subject}</p>
         <p><strong>Message:</strong></p>
         <p>{message}</p>
     """
-    send_email(to='support@zarniskills.com', subject=f'[Contact Form] {subject}', html_body=html_body)
+    support_email = SiteSettings.get('support_email', '') or 'support@zarniskills.com'
+    send_email(to=support_email, subject=f'[Contact Form] {subject}', html_body=html_body)
 
     return jsonify({'success': True})
 
@@ -274,12 +375,32 @@ def get_courses():
         ]
     })
 
-@api_bp.route('/packages/<int:pkg_id>', methods=['GET'])
-def get_package_detail(pkg_id):
-    pkg = Package.query.get_or_404(pkg_id)
+def _resolve_package(ref, abort_404=True):
+    """Look a package up by its public_code."""
+    if ref in (None, ''):
+        return None
+    ref = str(ref).strip()
+    pkg = Package.query.filter_by(public_code=ref).first()
+    if pkg is None and abort_404:
+        from flask import abort
+        abort(404)
+    return pkg
+
+
+@api_bp.route('/packages/<pkg_ref>', methods=['GET'])
+def get_package_detail(pkg_ref):
+    pkg = Package.query.filter_by(public_code=pkg_ref).first()
+    if pkg is None and pkg_ref.isdigit():
+        # Falls back to the old numeric-id lookup so links shared before the
+        # public_code migration (e.g. /packages/1) keep working.
+        pkg = Package.query.get(int(pkg_ref))
+    if pkg is None:
+        from flask import abort
+        abort(404)
 
     return jsonify({
         'id': pkg.id,
+        'public_code': pkg.public_code,
         'name': pkg.name,
         'description': pkg.description,
         'level': pkg.level,
@@ -287,6 +408,8 @@ def get_package_detail(pkg_id):
         'pkg_duration': pkg.pkg_duration,
         'what_you_get': pkg.what_you_get,
         'price': float(pkg.price) if pkg.price else 0.0,
+        'market_price': float(pkg.market_price) if pkg.market_price else None,
+        'gst_percent': float(pkg.gst_percent) if pkg.gst_percent is not None else None,
         'thumbnail_display_url': pkg.thumbnail_display_url,
         'level1_commission_percent': float(pkg.level1_commission_percent) if pkg.level1_commission_percent else 0.0,
         'level2_commission_percent': float(pkg.level2_commission_percent) if pkg.level2_commission_percent else 0.0,
@@ -329,6 +452,7 @@ def get_course_detail(slug):
             'prerequisites': course.prerequisites,
             'what_you_learn': course.what_you_learn,
             'certificate': course.certificate,
+            'certificate_template': _get_certificate_template(course) if course.certificate else None,
             'price': float(course.price) if course.price else None,
             'thumbnail_display_url': course.thumbnail_display_url,
             'instructor_id': course.instructor_id,
@@ -347,7 +471,7 @@ def get_course_detail(slug):
             } for ch in chapters
         ],
         'packages': [
-            {'id': p.id, 'name': p.name, 'price': float(p.price) if p.price else None}
+            {'id': p.id, 'public_code': p.public_code, 'name': p.name, 'price': float(p.price) if p.price else None}
             for p in course.packages if p.is_active
         ],
     })
@@ -524,13 +648,103 @@ def auth_status():
                 'phone': current_user.phone,
                 'bio': current_user.bio,
                 'about': current_user.about,
+                'age': current_user.age,
+                'gender': current_user.gender,
+                'category': current_user.category,
+                'address': current_user.address,
                 'role': current_user.role,
                 'referral_code': current_user.referral_code,
                 'profile_image_url': current_user.profile_image_url,
                 'created_at': current_user.created_at.strftime('%b %Y') if current_user.created_at else None,
-            }
+            },
+            # Set while an admin is viewing the site as another user, so the UI
+            # can show the "return to admin" bar instead of silently pretending
+            # to be them.
+            'impersonating': _impersonation_info(),
         })
     return jsonify({'authenticated': False})
+
+
+def _impersonation_info():
+    """None normally; while impersonating, the admin's own id/name so the
+    frontend can offer a way back."""
+    admin_id = session.get('impersonator_id')
+    if not admin_id:
+        return None
+    admin = User.query.get(admin_id)
+    if not admin:
+        session.pop('impersonator_id', None)
+        return None
+    return {'admin_id': admin.id, 'admin_name': admin.name}
+
+
+@api_bp.route('/admin/users/<int:user_id>/impersonate', methods=['POST'])
+def admin_impersonate_user(user_id):
+    """Log the admin into another user's account for support purposes, without
+    ever needing that user's password (which is unrecoverable by design). The
+    admin's own id is kept in the session so /auth/stop-impersonating can
+    switch back. Admins cannot impersonate other admins."""
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+    if session.get('impersonator_id'):
+        return jsonify({'success': False, 'message': 'Already impersonating. Return to your admin account first.'}), 400
+
+    target = User.query.get_or_404(user_id)
+    if target.id == current_user.id:
+        return jsonify({'success': False, 'message': 'You are already signed in as this account.'}), 400
+    if target.role == 'admin':
+        return jsonify({'success': False, 'message': 'Cannot sign in as another admin.'}), 400
+    if not target.is_active:
+        return jsonify({'success': False, 'message': 'This account is deactivated.'}), 400
+
+    admin_id = current_user.id
+    current_app.logger.warning(f'Admin {admin_id} started impersonating user {target.id} ({target.email})')
+
+    logout_user()
+    login_user(target, remember=False)
+    session['impersonator_id'] = admin_id
+
+    return jsonify({
+        'success': True,
+        'user': {
+            'id': target.id,
+            'name': target.name,
+            'email': target.email,
+            'role': target.role,
+            'referral_code': target.referral_code,
+            'profile_image_url': target.profile_image_url,
+        },
+    })
+
+
+@api_bp.route('/auth/stop-impersonating', methods=['POST'])
+def stop_impersonating():
+    """Switch back from an impersonated account to the admin who started it."""
+    admin_id = session.get('impersonator_id')
+    if not admin_id:
+        return jsonify({'success': False, 'message': 'Not impersonating anyone.'}), 400
+
+    admin = User.query.get(admin_id)
+    session.pop('impersonator_id', None)
+    if not admin or admin.role != 'admin':
+        logout_user()
+        return jsonify({'success': False, 'message': 'Original admin account is no longer available. Please log in again.'}), 400
+
+    current_app.logger.warning(f'Admin {admin.id} stopped impersonating')
+    logout_user()
+    login_user(admin, remember=True)
+
+    return jsonify({
+        'success': True,
+        'user': {
+            'id': admin.id,
+            'name': admin.name,
+            'email': admin.email,
+            'role': admin.role,
+            'referral_code': admin.referral_code,
+            'profile_image_url': admin.profile_image_url,
+        },
+    })
 
 @api_bp.route('/auth/login', methods=['POST'])
 def login():
@@ -565,6 +779,9 @@ def login():
 
 @api_bp.route('/auth/logout', methods=['POST'])
 def logout():
+    # Clear any impersonation marker too, so a stale one can't leak into the
+    # next session on this browser.
+    session.pop('impersonator_id', None)
     logout_user()
     return jsonify({'success': True})
 
@@ -582,7 +799,10 @@ def verify_referral():
 
 @api_bp.route('/auth/register', methods=['POST'])
 def register():
-    data = request.get_json() or {}
+    # The signup form is posted as multipart/form-data (axios drops the
+    # instance's default JSON header for FormData bodies), so request.form
+    # is the right parser here — request.get_json() 415s on this content type.
+    data = request.form
     name = data.get('name', '').strip()
     email = data.get('email', '').strip()
     password = data.get('password', '')
@@ -594,7 +814,14 @@ def register():
         
     if User.query.filter_by(email=email).first():
         return jsonify({'success': False, 'message': 'Email address already registered.'}), 400
-        
+
+    # The signup form verifies by OTP first; re-check server-side so the step
+    # can't simply be skipped by posting here directly.
+    if not email_is_verified(email):
+        return jsonify({'success': False,
+                        'message': 'Please verify your email with the code we sent before creating your account.',
+                        'needs_otp': True}), 400
+
     # Find referrer if ref_code is provided
     referred_by_id = None
     manager_id = None
@@ -617,7 +844,13 @@ def register():
     
     db.session.add(new_user)
     db.session.commit()
-    
+
+    try:
+        from app.utils.email import send_welcome_email
+        send_welcome_email(new_user, password=password, profile_link=f'{_frontend_base()}/student/profile')
+    except Exception:
+        current_app.logger.exception(f'Failed to send welcome email to {new_user.email}')
+
     login_user(new_user, remember=True)
     return jsonify({
         'success': True,
@@ -1250,10 +1483,10 @@ def student_certificates():
                 'course_title': c.title,
                 'student_name': current_user.name,
                 'issued_date': (completed_at_by_course.get(c.id) or datetime.now(timezone.utc)).strftime('%d %B %Y'),
+                'template': _get_certificate_template(c),
             }
             for c in completed
         ],
-        'template': _get_certificate_template(),
     })
 
 
@@ -1286,6 +1519,404 @@ def student_trip_goal():
     })
 
 
+def _trip_goal_dict(t):
+    return {
+        'id': t.id,
+        'title': t.title,
+        'description': t.description,
+        'destination': t.destination,
+        'goal_amount': float(t.goal_amount or 0),
+        'goal_date': t.goal_date.isoformat() if t.goal_date else None,
+        'image_display_url': t.image_display_url,
+        'display_order': t.display_order,
+        'is_active': t.is_active,
+    }
+
+
+@api_bp.route('/admin/trip-goals', methods=['GET', 'POST'])
+def admin_trip_goals():
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from app.models import TripGoal
+
+    if request.method == 'GET':
+        items = TripGoal.query.order_by(TripGoal.display_order, TripGoal.goal_date).all()
+        return jsonify({'trips': [_trip_goal_dict(t) for t in items]})
+
+    from app.admin.routes import _save_thumbnail, ALLOWED_IMAGE_EXTS
+    f = request.form
+    parsed = _parse_trip_form(f)
+    if parsed.get('error'):
+        return jsonify({'success': False, 'message': parsed['error']}), 400
+
+    image = _save_thumbnail(request.files.get('image_file'))
+    if image is False:
+        return jsonify({'success': False, 'message': f'Invalid image format. Allowed: {", ".join(ALLOWED_IMAGE_EXTS)}'}), 400
+
+    trip = TripGoal(
+        title=parsed['title'],
+        description=parsed['description'],
+        destination=parsed['destination'],
+        goal_amount=parsed['goal_amount'],
+        goal_date=parsed['goal_date'],
+        image_filename=image or (f.get('image_url') or '').strip() or None,
+        display_order=parsed['display_order'],
+        is_active=parsed['is_active'],
+        created_by=current_user.id,
+    )
+    db.session.add(trip)
+    db.session.commit()
+    return jsonify({'success': True, 'id': trip.id})
+
+
+@api_bp.route('/admin/trip-goals/<int:trip_id>', methods=['PUT', 'DELETE'])
+def admin_trip_goal_detail(trip_id):
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from app.models import TripGoal
+    trip = TripGoal.query.get_or_404(trip_id)
+
+    if request.method == 'DELETE':
+        db.session.delete(trip)
+        db.session.commit()
+        return jsonify({'success': True})
+
+    from app.admin.routes import _save_thumbnail, ALLOWED_IMAGE_EXTS
+    f = request.form
+    parsed = _parse_trip_form(f)
+    if parsed.get('error'):
+        return jsonify({'success': False, 'message': parsed['error']}), 400
+
+    image = _save_thumbnail(request.files.get('image_file'), trip.image_filename)
+    if image is False:
+        return jsonify({'success': False, 'message': f'Invalid image format. Allowed: {", ".join(ALLOWED_IMAGE_EXTS)}'}), 400
+
+    trip.title = parsed['title']
+    trip.description = parsed['description']
+    trip.destination = parsed['destination']
+    trip.goal_amount = parsed['goal_amount']
+    trip.goal_date = parsed['goal_date']
+    trip.display_order = parsed['display_order']
+    trip.is_active = parsed['is_active']
+    if image:
+        trip.image_filename = image
+    elif (f.get('image_url') or '').strip():
+        trip.image_filename = f.get('image_url').strip()
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+def _parse_trip_form(f):
+    """Shared validation for the create and update handlers. Returns the
+    cleaned values, or a dict carrying 'error' for the caller to return."""
+    from datetime import date as _date
+
+    title = (f.get('title') or '').strip()
+    amount_raw = f.get('goal_amount')
+    date_raw = (f.get('goal_date') or '').strip()
+
+    if not title or amount_raw in (None, '') or not date_raw:
+        return {'error': 'Title, goal amount and goal date are required.'}
+    try:
+        goal_amount = float(amount_raw)
+    except (TypeError, ValueError):
+        return {'error': 'Goal amount must be a number.'}
+    if goal_amount <= 0:
+        return {'error': 'Goal amount must be greater than zero.'}
+    try:
+        goal_date = _date.fromisoformat(date_raw)
+    except ValueError:
+        return {'error': 'Goal date must be a valid date (YYYY-MM-DD).'}
+
+    return {
+        'title': title,
+        'description': (f.get('description') or '').strip() or None,
+        'destination': (f.get('destination') or '').strip() or None,
+        'goal_amount': goal_amount,
+        'goal_date': goal_date,
+        'display_order': int(f.get('display_order') or 0),
+        'is_active': f.get('is_active') in ('true', 'on', '1'),
+    }
+
+
+@api_bp.route('/student/trip-goals', methods=['GET'])
+def student_trip_goals():
+    """Every active trip, each already resolved to a status the UI can render
+    directly rather than re-deriving the same comparison in the client."""
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from datetime import date as _date
+    from app.models import TripGoal, AchievementRequest
+    from app.utils.commissions import sum_commission_earnings
+
+    # Trip qualification counts active (level 1, direct-referral) income only —
+    # passive/manager-override earnings don't count toward it.
+    earnings = sum_commission_earnings(current_user.id, level=1)
+    today = _date.today()
+
+    # One lookup for all trip claims, keyed by the title they were filed under
+    # (trip claims are free-standing AchievementRequests with no achievement_id).
+    claims = {
+        r.title: r.status
+        for r in AchievementRequest.query
+        .filter(AchievementRequest.user_id == current_user.id,
+                AchievementRequest.achievement_id.is_(None))
+        .order_by(AchievementRequest.id.asc())
+        .all()
+    }
+
+    trips = []
+    for t in (TripGoal.query.filter_by(is_active=True)
+              .order_by(TripGoal.display_order, TripGoal.goal_date).all()):
+        target = float(t.goal_amount or 0)
+        achieved = earnings >= target and target > 0
+        days_left = (t.goal_date - today).days if t.goal_date else 0
+        expired = (not achieved) and days_left < 0
+
+        d = _trip_goal_dict(t)
+        d.update({
+            'current_earnings': earnings,
+            'remaining': max(0.0, target - earnings),
+            'progress_pct': min(100, round((earnings / target) * 100)) if target > 0 else 0,
+            'achieved': achieved,
+            'expired': expired,
+            'days_left': days_left,
+            # achieved -> earned | expired -> missed | otherwise -> in_progress
+            'status': 'achieved' if achieved else ('missed' if expired else 'in_progress'),
+            'claim_status': claims.get(t.title),
+        })
+        trips.append(d)
+
+    return jsonify({
+        'trips': trips,
+        'current_earnings': earnings,
+        'achieved_count': sum(1 for t in trips if t['achieved']),
+        'total_count': len(trips),
+    })
+
+
+def _frontend_base():
+    """Origin to build user-facing links on (reset links, profile links...).
+
+    Prefers the configured FRONTEND_URL. Falls back to the request's Origin
+    when it's one CORS already trusts — that covers local dev without any
+    config. Anything else falls back to this host, because an unchecked
+    Origin header would let a caller aim an emailed link at their own site.
+    """
+    configured = current_app.config.get('FRONTEND_URL')
+    if configured:
+        return configured
+
+    origin = (request.headers.get('Origin') or '').rstrip('/')
+    allowed = ('http://localhost:5173', 'http://127.0.0.1:5173')
+    if origin in allowed:
+        return origin
+
+    return request.host_url.rstrip('/')
+
+
+OTP_TTL_MINUTES = 10
+OTP_MAX_ATTEMPTS = 5
+OTP_RESEND_COOLDOWN_SECONDS = 60
+# How long a verified address stays good for. Long enough to finish a slow
+# signup form, short enough that a stale verification can't be reused later.
+OTP_VERIFIED_WINDOW_MINUTES = 60
+
+
+def _hash_otp(code: str) -> str:
+    import hashlib
+    return hashlib.sha256(code.encode()).hexdigest()
+
+
+def email_is_verified(email: str) -> bool:
+    """True when this address completed an OTP recently."""
+    from datetime import datetime, timedelta, timezone as _tz
+    from app.models import EmailOtp
+
+    cutoff = datetime.now(_tz.utc) - timedelta(minutes=OTP_VERIFIED_WINDOW_MINUTES)
+    row = (EmailOtp.query
+           .filter_by(email=email.strip().lower(), verified=True)
+           .order_by(EmailOtp.id.desc()).first())
+    if not row or not row.verified_at:
+        return False
+    return row.verified_at.replace(tzinfo=_tz.utc) >= cutoff
+
+
+@api_bp.route('/auth/send-otp', methods=['POST'])
+def api_send_email_otp():
+    """Issue a signup verification code."""
+    import secrets
+    from datetime import datetime, timedelta, timezone as _tz
+    from app.models import EmailOtp
+    from app.utils.email import send_email_otp
+
+    data = request.get_json() or {}
+    email = (data.get('email') or '').strip().lower()
+    name = (data.get('name') or '').strip()
+
+    if not email or '@' not in email:
+        return jsonify({'success': False, 'message': 'Please enter a valid email address.'}), 400
+
+    # Better to say so now than after they've filled the whole form.
+    if User.query.filter_by(email=email).first():
+        return jsonify({'success': False, 'message': 'This email is already registered. Try logging in instead.'}), 400
+
+    now = datetime.now(_tz.utc)
+    last = EmailOtp.query.filter_by(email=email).order_by(EmailOtp.id.desc()).first()
+    if last and last.created_at:
+        elapsed = (now - last.created_at.replace(tzinfo=_tz.utc)).total_seconds()
+        if elapsed < OTP_RESEND_COOLDOWN_SECONDS:
+            wait = int(OTP_RESEND_COOLDOWN_SECONDS - elapsed)
+            return jsonify({'success': False,
+                            'message': f'Please wait {wait}s before requesting another code.',
+                            'retry_after': wait}), 429
+
+    code = f'{secrets.randbelow(1000000):06d}'
+    db.session.add(EmailOtp(
+        email=email,
+        code_hash=_hash_otp(code),
+        expires_at=now + timedelta(minutes=OTP_TTL_MINUTES),
+    ))
+    db.session.commit()
+
+    sent = False
+    try:
+        sent = send_email_otp(email, code, name)
+    except Exception:
+        current_app.logger.exception(f'Failed to send signup OTP to {email}')
+
+    if not sent:
+        return jsonify({'success': False, 'message': "Couldn't send the code right now. Please try again."}), 502
+
+    return jsonify({'success': True, 'message': f'Code sent to {email}.',
+                    'expires_in': OTP_TTL_MINUTES * 60})
+
+
+@api_bp.route('/auth/verify-otp', methods=['POST'])
+def api_verify_email_otp():
+    """Check a code against the newest outstanding one for that address."""
+    from datetime import datetime, timezone as _tz
+    from app.models import EmailOtp
+
+    data = request.get_json() or {}
+    email = (data.get('email') or '').strip().lower()
+    code = (data.get('code') or '').strip()
+
+    if not email or not code:
+        return jsonify({'success': False, 'message': 'Enter the 6-digit code we emailed you.'}), 400
+
+    row = EmailOtp.query.filter_by(email=email).order_by(EmailOtp.id.desc()).first()
+    if not row:
+        return jsonify({'success': False, 'message': 'Request a code first.'}), 400
+    if row.verified:
+        return jsonify({'success': True, 'message': 'Email already verified.'})
+    if row.expires_at.replace(tzinfo=_tz.utc) < datetime.now(_tz.utc):
+        return jsonify({'success': False, 'message': 'That code has expired. Please request a new one.'}), 400
+    if row.attempts >= OTP_MAX_ATTEMPTS:
+        return jsonify({'success': False, 'message': 'Too many incorrect attempts. Please request a new code.'}), 429
+
+    # Count the attempt before comparing, so a wrong guess always costs one
+    # even if the request is abandoned partway.
+    row.attempts += 1
+    if _hash_otp(code) != row.code_hash:
+        db.session.commit()
+        left = max(0, OTP_MAX_ATTEMPTS - row.attempts)
+        return jsonify({'success': False,
+                        'message': f'Incorrect code. {left} attempt{"" if left == 1 else "s"} left.'}), 400
+
+    row.verified = True
+    row.verified_at = datetime.now(_tz.utc)
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Email verified.'})
+
+
+@api_bp.route('/auth/forgot-password', methods=['POST'])
+def api_forgot_password():
+    """Start a password reset for the React app.
+
+    Always answers success, even for an address that isn't registered — a
+    different response would let anyone probe which emails have accounts.
+    """
+    import hashlib
+    from datetime import datetime, timedelta, timezone as _tz
+    from app.auth.routes import _make_reset_token
+    from app.models import PasswordResetToken
+    from app.utils.email import send_password_reset_email
+
+    data = request.get_json() or {}
+    email = (data.get('email') or '').strip().lower()
+    if not email:
+        return jsonify({'success': False, 'message': 'Please enter your email address.'}), 400
+
+    generic = {'success': True,
+               'message': 'If that email is registered, a reset link is on its way.'}
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify(generic)
+
+    token = _make_reset_token(user)
+
+    # Record the token so it can be retired after one use. The signed token
+    # alone is valid for its whole lifetime, so without this row a reset link
+    # could be replayed until it expires.
+    expires = datetime.now(_tz.utc) + timedelta(hours=1)
+    db.session.add(PasswordResetToken(
+        user_id=user.id,
+        token_hash=hashlib.sha256(token.encode()).hexdigest(),
+        used=False,
+        expires_at=expires,
+    ))
+    db.session.commit()
+
+    reset_link = f"{_frontend_base()}/reset-password?token={token}"
+    try:
+        send_password_reset_email(user, reset_link)
+    except Exception:
+        current_app.logger.exception(f'Failed to send password reset email to {email}')
+
+    return jsonify(generic)
+
+
+@api_bp.route('/auth/reset-password', methods=['POST'])
+def api_reset_password():
+    """Finish the reset: verify the signed token, then set the new password."""
+    import hashlib
+    from datetime import datetime, timezone as _tz
+    from app.auth.routes import _verify_reset_token
+    from app.models import PasswordResetToken
+    from app.utils import hash_password
+
+    data = request.get_json() or {}
+    token = (data.get('token') or '').strip()
+    password = data.get('password') or ''
+
+    if not token:
+        return jsonify({'success': False, 'message': 'This reset link is invalid.'}), 400
+    if len(password) < 6:
+        return jsonify({'success': False, 'message': 'Password must be at least 6 characters.'}), 400
+
+    user = _verify_reset_token(token)
+    if user is None:
+        return jsonify({'success': False, 'message': 'This reset link is invalid or has expired.'}), 400
+
+    row = PasswordResetToken.query.filter_by(
+        token_hash=hashlib.sha256(token.encode()).hexdigest()).first()
+    if row is None or row.used:
+        return jsonify({'success': False, 'message': 'This reset link has already been used.'}), 400
+    if row.expires_at and datetime.now(_tz.utc) > row.expires_at.replace(tzinfo=_tz.utc):
+        return jsonify({'success': False, 'message': 'This reset link has expired.'}), 400
+
+    user.password_hash = hash_password(password)
+    row.used = True
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Password updated. You can log in now.'})
+
+
 @api_bp.route('/student/manager', methods=['GET'])
 def student_manager():
     if not current_user.is_authenticated:
@@ -1304,10 +1935,20 @@ def student_manager():
 
     return jsonify({
         'has_manager': manager is not None,
+        'me': {
+            'name': current_user.name,
+            'email': current_user.email,
+            'phone': current_user.phone,
+            'about': current_user.about,
+            'address': current_user.address,
+            'profile_image_url': current_user.profile_image_url,
+        },
         'sponsor': {
             'name': direct_referrer.name,
             'email': direct_referrer.email,
             'phone': direct_referrer.phone,
+            'about': direct_referrer.about,
+            'address': direct_referrer.address,
             'role': direct_referrer.role,
             'profile_image_url': direct_referrer.profile_image_url,
             'referral_code': direct_referrer.referral_code,
@@ -1316,12 +1957,16 @@ def student_manager():
             'name': manager.name,
             'email': manager.email,
             'phone': manager.phone,
+            'about': manager.about,
+            'address': manager.address,
             'profile_image_url': manager.profile_image_url,
         } if manager else None,
         'referred_by': {
             'name': referred_by.name,
             'email': referred_by.email,
             'phone': referred_by.phone,
+            'about': referred_by.about,
+            'address': referred_by.address,
             'role': referred_by.role,
             'profile_image_url': referred_by.profile_image_url,
         } if referred_by else None,
@@ -1345,7 +1990,7 @@ def student_checkout_pricing():
         return jsonify({'success': False, 'message': 'No item specified.'}), 400
 
     if package_id:
-        package = Package.query.get_or_404(int(package_id))
+        package = _resolve_package(package_id)
         pricing = compute_checkout_price(current_user, package=package, coupon_code=coupon_code)
     else:
         course = Course.query.get_or_404(int(course_id))
@@ -1381,7 +2026,7 @@ def student_purchase():
         return jsonify({'success': False, 'message': 'No item specified.'}), 400
 
     if package_id:
-        package = Package.query.get_or_404(int(package_id))
+        package = _resolve_package(package_id)
         if current_user.has_purchased(package.id):
             return jsonify({'success': False, 'message': 'You already own this package.'}), 400
         pricing = compute_checkout_price(current_user, package=package, coupon_code=coupon_code)
@@ -1430,6 +2075,12 @@ def student_purchase():
     process_commissions(order)
     db.session.commit()
 
+    try:
+        from app.utils.email import send_purchase_confirmation
+        send_purchase_confirmation(current_user, order)
+    except Exception:
+        current_app.logger.exception(f'Failed to send purchase confirmation email to {current_user.email}')
+
     return jsonify({'success': True})
 
 
@@ -1451,7 +2102,7 @@ def student_checkout_create_order():
         return jsonify({'success': False, 'message': 'No item specified.'}), 400
 
     if package_id:
-        package = Package.query.get_or_404(int(package_id))
+        package = _resolve_package(package_id)
         if current_user.has_purchased(package.id):
             return jsonify({'success': False, 'message': 'You already own this package.'}), 400
         pricing = compute_checkout_price(current_user, package=package, coupon_code=coupon_code)
@@ -1553,9 +2204,11 @@ def student_payment_verify():
             discount_amount=pricing['coupon_discount'] or None,
         )
     else:
-        if receipt_type != 'pkg' or receipt_item_id != int(package_id):
+        package = _resolve_package(package_id)
+        # The receipt records the row id at order-creation time; compare against
+        # the resolved package rather than parsing the (now non-numeric) param.
+        if receipt_type != 'pkg' or receipt_item_id != package.id:
             return jsonify({'success': False, 'message': 'Payment does not match the requested package.'}), 400
-        package = Package.query.get_or_404(int(package_id))
         if current_user.has_purchased(package.id):
             return jsonify({'success': False, 'message': 'You already own this package.'}), 400
         pricing = compute_checkout_price(current_user, package=package, coupon_code=coupon_code)
@@ -1586,7 +2239,7 @@ def student_payment_verify():
         from app.utils.email import send_purchase_confirmation
         send_purchase_confirmation(current_user, order)
     except Exception:
-        pass
+        current_app.logger.exception(f'Failed to send purchase confirmation email to {current_user.email}')
 
     return jsonify({'success': True})
 
@@ -1595,6 +2248,147 @@ def _affiliate_activation_order():
     return Order.query.filter_by(
         user_id=current_user.id, package_id=None, course_id=None, payment_status='paid'
     ).first()
+
+
+def _fulfil_payment_from_receipt(receipt: str, payment_id: str, amount_inr: float, notes: dict | None = None) -> bool:
+    """Shared by the Razorpay webhook to fulfil a captured payment purely from its
+    order receipt (no logged-in session available). Mirrors the three client-verify
+    routes above, but trusts the amount Razorpay actually captured — recorded at
+    order-creation time — instead of re-deriving pricing/coupons from the request
+    body, since a webhook has none. Idempotent: a payment_id already recorded as
+    an Order's transaction_id (e.g. the client's own /verify call already ran)
+    is treated as already fulfilled. `notes` (the Razorpay order's own notes,
+    if any) is only used by the guest masterclass-referral receipt branch,
+    which has no logged-in user to look form data up from."""
+    if not receipt or Order.query.filter_by(transaction_id=payment_id).first():
+        return True
+
+    m = re.match(r'^(pkg|crs)_(\d+)_u(\d+)_[0-9a-fA-F]{8}$', receipt)
+    if m:
+        item_type, item_id, user_id = m.group(1), int(m.group(2)), int(m.group(3))
+        user = User.query.get(user_id)
+        if not user:
+            return False
+        if item_type == 'pkg':
+            package = Package.query.get(item_id)
+            if not package or user.has_purchased(package.id):
+                return True
+            order = Order(user_id=user.id, package_id=package.id, amount_paid=amount_inr,
+                           payment_status='paid', payment_method='razorpay', transaction_id=payment_id)
+        else:
+            course = Course.query.get(item_id)
+            if not course or user.has_access_to_course(course.id):
+                return True
+            order = Order(user_id=user.id, course_id=course.id, amount_paid=amount_inr,
+                           payment_status='paid', payment_method='razorpay', transaction_id=payment_id)
+        db.session.add(order)
+        db.session.flush()
+        process_commissions(order)
+        db.session.commit()
+        try:
+            from app.utils.email import send_purchase_confirmation
+            send_purchase_confirmation(user, order)
+        except Exception:
+            current_app.logger.exception(f'Failed to send purchase confirmation email to {user.email}')
+        return True
+
+    m = re.match(r'^aff_u(\d+)_[0-9a-fA-F]{8}$', receipt)
+    if m:
+        user_id = int(m.group(1))
+        user = User.query.get(user_id)
+        if not user:
+            return False
+        already = Order.query.filter_by(
+            user_id=user.id, package_id=None, course_id=None, product_id=None, payment_status='paid'
+        ).first()
+        if already:
+            return True
+        order = Order(user_id=user.id, amount_paid=amount_inr, payment_status='paid',
+                       payment_method='razorpay', transaction_id=payment_id)
+        db.session.add(order)
+        db.session.flush()
+        process_commissions(order)
+        db.session.commit()
+        return True
+
+    m = re.match(r'^mcref_([A-Z0-9]{8})_[0-9a-fA-F]{8}$', receipt)
+    if m:
+        code = m.group(1)
+        referrer = User.query.filter_by(referral_code=code).first()
+        if not referrer:
+            return False
+        # Safety-net path only: the client's own /verify call already handles
+        # the normal case. This only runs if the browser never came back, so
+        # the guest's form data has to be recovered from the Razorpay order
+        # notes captured at create-order time instead of a live request body.
+        notes = notes or {}
+        content = _get_masterclass_content()
+        amount = float(content.get('price') or 0)
+        order = _create_masterclass_registration(
+            referrer, notes.get('name'), notes.get('phone'), notes.get('email'),
+            {k: notes.get(k, '') for k in ('age', 'occupation', 'city_state', 'experience_level', 'goal')},
+            amount, payment_id,
+        )
+        return order is not None
+
+    m = re.match(r'^prd_(\d+)_u(\d+)_[0-9a-fA-F]{8}$', receipt)
+    if m:
+        product_id, user_id = int(m.group(1)), int(m.group(2))
+        user = User.query.get(user_id)
+        product = Product.query.get(product_id)
+        if not user or not product:
+            return False
+        if user.has_purchased_product(product.id):
+            return True
+        order = Order(user_id=user.id, product_id=product.id, amount_paid=amount_inr,
+                       payment_status='paid', payment_method='razorpay', transaction_id=payment_id)
+        db.session.add(order)
+        db.session.flush()
+        process_commissions(order)
+        db.session.commit()
+        return True
+
+    return False
+
+
+@api_bp.route('/webhooks/razorpay', methods=['POST'])
+def razorpay_webhook():
+    """Server-to-server payment confirmation from Razorpay. Configure this exact
+    URL (https://<your-domain>/api/v1/webhooks/razorpay) under Razorpay Dashboard
+    -> Settings -> Webhooks, subscribed to at least 'payment.captured', and paste
+    the webhook secret it gives you into razorpay_webhook_secret in .env.
+
+    This is a safety net alongside the client-side /verify routes above: if the
+    student's browser never makes it back after Razorpay actually captures the
+    payment (closed tab, network drop, crash), this still fulfils the order. It's
+    idempotent against the normal client-verify path via the transaction_id
+    uniqueness check in _fulfil_payment_from_receipt."""
+    raw_body = request.get_data()
+    signature = request.headers.get('X-Razorpay-Signature', '')
+
+    if not verify_razorpay_webhook_signature(raw_body, signature):
+        return jsonify({'error': 'Invalid signature'}), 400
+
+    payload = request.get_json(silent=True) or {}
+    event = payload.get('event')
+
+    if event == 'payment.captured':
+        entity = ((payload.get('payload') or {}).get('payment') or {}).get('entity') or {}
+        payment_id = entity.get('id')
+        order_id = entity.get('order_id')
+        amount_paise = entity.get('amount') or 0
+
+        if payment_id and order_id:
+            try:
+                rz_order = fetch_razorpay_order(order_id)
+                receipt = (rz_order or {}).get('receipt') or ''
+                notes = (rz_order or {}).get('notes') or {}
+                _fulfil_payment_from_receipt(receipt, payment_id, amount_paise / 100, notes=notes)
+            except Exception as e:
+                current_app.logger.error(f'Razorpay webhook fulfilment error: {e}')
+                db.session.rollback()
+
+    return jsonify({'status': 'ok'}), 200
 
 
 _DEFAULT_MASTERCLASS_CONTENT = {
@@ -1607,8 +2401,201 @@ _DEFAULT_MASTERCLASS_CONTENT = {
     'mode': 'Online (Zoom Live)',
     'fee_text': '₹99 Only (Registration Fee)',
     'price': 99,
+    'original_price': 499,
     'video_url': '',
     'video_filename': '',
+    'show_video': True,
+    'offer_ends_at': '',
+    'total_seats': 100,
+    'seats_filled': 87,
+    'language': 'Hindi',
+    'hero_image': '/static/img/manwithlaptop.png',
+    'summary_image': '/static/img/manwithlaptop.png',
+    'achievement_image': '/static/img/achievement-man.png',
+    'feature_chips': [
+        'Live Interactive Session',
+        'Practical Learning',
+        'Bonus Resources',
+        'Certificate of Participation',
+    ],
+    'achieve_items': [
+        'Learn skills that are in high demand',
+        'Start your online income journey',
+        'Work from anywhere, anytime',
+        'Create multiple income sources',
+        'Achieve financial freedom',
+        'Change your lifestyle for the better',
+    ],
+    'founder_name': 'Suriya Yadav',
+    'founder_title': 'Founder, Zarni Skills',
+    'founder_quote': 'The best investment you can make is in yourself. See you in the masterclass!',
+    'support_phone': '+91 12345 67890',
+    'support_email': 'support@zarniskills.com',
+    'website_url': 'www.zarniskills.com',
+    'whatsapp_support_link': '',
+    'preparation_video_link': '',
+    'welcome_pdf_link': '',
+    'mission_text': 'हमारा Mission है आपको Digital Skills और Online Business सिखाकर आपकी Financial Freedom में मदद करना।',
+    'social_links': {'youtube': '', 'instagram': '', 'telegram': '', 'facebook': ''},
+
+    # ── Branding ──────────────────────────────────────────────────────────
+    'brand_name': 'Zarni Skills',
+    'logo_image': '/static/img/zarni-logo.png',
+    'header_badges': [
+        'LIVE MASTERCLASS',
+        'BEGINNER FRIENDLY',
+        'PRACTICAL TRAINING',
+        '100% SECURE PAYMENT',
+    ],
+    'hero_checks': ['Practical Training', 'Real Results', 'Live Q&A', 'Certification'],
+    'cta_button_text': 'Register Now',
+    'secure_note_hero': 'Secure Payment | Instant Access',
+    'secure_note_offer': 'Secure Payment | Your Data is Safe',
+
+    # ── Landing section headings & copy ───────────────────────────────────
+    'offer_header_text': 'Limited Time Offer',
+    'countdown_label': 'Offer Ends In',
+    'seats_cta_text': 'Limited Seats – Act Now!',
+    'fee_label': 'Registration Fee',
+    'limited_seats_label': 'Limited Seats',
+    # {left}/{filled}/{total} are replaced with the live seat numbers.
+    'seats_left_text': 'Only {left} Seats Left!',
+    'seats_filled_text': '{filled} / {total} Seats Filled',
+    'price_only_suffix': 'Only',
+    'video_heading': 'Watch This 60-Second Intro',
+    'video_subheading': '– Before You Register –',
+    'details_heading': 'Masterclass Details',
+    'seats_heading': 'Seats Availability',
+    'live_registrations_label': 'Live Registrations',
+    'live_registrations': [
+        'Rahul from Jaipur', 'Priya from Delhi', 'Ankit from Indore', 'Sneha from Lucknow',
+    ],
+    'live_registrations_badge': 'Just Registered',
+    'skills_heading': 'Skills You Will Master',
+    'achieve_heading': 'What You Will Achieve',
+    'bonuses_heading': 'Exclusive Bonuses',
+    'bonuses_subheading': '(For Registered Students)',
+    'testimonials_heading': 'Success Stories',
+    'faq_heading': 'Frequently Asked Questions',
+    'final_cta_title': "Don't Miss This Opportunity!",
+    'final_cta_subtitle': 'Start Your Online Income Journey Today.',
+    'final_cta_note': 'Limited Seats – Register Now!',
+    'landing_trust_items': [
+        '100% Secure Payment', 'Easy Refund Policy', '24/7 Support Available', 'Trusted by Thousands',
+    ],
+    'payment_brands': ['Razorpay', 'UPI', 'VISA', 'Mastercard'],
+
+    # ── Form page copy ────────────────────────────────────────────────────
+    'form_title': "You're Just One Step Away!",
+    'form_subtitle': 'Reserve Your Seat in the Live Masterclass',
+    'step1_heading': 'Your Details',
+    'step1_subheading': 'Fill in your information to get started',
+    'step2_heading': 'Order Summary',
+    'step2_subheading': 'Review your order details',
+    'step3_heading': 'Choose Payment Option',
+    'step3_subheading': 'Select your preferred payment method',
+    'order_item_title': 'Live Masterclass Registration',
+    'gst_label': 'GST (18%)',
+    'gst_amount': 0,
+    'total_label': 'Total Amount',
+    'tax_note': '(All taxes included)',
+    'submit_button_text': 'Proceed to Payment',
+    'form_secure_note': 'Your information is 100% secure and safe.',
+    'payment_secure_note': 'Secure payment powered by Razorpay',
+    'label_full_name': 'Full Name',
+    'label_phone': 'Mobile Number (WhatsApp)',
+    'label_email': 'Email Address',
+    'label_age': 'Age',
+    'label_occupation': 'Occupation',
+    'label_city': 'City & State (Optional)',
+    'label_experience': 'Experience Level',
+    'label_goal': 'What is your biggest goal? (Choose one)',
+    'country_code': '+91',
+    'placeholder_full_name': 'Enter your full name',
+    'placeholder_phone': 'Enter your WhatsApp number',
+    'placeholder_email': 'Enter your email address',
+    'placeholder_city': 'Enter your city & state',
+    'placeholder_age': 'Select your age',
+    'placeholder_occupation': 'Select occupation',
+    'placeholder_experience': 'Select your level',
+    'processing_text': 'Processing...',
+    'invalid_link_title': "This link isn't valid",
+    'invalid_link_text': 'The registration link you followed is invalid or has expired. Please check the link and try again.',
+    'age_options': ['Under 18', '18 - 24', '25 - 34', '35 - 44', '45 - 54', '55+'],
+    'occupation_options': ['Student', 'Job / Service', 'Business Owner', 'Freelancer', 'Housewife', 'Other'],
+    'experience_options': ['Complete Beginner', 'Some Experience', 'Experienced'],
+    'goal_options': [
+        'Learn Online Business', 'Earn Extra Income', 'Learn Digital Skills',
+        'Start Freelancing', 'Build Personal Brand', 'Other',
+    ],
+    'payment_options': [
+        {'label': 'UPI', 'desc': 'Pay using any UPI app', 'brand': 'UPI'},
+        {'label': 'PhonePe', 'desc': 'Pay using PhonePe', 'brand': 'PhonePe'},
+        {'label': 'Google Pay', 'desc': 'Pay using Google Pay', 'brand': 'G Pay'},
+        {'label': 'Paytm', 'desc': 'Pay using Paytm', 'brand': 'Paytm'},
+        {'label': 'Debit / Credit Card', 'desc': 'Visa, Mastercard, Rupay', 'brand': 'VISA'},
+        {'label': 'Net Banking', 'desc': 'All major banks supported', 'brand': 'Bank'},
+    ],
+    'form_trust_items': [
+        {'title': '100% Secure', 'desc': 'Your data is protected'},
+        {'title': 'Easy Payment', 'desc': 'Multiple payment options'},
+        {'title': 'Instant Access', 'desc': 'Get immediate confirmation'},
+        {'title': '24/7 Support', 'desc': "We're here to help"},
+    ],
+    'why_join_heading': 'Why Thousands Are Joining',
+    'privacy_heading': 'Your Information is Safe With Us',
+    'privacy_text': 'We respect your privacy and never share your information with anyone. Your registration is safe, secure and confidential.',
+    'privacy_badges': ['SSL Secure', 'Privacy Protected', 'Trusted by Thousands'],
+
+    # ── Success page copy ─────────────────────────────────────────────────
+    'success_title': 'Congratulations!',
+    'success_subtitle': 'Your Registration is Confirmed!',
+    'success_message': 'Welcome to Zarni Skills Family.\nYour seat has been successfully reserved.',
+    'registration_id_label': 'Registration ID',
+    'success_panel_heading': "You're All Set For The Live Masterclass!",
+    'label_masterclass_date': 'Masterclass Date',
+    'label_time': 'Time',
+    'label_mode': 'Mode',
+    'label_language': 'Language',
+    'email_sent_text': 'A confirmation email has been sent to',
+    'whatsapp_sent_text': 'Event updates will be sent to',
+    'next_steps_heading': 'Next Steps',
+    'next_steps': [
+        {'title': 'Join WhatsApp Community', 'desc': 'Join our official community to get updates, reminders & important announcements.', 'cta': 'Join Community', 'link_key': 'whatsapp_group_link'},
+        {'title': 'Check Your Email', 'desc': 'Check your email for payment receipt and masterclass details.', 'cta': 'Check Email', 'link_key': 'email'},
+        {'title': 'Add to Calendar', 'desc': "Add the masterclass to your calendar so you don't miss it.", 'cta': 'Add to Calendar', 'link_key': 'calendar'},
+        {'title': 'Watch Preparation Video', 'desc': 'Watch this short video to know how to get the best from this masterclass.', 'cta': 'Watch Now', 'link_key': 'preparation_video_link'},
+        {'title': 'Download Welcome PDF', 'desc': 'Download the welcome guide & preparation checklist for the session.', 'cta': 'Download PDF', 'link_key': 'welcome_pdf_link'},
+    ],
+    'community_panel_heading': 'Join Our Community',
+    'community_panel_text': 'Get instant access to our WhatsApp community and connect with other learners.',
+    'community_card_title': 'WhatsApp Community',
+    'community_card_subtitle': 'Learn, Network & Grow Together',
+    'community_card_cta': 'Join',
+    'support_panel_heading': 'Your WhatsApp Support',
+    'support_panel_text': 'Need help? Chat directly with our support team on WhatsApp.',
+    'support_card_title': 'Chat on WhatsApp',
+    'support_card_subtitle': "We're here to help you!",
+    'support_card_cta': 'Chat Now',
+    'success_banner_title': "You've Taken The First Step Towards Your Success!",
+    'success_banner_subtitle': "We're excited to help you achieve your goals.",
+    'success_trust_items': [
+        '100% Secure Payment', 'Instant Access', 'Expert Guidance',
+        'Practical Learning', 'Live Q&A Session', 'Certificate Included',
+    ],
+
+    # ── Footer ────────────────────────────────────────────────────────────
+    'footer_links_heading': 'Important Links',
+    'footer_contact_heading': 'Contact Us',
+    'footer_social_heading': 'Follow Us',
+    'footer_links': [
+        {'label': 'About Us', 'url': '/about'},
+        {'label': 'Privacy Policy', 'url': '/privacy-policy'},
+        {'label': 'Terms & Conditions', 'url': '/terms-and-conditions'},
+        {'label': 'Refund Policy', 'url': '/refund-policy'},
+    ],
+    'whatsapp_support_label': 'WhatsApp Support',
+    'copyright_text': '',
     'includes': [
         'Live Masterclass Access',
         'Live Q&A Session',
@@ -1719,6 +2706,289 @@ def admin_masterclass_funnel_video():
     content['video_filename'] = video
     SiteSettings.set('masterclass_funnel_content', json.dumps(content))
     return jsonify({'success': True, 'video_filename': video})
+
+
+# Image keys the admin funnel editor is allowed to upload into — an allowlist
+# so a crafted 'field' can't write an arbitrary key into the content blob.
+_MASTERCLASS_IMAGE_FIELDS = {'hero_image', 'summary_image', 'achievement_image', 'logo_image'}
+
+
+@api_bp.route('/admin/masterclass-funnel/image', methods=['POST'])
+def admin_masterclass_funnel_image():
+    """Upload one of the funnel's images (hero/summary/achievement/logo) and
+    store the resulting URL on the content blob, so admins never have to paste
+    a file path by hand. Mirrors the video upload route above."""
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from app.models import SiteSettings
+    from app.admin.routes import _save_thumbnail, ALLOWED_IMAGE_EXTS
+
+    field = (request.form.get('field') or '').strip()
+    if field not in _MASTERCLASS_IMAGE_FIELDS:
+        return jsonify({'success': False, 'message': 'Unknown image field.'}), 400
+
+    image = _save_thumbnail(request.files.get('image_file'))
+    if image is False:
+        return jsonify({'success': False, 'message': f'Invalid image format. Allowed: {", ".join(ALLOWED_IMAGE_EXTS)}'}), 400
+    if not image:
+        return jsonify({'success': False, 'message': 'No image file provided.'}), 400
+
+    content = _get_masterclass_content()
+    content[field] = image
+    SiteSettings.set('masterclass_funnel_content', json.dumps(content))
+    return jsonify({'success': True, 'field': field, 'url': image})
+
+
+def _create_masterclass_registration(referrer, name, phone, email, extra_fields,
+                                      amount, payment_id, payment_method='razorpay'):
+    """Shared by the public masterclass /verify route and the webhook fallback
+    below: creates the guest's account (referred_by the link owner, so the
+    existing L1/L2 commission cascade in process_commissions() credits the
+    referrer), the paid Order, and runs commission processing. Returns the
+    new Order, or None if a user with this email/phone is already registered
+    (never repoint an existing account's referral chain)."""
+    email = (email or '').strip().lower()
+    phone = (phone or '').strip()
+    if not email:
+        return None
+    if User.query.filter(db.func.lower(User.email) == email).first():
+        return None
+    if phone and User.query.filter_by(phone=phone).first():
+        return None
+
+    from werkzeug.security import generate_password_hash
+    generated_password = secrets.token_urlsafe(9)
+    new_user = User(
+        name=(name or 'Student').strip() or 'Student',
+        email=email,
+        password_hash=generate_password_hash(generated_password),
+        phone=phone,
+        referred_by=referrer.id,
+        manager_id=referrer.id if referrer.role == 'manager' else referrer.manager_id,
+        role='student',
+    )
+    db.session.add(new_user)
+    db.session.flush()
+
+    order = Order(
+        user_id=new_user.id,
+        package_id=None, course_id=None, product_id=None,
+        amount_paid=amount,
+        payment_status='paid',
+        payment_method=payment_method,
+        transaction_id=payment_id,
+        extra_info=json.dumps(extra_fields),
+    )
+    db.session.add(order)
+    db.session.flush()
+
+    # Masterclass registrations pay the referrer the whole fee, credited
+    # straight away — deliberately NOT process_commissions(), which splits a
+    # percentage across L1/L2/manager and leaves it pending admin approval.
+    commission = Commission(
+        user_id=referrer.id,
+        from_user_id=new_user.id,
+        order_id=order.id,
+        level=1,
+        commission_percent=100,
+        commission_amount=amount,
+        status='approved',
+    )
+    db.session.add(commission)
+    db.session.flush()
+    db.session.add(WalletTransaction(
+        user_id=referrer.id,
+        type='commission',
+        amount=amount,
+        reference_id=commission.id,
+        status='completed',
+        note=f'Masterclass registration income from {new_user.name}',
+    ))
+    db.session.commit()
+
+    try:
+        from app.utils.notifications import add_notification
+        add_notification(
+            user_id=referrer.id,
+            title='Registration Income Received! 💰',
+            message=f'You earned ₹{amount:,.2f} from {new_user.name}\'s masterclass registration.',
+            type='commission',
+        )
+    except Exception:
+        current_app.logger.exception('Failed to add registration income notification')
+
+    try:
+        from app.utils.email import send_welcome_email
+        send_welcome_email(new_user, password=generated_password,
+                            profile_link=f'{_frontend_base()}/student/profile')
+    except Exception:
+        current_app.logger.exception(f'Failed to send welcome email to {new_user.email}')
+
+    return order
+
+
+def _masterclass_guest_fields(data):
+    """Extracts + trims the guest lead fields shared by create-order/verify."""
+    return {
+        'age': (data.get('age') or '').strip(),
+        'occupation': (data.get('occupation') or '').strip(),
+        'city_state': (data.get('city_state') or '').strip(),
+        'experience_level': (data.get('experience_level') or '').strip(),
+        'goal': (data.get('goal') or '').strip(),
+    }
+
+
+@api_bp.route('/public/masterclass/<code>', methods=['GET'])
+def public_masterclass_funnel(code):
+    """Unauthenticated: the landing page a referral link (/masterclass/<code>)
+    resolves to. 404s on an unknown code so a bad/typo'd link fails loudly."""
+    referrer = User.query.filter_by(referral_code=code).first()
+    if not referrer:
+        return jsonify({'error': 'Invalid or expired link.'}), 404
+
+    return jsonify({
+        'referrer_name': referrer.name,
+        'content': _get_masterclass_content(),
+    })
+
+
+@api_bp.route('/public/masterclass/<code>/create-order', methods=['POST'])
+def public_masterclass_create_order(code):
+    referrer = User.query.filter_by(referral_code=code).first()
+    if not referrer:
+        return jsonify({'success': False, 'message': 'Invalid or expired link.'}), 404
+
+    data = request.get_json() or {}
+    name = (data.get('name') or '').strip()
+    phone = (data.get('phone') or '').strip()
+    email = (data.get('email') or '').strip().lower()
+    if not name or not phone or not email:
+        return jsonify({'success': False, 'message': 'Name, phone, and email are required.'}), 400
+
+    if User.query.filter(db.func.lower(User.email) == email).first() or \
+       (phone and User.query.filter_by(phone=phone).first()):
+        return jsonify({'success': False, 'message': 'This email or phone is already registered. Please log in instead.'}), 409
+
+    amount = float(_get_masterclass_content().get('price') or 0)
+    receipt = f'mcref_{code}_{uuid.uuid4().hex[:8]}'
+
+    if not is_razorpay_enabled() or amount <= 0:
+        return jsonify({'razorpay_enabled': False})
+
+    rz_order = create_razorpay_order(amount_inr=amount, receipt=receipt, notes={
+        'name': name, 'phone': phone, 'email': email, 'referral_code': code,
+        **_masterclass_guest_fields(data),
+    })
+    if rz_order is None:
+        return jsonify({'success': False, 'message': 'Payment gateway error. Please try again or contact support.'}), 502
+
+    return jsonify({
+        'razorpay_enabled': True,
+        'order_id': rz_order['id'],
+        'amount': rz_order['amount'],
+        'currency': rz_order['currency'],
+        'key_id': get_razorpay_key_id(),
+        'item_name': 'Masterclass Registration',
+        'user_name': name,
+        'user_email': email,
+    })
+
+
+@api_bp.route('/public/masterclass/<code>/verify', methods=['POST'])
+def public_masterclass_verify(code):
+    referrer = User.query.filter_by(referral_code=code).first()
+    if not referrer:
+        return jsonify({'success': False, 'message': 'Invalid or expired link.'}), 404
+
+    data = request.get_json() or {}
+    razorpay_order_id = data.get('razorpay_order_id', '')
+    razorpay_payment_id = data.get('razorpay_payment_id', '')
+    razorpay_signature = data.get('razorpay_signature', '')
+
+    if not verify_razorpay_signature(razorpay_order_id, razorpay_payment_id, razorpay_signature):
+        return jsonify({'success': False, 'message': 'Payment verification failed. If money was deducted, contact support with your payment ID.'}), 400
+
+    rz_order = fetch_razorpay_order(razorpay_order_id)
+    if rz_order is None:
+        return jsonify({'success': False, 'message': 'Could not confirm payment with the gateway. If money was deducted, contact support with your payment ID.'}), 400
+
+    receipt_match = re.match(r'^mcref_([A-Z0-9]{8})_[0-9a-fA-F]{8}$', rz_order.get('receipt') or '')
+    if not receipt_match or receipt_match.group(1) != code:
+        return jsonify({'success': False, 'message': 'Payment verification failed. This payment does not belong to this link.'}), 400
+
+    content = _get_masterclass_content()
+    amount = float(content.get('price') or 0)
+    expected_paise = int(round(amount * 100))
+    if rz_order.get('amount') != expected_paise:
+        return jsonify({'success': False, 'message': 'Paid amount does not match the registration price. Contact support with your payment ID.'}), 400
+
+    if Order.query.filter_by(transaction_id=razorpay_payment_id).first():
+        return jsonify({'success': False, 'message': 'This payment has already been processed.'}), 400
+
+    name = (data.get('name') or '').strip()
+    phone = (data.get('phone') or '').strip()
+    email = (data.get('email') or '').strip().lower()
+    order = _create_masterclass_registration(
+        referrer, name, phone, email, _masterclass_guest_fields(data),
+        amount, razorpay_payment_id,
+    )
+    if order is None:
+        return jsonify({'success': False, 'message': 'This email or phone is already registered. Please log in instead.'}), 409
+
+    return jsonify({
+        'success': True,
+        'registration_id': f'ZS-{order.id:06d}',
+        'date': content.get('date'),
+        'time': content.get('time'),
+        'mode': content.get('mode'),
+        'language': content.get('language'),
+        'whatsapp_group_link': content.get('whatsapp_group_link'),
+        'email': email,
+        'phone': phone,
+    })
+
+
+@api_bp.route('/public/masterclass/<code>/activate', methods=['POST'])
+def public_masterclass_activate(code):
+    """Simulated/free registration — only reachable when Razorpay is off or
+    the configured price is 0. Mirrors /public/masterclass/<code>/verify
+    minus the payment gateway round-trip. Same free-path pattern as
+    /student/affiliate-activation/activate."""
+    referrer = User.query.filter_by(referral_code=code).first()
+    if not referrer:
+        return jsonify({'success': False, 'message': 'Invalid or expired link.'}), 404
+
+    content = _get_masterclass_content()
+    amount = float(content.get('price') or 0)
+    if is_razorpay_enabled() and amount > 0:
+        return jsonify({'success': False, 'message': 'Online payments are enabled. Please complete checkout via the payment gateway.'}), 403
+
+    data = request.get_json() or {}
+    name = (data.get('name') or '').strip()
+    phone = (data.get('phone') or '').strip()
+    email = (data.get('email') or '').strip().lower()
+    if not name or not phone or not email:
+        return jsonify({'success': False, 'message': 'Name, phone, and email are required.'}), 400
+
+    order = _create_masterclass_registration(
+        referrer, name, phone, email, _masterclass_guest_fields(data),
+        amount, str(uuid.uuid4()), payment_method='simulated',
+    )
+    if order is None:
+        return jsonify({'success': False, 'message': 'This email or phone is already registered. Please log in instead.'}), 409
+
+    return jsonify({
+        'success': True,
+        'registration_id': f'ZS-{order.id:06d}',
+        'date': content.get('date'),
+        'time': content.get('time'),
+        'mode': content.get('mode'),
+        'language': content.get('language'),
+        'whatsapp_group_link': content.get('whatsapp_group_link'),
+        'email': email,
+        'phone': phone,
+    })
 
 
 @api_bp.route('/student/affiliate-activation/activate', methods=['POST'])
@@ -1849,14 +3119,36 @@ def student_update_profile():
     phone = (data.get('phone') or '').strip()
     bio = (data.get('bio') or '').strip()
     about = (data.get('about') or '').strip()
+    gender = (data.get('gender') or '').strip()
+    category = (data.get('category') or '').strip()
+    address = (data.get('address') or '').strip()
+    age_raw = data.get('age')
 
     if not name:
         return jsonify({'success': False, 'message': 'Name is required.'}), 400
+
+    if gender and gender not in ('male', 'female', 'other'):
+        return jsonify({'success': False, 'message': 'Invalid gender value.'}), 400
+    if category and category not in ('housewife', 'student', 'job_person', 'business_owner'):
+        return jsonify({'success': False, 'message': 'Invalid category value.'}), 400
+
+    age = None
+    if age_raw not in (None, ''):
+        try:
+            age = int(age_raw)
+        except (TypeError, ValueError):
+            return jsonify({'success': False, 'message': 'Age must be a number.'}), 400
+        if age < 10 or age > 100:
+            return jsonify({'success': False, 'message': 'Age must be between 10 and 100.'}), 400
 
     current_user.name = name
     current_user.phone = phone
     current_user.bio = bio
     current_user.about = about
+    current_user.age = age
+    current_user.gender = gender or None
+    current_user.category = category or None
+    current_user.address = address or None
     db.session.commit()
 
     return jsonify({
@@ -1869,10 +3161,37 @@ def student_update_profile():
             'phone': current_user.phone,
             'bio': current_user.bio,
             'about': current_user.about,
+            'age': current_user.age,
+            'gender': current_user.gender,
+            'category': current_user.category,
+            'address': current_user.address,
             'referral_code': current_user.referral_code,
             'profile_image_url': current_user.profile_image_url,
         }
     })
+
+
+@api_bp.route('/student/profile/password', methods=['PUT'])
+def student_change_password():
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from werkzeug.security import check_password_hash, generate_password_hash
+
+    data = request.get_json() or {}
+    current_password = data.get('current_password') or ''
+    new_password = data.get('new_password') or ''
+
+    if not current_password or not new_password:
+        return jsonify({'success': False, 'message': 'Current and new password are required.'}), 400
+    if len(new_password) < 8:
+        return jsonify({'success': False, 'message': 'New password must be at least 8 characters.'}), 400
+    if not check_password_hash(current_user.password_hash, current_password):
+        return jsonify({'success': False, 'message': 'Current password is incorrect.'}), 400
+
+    current_user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+    return jsonify({'success': True})
 
 
 @api_bp.route('/student/profile/photo', methods=['POST'])
@@ -1907,6 +3226,20 @@ def student_referrals_list():
         return jsonify({'error': 'Unauthorized'}), 401
 
     my_referrals = User.query.filter_by(referred_by=current_user.id).order_by(User.created_at.desc()).all()
+    referral_ids = [r.id for r in my_referrals]
+
+    # A real purchase = a paid order for an actual package/course, not just the
+    # ₹99 affiliate-activation order (which has both package_id and course_id null).
+    purchased_ids = set()
+    if referral_ids:
+        purchased_ids = {
+            uid for (uid,) in db.session.query(Order.user_id).filter(
+                Order.user_id.in_(referral_ids),
+                Order.payment_status == 'paid',
+                db.or_(Order.package_id.isnot(None), Order.course_id.isnot(None)),
+            ).distinct().all()
+        }
+
     return jsonify({
         'referrals': [
             {
@@ -1914,8 +3247,64 @@ def student_referrals_list():
                 'name': r.name,
                 'email': r.email,
                 'created_at': r.created_at.strftime('%d %b %Y'),
+                'has_purchased': r.id in purchased_ids,
             } for r in my_referrals
-        ]
+        ],
+        'total_count': len(my_referrals),
+        'purchased_count': len(purchased_ids),
+        'not_purchased_count': len(my_referrals) - len(purchased_ids),
+    })
+
+
+@api_bp.route('/student/masterclass-referrals', methods=['GET'])
+def student_masterclass_referrals():
+    """Referrals who specifically registered through the ₹99 masterclass link
+    (an Order with no package_id/course_id — same signature as
+    _affiliate_activation_order()), not the general referral list. A masterclass
+    referral can still go on to buy a real package/course afterward, tracked
+    here as has_purchased."""
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    my_referrals = User.query.filter_by(referred_by=current_user.id).order_by(User.created_at.desc()).all()
+    referral_ids = [r.id for r in my_referrals]
+
+    masterclass_orders = {}
+    purchased_ids = set()
+    if referral_ids:
+        orders = Order.query.filter(
+            Order.user_id.in_(referral_ids),
+            Order.payment_status == 'paid',
+        ).order_by(Order.created_at.asc()).all()
+        for order in orders:
+            if order.package_id is None and order.course_id is None:
+                masterclass_orders.setdefault(order.user_id, order)
+            else:
+                purchased_ids.add(order.user_id)
+
+    masterclass_referrals = [r for r in my_referrals if r.id in masterclass_orders]
+    purchased_count = sum(1 for r in masterclass_referrals if r.id in purchased_ids)
+    total_registration_income = sum(
+        float(order.amount_paid or 0) for order in masterclass_orders.values()
+    )
+
+    return jsonify({
+        'total_registration_income': total_registration_income,
+        'referrals': [
+            {
+                'id': r.id,
+                'name': r.name,
+                'email': r.email,
+                'phone': r.phone,
+                'created_at': r.created_at.strftime('%d %b %Y') if r.created_at else None,
+                'has_purchased': r.id in purchased_ids,
+                'masterclass_amount': float(masterclass_orders[r.id].amount_paid) if masterclass_orders[r.id].amount_paid is not None else None,
+                'masterclass_paid_at': masterclass_orders[r.id].created_at.strftime('%d %b %Y') if masterclass_orders[r.id].created_at else None,
+            } for r in masterclass_referrals
+        ],
+        'total_count': len(masterclass_referrals),
+        'purchased_count': purchased_count,
+        'not_purchased_count': len(masterclass_referrals) - purchased_count,
     })
 
 
@@ -2059,6 +3448,9 @@ def get_student_course_watch(course_id):
             'certificate_eligible': bool(course.certificate),
             'instructor_name': course.instructor_display_name,
             'instructor_image_display_url': course.instructor_image_display_url,
+            # Lets the player link through to the instructor's profile, the same
+            # way the public course pages already do.
+            'instructor_slug': course.instructor_slug,
         },
         'chapters': [
             {
@@ -2314,15 +3706,88 @@ def get_admin_dashboard_data():
     from sqlalchemy import func
 
     from sqlalchemy.orm import selectinload
+    from app.models import SiteSettings
+
+    def commission_sum(*filters):
+        return float(db.session.query(func.coalesce(func.sum(Commission.commission_amount), 0)).filter(*filters).scalar() or 0)
+
+    def wallet_sum(*filters):
+        return float(db.session.query(func.coalesce(func.sum(WalletTransaction.amount), 0)).filter(*filters).scalar() or 0)
+
+    total_revenue = float(db.session.query(func.sum(Order.amount_paid)).filter_by(payment_status='paid').scalar() or 0)
+
+    # GST breakdown — computed per paid package order using that package's
+    # CURRENT gst_percent (orders don't lock in the rate at purchase time),
+    # so this is a best-effort estimate, not a precise historical ledger.
+    gst_orders = db.session.query(Order.amount_paid, Package.gst_percent).join(
+        Package, Package.id == Order.package_id
+    ).filter(Order.payment_status == 'paid', Order.package_id.isnot(None)).all()
+    revenue_including_gst = sum(float(o.amount_paid) for o in gst_orders)
+    revenue_excluding_gst = sum(
+        float(o.amount_paid) / (1 + float(o.gst_percent) / 100) if o.gst_percent else float(o.amount_paid)
+        for o in gst_orders
+    )
+    gst_amount_total = revenue_including_gst - revenue_excluding_gst
+
+    total_commission_alltime = commission_sum()  # every commission ever created, any status
+    commissions_paid = wallet_sum(WalletTransaction.type == 'commission', WalletTransaction.status == 'completed')
+    pending_balance = commission_sum(Commission.status == 'pending')
+    total_reward = commission_sum(Commission.status.in_(['approved', 'paid']))
+
+    withdrawn_completed = wallet_sum(WalletTransaction.type == 'withdrawal', WalletTransaction.status == 'completed')
+    wallet_balance = max(0.0, commissions_paid - withdrawn_completed)
+
+    payout_request_amount = float(db.session.query(func.coalesce(func.sum(Withdrawal.amount), 0)).filter_by(status='requested').scalar() or 0)
+
+    # Net platform profit = revenue with GST stripped out (GST isn't platform
+    # income, it's collected on the government's behalf) minus every commission
+    # ever paid out or owed to referrers/managers.
+    total_profit = revenue_excluding_gst - total_commission_alltime
+
+    # Manager override commissions are all stored at level=3 (both the 10%
+    # direct-manager hop and the 15%-of-that senior-manager hop) — the current
+    # global override rates are the only reliable way to tell them apart.
+    override_l1_percent = float(SiteSettings.get('global_manager_override_percent', 10.0))
+    override_l2_percent = float(SiteSettings.get('global_manager_override_level2_percent', 15.0))
+    manager_income_total = commission_sum(Commission.level == 3)
+    manager_income_l1 = commission_sum(Commission.level == 3, Commission.commission_percent == override_l1_percent)
+    manager_income_l2 = commission_sum(Commission.level == 3, Commission.commission_percent == override_l2_percent)
+    manager_income_paid = float(db.session.query(func.coalesce(func.sum(WalletTransaction.amount), 0)).join(
+        Commission, Commission.id == WalletTransaction.reference_id
+    ).filter(
+        WalletTransaction.type == 'commission', WalletTransaction.status == 'completed', Commission.level == 3
+    ).scalar() or 0)
+    manager_income_pending = commission_sum(Commission.level == 3, Commission.status == 'pending')
 
     stats = {
         'total_users': User.query.filter_by(role='student').count(),
         'total_managers': User.query.filter_by(role='manager').count(),
         'total_team_members': User.query.filter_by(role='team_member').count(),
         'total_orders': Order.query.filter_by(payment_status='paid').count(),
-        'total_revenue': float(db.session.query(func.sum(Order.amount_paid)).filter_by(payment_status='paid').scalar() or 0),
+        'total_revenue': total_revenue,
         'pending_commissions': Commission.query.filter_by(status='pending').count(),
         'pending_withdrawals': Withdrawal.query.filter_by(status='requested').count(),
+
+        # Financial overview
+        'commissions_paid': commissions_paid,
+        'pending_balance': pending_balance,
+        'wallet_balance': wallet_balance,
+        'payout_request_amount': payout_request_amount,
+        'revenue_including_gst': revenue_including_gst,
+        'revenue_excluding_gst': revenue_excluding_gst,
+        'gst_amount_total': gst_amount_total,
+        'total_commission_alltime': total_commission_alltime,
+        'total_reward': total_reward,
+        'total_profit': total_profit,
+
+        # Manager income
+        'manager_income_total': manager_income_total,
+        'manager_override_l1_percent': override_l1_percent,
+        'manager_income_l1': manager_income_l1,
+        'manager_override_l2_percent': override_l2_percent,
+        'manager_income_l2': manager_income_l2,
+        'manager_income_paid': manager_income_paid,
+        'manager_income_pending': manager_income_pending,
     }
     # Eager-load buyer/package/course so _order_item_name() below doesn't
     # fire a separate lazy-load query per order (N+1 across 10 rows).
@@ -2399,6 +3864,12 @@ def admin_user_detail(user_id):
             'name': user.name,
             'email': user.email,
             'phone': user.phone,
+            'bio': user.bio,
+            'about': user.about,
+            'age': user.age,
+            'gender': user.gender,
+            'category': user.category,
+            'address': user.address,
             'role': user.role,
             'referral_code': user.referral_code,
             'is_active': user.is_active,
@@ -2452,6 +3923,35 @@ def admin_toggle_user(user_id):
     user.is_active = not user.is_active
     db.session.commit()
     return jsonify({'success': True, 'is_active': user.is_active})
+
+
+@api_bp.route('/admin/users/<int:user_id>/reset-password', methods=['POST'])
+def admin_reset_user_password(user_id):
+    """Admin-initiated password reset. Passwords are stored as one-way hashes —
+    the original can never be retrieved, so this sets a brand-new password
+    instead (either admin-chosen or randomly generated) and returns it once
+    in the response so the admin can relay it to the user. It is never stored
+    or shown again after this."""
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    user = User.query.get_or_404(user_id)
+    if user.role == 'admin' and user.id != current_user.id:
+        return jsonify({'success': False, 'message': 'Cannot reset another admin\'s password.'}), 400
+
+    from werkzeug.security import generate_password_hash
+
+    data = request.get_json() or {}
+    new_password = (data.get('new_password') or '').strip()
+    if new_password and len(new_password) < 8:
+        return jsonify({'success': False, 'message': 'Password must be at least 8 characters.'}), 400
+    if not new_password:
+        alphabet = string.ascii_letters + string.digits
+        new_password = ''.join(secrets.choice(alphabet) for _ in range(10))
+
+    user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+    return jsonify({'success': True, 'new_password': new_password})
 
 
 @api_bp.route('/admin/users/<int:user_id>/set-role', methods=['POST'])
@@ -2838,6 +4338,8 @@ _SETTING_KEYS = [
     'community_whatsapp_url', 'community_youtube_url', 'community_instagram_url',
     'community_telegram_url', 'community_discord_url', 'community_facebook_url',
     'registration_field_config',
+    'footer_facebook_url', 'footer_instagram_url', 'footer_whatsapp_url',
+    'support_email', 'support_phone',
 ]
 
 
@@ -2939,29 +4441,148 @@ def admin_certificate_template():
 
     from app.models import SiteSettings
 
+    course = None
+    course_id = request.args.get('course_id', type=int) if request.method == 'GET' else None
+
     if request.method == 'POST':
         data = request.get_json() or {}
+        course_id = data.get('course_id')
+        course_id = int(course_id) if course_id else None
+
+        if course_id and data.get('reset'):
+            course = Course.query.get_or_404(course_id)
+            course.certificate_template = None
+            db.session.commit()
+            return jsonify({'success': True, 'template': _get_certificate_template()})
+
+        # Base for fields the incoming payload leaves blank (e.g. a number input
+        # momentarily cleared mid-edit) — falls back to whatever's already saved
+        # for this course/global template, not the hardcoded factory default.
+        existing_course = Course.query.get(course_id) if course_id else None
+        existing = _get_certificate_template(existing_course)
+
         template = {
             k: str(data.get(k) or DEFAULT_CERT_TEMPLATE[k]).strip() or DEFAULT_CERT_TEMPLATE[k]
-            for k in ('title', 'issuer', 'presented_line', 'completion_line')
+            for k in _CERT_TEXT_FIELDS
         }
-        for field in ('name', 'course', 'date'):
+        for k in _CERT_COLOR_FIELDS:
+            val = str(data.get(k) or '').strip()
+            if val and not _HEX_COLOR_RE.match(val):
+                return jsonify({'success': False, 'message': f'{k.replace("_", " ").title()} must be a hex color like #1e56d6.'}), 400
+            template[k] = val or DEFAULT_CERT_TEMPLATE[k]
+        for field in _CERT_POS_FIELDS:
             incoming = data.get(field) or {}
-            base = dict(DEFAULT_CERT_TEMPLATE[field])
-            try:
-                if 'x' in incoming:
-                    base['x'] = max(0, min(100, float(incoming['x'])))
-                if 'y' in incoming:
-                    base['y'] = max(0, min(100, float(incoming['y'])))
-                if 'font_size' in incoming:
-                    base['font_size'] = max(8, min(96, float(incoming['font_size'])))
-            except (TypeError, ValueError):
-                return jsonify({'success': False, 'message': f'Invalid position/size values for {field}.'}), 400
+            base = dict(existing.get(field, DEFAULT_CERT_TEMPLATE[field]))
+            for pos_key, (lo, hi) in (('x', (0, 100)), ('y', (0, 100)), ('font_size', (8, 96))):
+                # Blank/None/non-numeric = "unchanged" rather than a hard error —
+                # a number input reads as '' the instant it's cleared to retype.
+                raw = incoming.get(pos_key)
+                if raw is None or str(raw).strip() == '':
+                    continue
+                try:
+                    base[pos_key] = max(lo, min(hi, float(raw)))
+                except (TypeError, ValueError):
+                    return jsonify({'success': False, 'message': f'Invalid {pos_key} value for {field}.'}), 400
             template[field] = base
-        SiteSettings.set('certificate_template', json.dumps(template))
-        return jsonify({'success': True, 'template': template})
 
-    return jsonify({'template': _get_certificate_template()})
+        for k, (kind, arg) in _CERT_OPTION_FIELDS.items():
+            default = DEFAULT_CERT_TEMPLATE[k]
+            if k not in data:
+                template[k] = default
+                continue
+            raw = data[k]
+            if kind == 'bool':
+                template[k] = bool(raw)
+            elif kind == 'num':
+                lo, hi = arg
+                try:
+                    template[k] = max(lo, min(hi, float(raw)))
+                except (TypeError, ValueError):
+                    return jsonify({'success': False, 'message': f'{k.replace("_", " ").title()} must be a number.'}), 400
+            elif kind == 'font':
+                template[k] = raw if raw in _CERT_FONTS else default
+            else:
+                template[k] = (str(raw or '').strip()[:arg]) or default
+
+        if course_id:
+            course = Course.query.get_or_404(course_id)
+            course.certificate_template = json.dumps(template)
+            db.session.commit()
+        else:
+            course = None
+            SiteSettings.set('certificate_template', json.dumps(template))
+        # Re-read via _get_certificate_template rather than returning the bare
+        # `template` dict built above — that dict only has the text/color/
+        # position/option fields, not the brand asset URLs (logo/seal/
+        # signature/medallion) or the background image, which live in their
+        # own SiteSettings keys. Returning it directly meant the admin UI's
+        # post-save state merge dropped every uploaded asset back to blank,
+        # even though they were never touched and stayed correct in the DB.
+        return jsonify({'success': True, 'template': _get_certificate_template(course)})
+
+    if course_id:
+        course = Course.query.get_or_404(course_id)
+    return jsonify({'template': _get_certificate_template(course)})
+
+
+@api_bp.route('/admin/certificate-template/background-image', methods=['POST'])
+def admin_certificate_background_image():
+    """Upload a fully custom certificate background artwork. When set, the
+    student-facing certificate renders this image full-bleed behind the
+    dynamic text fields instead of the built-in illustrated design — for
+    admins who want a completely bespoke look, not just recolored built-ins."""
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from app.models import SiteSettings
+    from app.admin.routes import _save_thumbnail, ALLOWED_IMAGE_EXTS
+
+    image = _save_thumbnail(request.files.get('image_file'))
+    if image is False:
+        return jsonify({'success': False, 'message': f'Invalid image format. Allowed: {", ".join(ALLOWED_IMAGE_EXTS)}'}), 400
+    if not image:
+        return jsonify({'success': False, 'message': 'No image file provided.'}), 400
+
+    SiteSettings.set('certificate_background_image_url', image)
+    return jsonify({'success': True, 'image_url': image})
+
+
+@api_bp.route('/admin/certificate-template/background-image', methods=['DELETE'])
+def admin_certificate_background_image_remove():
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from app.models import SiteSettings
+    SiteSettings.set('certificate_background_image_url', None)
+    return jsonify({'success': True})
+
+
+@api_bp.route('/admin/certificate-template/asset/<key>', methods=['POST', 'DELETE'])
+def admin_certificate_asset(key):
+    """Upload or clear one certificate brand asset — the header logo, the
+    accreditation seal, or the signatory's scanned signature. One handler
+    rather than three near-identical ones; `key` picks the setting."""
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from app.models import SiteSettings
+    setting = _CERT_ASSETS.get(key)
+    if not setting:
+        return jsonify({'success': False, 'message': 'Unknown certificate asset.'}), 400
+
+    if request.method == 'DELETE':
+        SiteSettings.set(setting, None)
+        return jsonify({'success': True})
+
+    from app.admin.routes import _save_thumbnail, ALLOWED_IMAGE_EXTS
+    image = _save_thumbnail(request.files.get('image_file'))
+    if image is False:
+        return jsonify({'success': False, 'message': f'Invalid image format. Allowed: {", ".join(ALLOWED_IMAGE_EXTS)}'}), 400
+    if not image:
+        return jsonify({'success': False, 'message': 'No image file provided.'}), 400
+
+    SiteSettings.set(setting, image)
+    return jsonify({'success': True, 'image_url': image})
 
 
 # ── Package / Course / Chapter management ──────────────────────────────────
@@ -2977,6 +4598,8 @@ def admin_create_package():
         name=f['name'].strip(),
         description=f.get('description', '').strip(),
         price=float(f['price']),
+        market_price=float(f['market_price']) if f.get('market_price', '').strip() else None,
+        gst_percent=float(f['gst_percent']) if f.get('gst_percent', '').strip() else 18.0,
         level1_commission_percent=float(f.get('level1_pct') or 10.0),
         level2_commission_percent=float(f.get('level2_pct') or 5.0),
         min_income_for_level2=float(f.get('min_income') or 0),
@@ -3014,6 +4637,8 @@ def admin_update_package(pkg_id):
     pkg.name = f['name'].strip()
     pkg.description = f.get('description', '').strip()
     pkg.price = float(f['price'])
+    pkg.market_price = float(f['market_price']) if f.get('market_price', '').strip() else None
+    pkg.gst_percent = float(f['gst_percent']) if f.get('gst_percent', '').strip() else 18.0
     pkg.level1_commission_percent = float(f.get('level1_pct') or 10.0)
     pkg.level2_commission_percent = float(f.get('level2_pct') or 5.0)
     pkg.min_income_for_level2 = float(f.get('min_income') or 0)
@@ -3822,6 +5447,71 @@ def admin_home_team_detail(member_id):
 
     db.session.commit()
     return jsonify({'success': True})
+
+
+# ── Achievement Rewards section content ────────────────────────────────────
+# The whole section is admin-authored text now (no imagery) — every string the
+# public component renders lives here, so nothing on it is hardcoded.
+
+_DEFAULT_ACHIEVEMENT_REWARDS = {
+    'badge_text': 'Level Up & Cash In',
+    'heading_line1': 'Achievement',
+    'heading_line2': 'Rewards',
+    'ribbon_text': 'Earn More, Achieve More!',
+    'description': 'Your hard work deserves the best rewards. Achieve your income milestones and',
+    'description_highlight': 'unlock exciting gifts along the way!',
+    'intro_features': [
+        {'title': 'Achieve', 'desc': 'Set your income goals and keep growing.'},
+        {'title': 'Unlock', 'desc': 'Reach milestones and unlock exciting rewards.'},
+        {'title': 'Enjoy', 'desc': 'Get premium gifts that inspire and motivate you.'},
+    ],
+    'perks': [
+        {'title': 'No Time Limit', 'desc': 'Achieve at your own pace.'},
+        {'title': 'Set Goals', 'desc': 'Push your limits and grow more.'},
+        {'title': 'Get Rewarded', 'desc': 'Unlock premium gifts and more.'},
+        {'title': 'Stay Motivated', 'desc': 'More income, more rewards.'},
+    ],
+    'cta_title': 'Your Success, Your Reward!',
+    'cta_subtitle': 'The more you achieve, the more you earn.',
+    'cta_button_text': 'Start Your Journey',
+    'cta_button_link': '/register',
+    'is_active': True,
+}
+
+
+def _get_achievement_rewards_content():
+    from app.models import SiteSettings
+    raw = SiteSettings.get('achievement_rewards_content', '')
+    content = dict(_DEFAULT_ACHIEVEMENT_REWARDS)
+    if raw:
+        try:
+            content.update(json.loads(raw))
+        except (TypeError, ValueError):
+            pass
+    return content
+
+
+@api_bp.route('/achievement-rewards', methods=['GET'])
+def get_achievement_rewards():
+    return jsonify({'content': _get_achievement_rewards_content()})
+
+
+@api_bp.route('/admin/achievement-rewards', methods=['GET', 'POST'])
+def admin_achievement_rewards():
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+    from app.models import SiteSettings
+
+    if request.method == 'POST':
+        data = request.get_json()
+        if not isinstance(data, dict):
+            return jsonify({'success': False, 'message': 'Invalid content payload.'}), 400
+        content = dict(_DEFAULT_ACHIEVEMENT_REWARDS)
+        content.update(data)
+        SiteSettings.set('achievement_rewards_content', json.dumps(content))
+        return jsonify({'success': True})
+
+    return jsonify({'content': _get_achievement_rewards_content()})
 
 
 # ── Achievement Rewards (homepage milestone strip) management ──────────────
@@ -4779,18 +6469,24 @@ def get_manager_dashboard_data():
     from sqlalchemy.orm import selectinload
     from datetime import datetime, timezone, timedelta
 
-    # Counted/aggregated in SQL rather than loading every team member's full
-    # row into Python just to len()/sum()/slice them — matters once a
-    # manager's team grows past a handful of people.
-    total_team = User.query.filter_by(referred_by=current_user.id).count()
-    active_team = User.query.filter_by(referred_by=current_user.id, is_active=True).count()
+    # "Team" is everyone *assigned* to this manager (manager_id), not just the
+    # people they directly referred (referred_by) — a manager's team can include
+    # members who signed up under someone else's referral link but were later
+    # placed on this manager's roster. Counted/aggregated in SQL rather than
+    # loading every team member's full row into Python just to len()/sum()/
+    # slice them — matters once a manager's team grows past a handful of people.
+    total_team = User.query.filter_by(manager_id=current_user.id).count()
+    active_team = User.query.filter_by(manager_id=current_user.id, is_active=True).count()
 
     team_revenue = db.session.query(func.sum(Order.amount_paid)).join(
         User, User.id == Order.user_id
     ).filter(
-        User.referred_by == current_user.id,
+        User.manager_id == current_user.id,
         Order.payment_status == 'paid'
     ).scalar() or 0
+
+    from app.models import SiteSettings
+    manager_override_percent = float(SiteSettings.get('global_manager_override_percent', 10.0))
 
     start_30 = datetime.now(timezone.utc) - timedelta(days=30)
     last_30_earnings = db.session.query(func.sum(WalletTransaction.amount)).filter(
@@ -4806,13 +6502,15 @@ def get_manager_dashboard_data():
         selectinload(Commission.buyer)
     ).order_by(Commission.created_at.desc()).limit(5).all()
 
-    recent_team = User.query.filter_by(referred_by=current_user.id).order_by(
+    recent_team = User.query.filter_by(manager_id=current_user.id).order_by(
         User.created_at.desc()).limit(5).all()
 
     return jsonify({
         'total_team': total_team,
         'active_team': active_team,
         'team_revenue': float(team_revenue),
+        'manager_override_percent': manager_override_percent,
+        'manager_override_amount': float(team_revenue) * manager_override_percent / 100,
         'all_time_earnings': current_user.total_earnings,
         'available_balance': current_user.available_balance,
         'pending_earnings': current_user.pending_earnings,
@@ -4844,7 +6542,7 @@ def get_manager_team():
     if not _manager_only():
         return jsonify({'error': 'Unauthorized'}), 401
 
-    members = User.query.filter_by(referred_by=current_user.id).order_by(User.created_at.desc()).all()
+    members = User.query.filter_by(manager_id=current_user.id).order_by(User.created_at.desc()).all()
 
     return jsonify({
         'members': [

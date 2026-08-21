@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { ShieldAlert, ShieldCheck, Landmark, CheckCircle2, Tag, X, ArrowLeft, ArrowRight, ArrowUpCircle, Package, BookOpen, Lock, Sparkles, PartyPopper, Play } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Landmark, CheckCircle2, Tag, X, ArrowLeft, ArrowRight, ArrowUpCircle, Package, BookOpen, Lock, Sparkles, PartyPopper, Play, Loader2 } from 'lucide-react';
 import api from '../../utils/api';
 
 let razorpayScriptPromise = null;
@@ -36,13 +36,16 @@ export default function Checkout() {
 
   const packageId = searchParams.get('package_id');
   const courseId = searchParams.get('course_id');
+  // Arriving from the offers page with ?coupon=CODE — prefill and validate it
+  // so the student never has to retype a code they just tapped.
+  const presetCoupon = (searchParams.get('coupon') || '').trim().toUpperCase();
 
   useEffect(() => {
     const fetchItemDetails = async () => {
       try {
         if (packageId) {
           const response = await api.get('/global-data');
-          const found = response.data.packages.find(p => String(p.id) === packageId);
+          const found = response.data.packages.find((p) => p.public_code === packageId);
           if (found) setItem({ ...found, type: 'package' });
         } else if (courseId) {
           const response = await api.get('/courses');
@@ -74,7 +77,16 @@ export default function Checkout() {
   };
 
   useEffect(() => {
-    if (item) fetchPricing(null);
+    if (!item) return;
+    if (presetCoupon) {
+      setCouponInput(presetCoupon);
+      fetchPricing(presetCoupon).then((result) => {
+        if (result && result.coupon_valid) setAppliedCoupon(presetCoupon);
+        else setCouponError('That coupon is no longer valid.');
+      });
+    } else {
+      fetchPricing(null);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item]);
 
@@ -195,9 +207,8 @@ export default function Checkout() {
   const ItemIcon = item?.type === 'course' ? BookOpen : Package;
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-50 flex flex-col">
+    <div className="min-h-screen relative overflow-hidden flex flex-col">
       {/* Ambient background */}
-      <div className="fixed inset-0 pointer-events-none -z-10" style={{ background: 'radial-gradient(ellipse 90% 60% at 50% -10%, #eef6ff 0%, #f8faff 55%, #f8faff 100%)' }}></div>
       <div className="fixed top-[-10%] left-[8%] w-96 h-96 bg-blue-400/10 rounded-full blur-[130px] pointer-events-none -z-10"></div>
       <div className="fixed bottom-[-10%] right-[8%] w-96 h-96 bg-indigo-400/10 rounded-full blur-[130px] pointer-events-none -z-10"></div>
 
@@ -283,7 +294,7 @@ export default function Checkout() {
               const hasCouponDiscount = pricing && pricing.coupon_discount > 0;
 
               return (
-                <div className="relative rounded-[2rem] p-[1.5px] bg-gradient-to-br from-blue-400/40 via-indigo-300/20 to-transparent shadow-[0_25px_60px_-20px_rgba(37,99,235,0.35)] animate-fade-in-up">
+                <div className="relative rounded-[2rem] p-[1.5px] bg-gradient-to-br from-blue-400/40 via-indigo-300/20 to-transparent shadow-[0_25px_60px_-20px_rgba(37,99,235,0.35)] hover:shadow-[0_30px_70px_-15px_rgba(37,99,235,0.45)] transition-shadow duration-500 animate-fade-in-up">
                   <div className="bg-white rounded-[calc(2rem-1.5px)] overflow-hidden">
 
                     {/* Header */}
@@ -292,25 +303,64 @@ export default function Checkout() {
                       <div className="absolute inset-0 opacity-[0.07] pointer-events-none"
                         style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
                       <div className="absolute -top-12 -right-8 w-48 h-48 bg-blue-400/25 rounded-full blur-[90px] pointer-events-none animate-blob"></div>
+                      <div className="absolute -bottom-16 -left-10 w-56 h-56 bg-indigo-400/20 rounded-full blur-[100px] pointer-events-none animate-blob" style={{ animationDelay: '2.5s' }}></div>
                       <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
 
-                      <div className="relative z-10 flex items-start gap-3.5">
-                        <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 shadow-inner">
-                          <ItemIcon className="w-6 h-6 text-white" strokeWidth={2} />
-                        </div>
-                        <div className="min-w-0 flex-1">
+                      <div className="relative z-10 flex items-start gap-4">
+                        {item.thumbnail_display_url ? (
+                          <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 animate-float">
+                            <div className="absolute -inset-1.5 rounded-[1.5rem] bg-gradient-to-br from-amber-300 via-blue-300 to-indigo-300 opacity-80 blur-[6px] animate-pulse"></div>
+                            <img
+                              src={item.thumbnail_display_url}
+                              alt={item.name || item.title}
+                              className="relative w-full h-full rounded-2xl object-cover border-2 border-white/40 shadow-xl bg-white/10"
+                            />
+                            <span className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border-2 border-[#0f1f4d] flex items-center justify-center shadow-lg">
+                              <ShieldCheck className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 shadow-inner">
+                            <ItemIcon className="w-9 h-9 text-white" strokeWidth={1.8} />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1 pt-1">
                           <p className="text-[10px] font-black uppercase tracking-widest text-blue-200/80">{item.type}</p>
                           <h2 className="text-lg sm:text-xl font-heading font-black leading-snug truncate">{item.name || item.title}</h2>
+
+                          <div className="flex items-center gap-2.5 mt-2.5 flex-wrap">
+                            {pricingLoading ? (
+                              <span className="inline-flex items-center gap-2 text-2xl sm:text-3xl font-heading font-black">
+                                <Loader2 className="w-6 h-6 animate-spin text-blue-200" />
+                              </span>
+                            ) : (
+                              <p className="text-3xl sm:text-4xl font-heading font-black transition-opacity duration-300">
+                                ₹{finalAmount.toLocaleString('en-IN')}
+                              </p>
+                            )}
+                            {item.market_price > item.price && (
+                              <>
+                                <span className="text-base sm:text-lg font-bold text-blue-200/60 line-through">₹{Number(item.market_price).toLocaleString('en-IN')}</span>
+                                <span className="relative inline-flex items-center gap-1 bg-emerald-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest shadow-md">
+                                  <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-60"></span>
+                                  <span className="relative">{Math.round(((item.market_price - item.price) / item.market_price) * 100)}% OFF 🥳</span>
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <p className="relative z-10 text-3xl sm:text-4xl font-heading font-black mt-4">
-                        ₹{pricingLoading ? '···' : finalAmount.toLocaleString('en-IN')}
-                      </p>
                     </div>
 
                     {/* Order Summary */}
                     <div className="p-6 border-b border-slate-100">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Order Summary</p>
+                      <p className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                        <span className="relative w-4 h-4 flex items-center justify-center shrink-0">
+                          <span className="absolute inset-0 rounded-full bg-blue-400/40 blur-[4px] animate-pulse"></span>
+                          <Package className="relative w-3.5 h-3.5 text-blue-500" strokeWidth={2.5} />
+                        </span>
+                        Order Summary
+                      </p>
 
                       {hasUpgradeCredit && (
                         <div className="flex items-start gap-2.5 bg-emerald-50 border border-emerald-100 rounded-xl px-3.5 py-3 mb-4">
@@ -322,7 +372,26 @@ export default function Checkout() {
                       )}
 
                       <div className="space-y-2.5 text-sm">
-                        <div className="flex justify-between">
+                        {(() => {
+                          const gstPct = item.gst_percent || 0;
+                          const gstAmount = gstPct ? Number(item.price) - Number(item.price) / (1 + gstPct / 100) : 0;
+                          const packageCost = Number(item.price) - gstAmount;
+                          return (
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400 font-medium">Package Cost</span>
+                                <span className="font-bold text-slate-700">₹{packageCost.toFixed(2)}</span>
+                              </div>
+                              {gstPct > 0 && (
+                                <div className="flex justify-between">
+                                  <span className="text-slate-400 font-medium">GST ({gstPct}%)</span>
+                                  <span className="font-bold text-slate-700">₹{gstAmount.toFixed(2)}</span>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                        <div className="flex justify-between border-t border-dashed border-slate-200 pt-2.5">
                           <span className="text-slate-400 font-medium">Base Price</span>
                           <span className="font-bold text-slate-700">₹{Number(item.price).toLocaleString('en-IN')}</span>
                         </div>
@@ -338,16 +407,21 @@ export default function Checkout() {
                             <span>−₹{pricing.coupon_discount.toLocaleString('en-IN')}</span>
                           </div>
                         )}
-                        <div className="flex justify-between border-t border-dashed border-slate-200 pt-2.5 mt-2.5 font-black text-slate-900">
+                        <div className="flex justify-between items-center border-t border-dashed border-slate-200 pt-2.5 mt-2.5 font-black text-slate-900">
                           <span>Total Amount</span>
-                          <span className="text-blue-600">₹{pricingLoading ? '···' : finalAmount.toLocaleString('en-IN')}</span>
+                          {pricingLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                          ) : (
+                            <span className="text-blue-600">₹{finalAmount.toLocaleString('en-IN')}</span>
+                          )}
                         </div>
                       </div>
 
                       {(hasUpgradeCredit || hasCouponDiscount) && (
-                        <div className="mt-4 inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-[11px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest shadow-md shadow-emerald-500/25">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          You save ₹{((pricing.upgrade_credit || 0) + (pricing.coupon_discount || 0)).toLocaleString('en-IN')} on this order
+                        <div className="relative overflow-hidden mt-4 inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-[11px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest shadow-md shadow-emerald-500/25">
+                          <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none"></span>
+                          <Sparkles className="w-3.5 h-3.5 relative" />
+                          <span className="relative">You save ₹{((pricing.upgrade_credit || 0) + (pricing.coupon_discount || 0)).toLocaleString('en-IN')} on this order</span>
                         </div>
                       )}
                     </div>
@@ -355,7 +429,11 @@ export default function Checkout() {
                     {/* Coupon */}
                     <div className="p-6 border-b border-slate-100">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                        <Tag className="w-3.5 h-3.5" /> Coupon Code
+                        <span className="relative w-4 h-4 flex items-center justify-center shrink-0">
+                          <span className="absolute inset-0 rounded-full bg-indigo-400/40 blur-[4px] animate-pulse"></span>
+                          <Tag className="relative w-3.5 h-3.5 text-indigo-500" strokeWidth={2.5} />
+                        </span>
+                        Coupon Code
                       </p>
                       {appliedCoupon ? (
                         <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
@@ -368,23 +446,30 @@ export default function Checkout() {
                         </div>
                       ) : (
                         <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={couponInput}
-                            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                            placeholder="Enter coupon code"
-                            className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-shadow"
-                          />
+                          <div className="relative flex-1">
+                            <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                            <input
+                              type="text"
+                              value={couponInput}
+                              onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                              placeholder="Enter coupon code"
+                              className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm font-bold uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 hover:border-slate-300 transition-all"
+                            />
+                          </div>
                           <button
                             onClick={handleApplyCoupon}
                             disabled={couponChecking || !couponInput.trim()}
-                            className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest disabled:opacity-60 transition-colors shrink-0"
+                            className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest disabled:opacity-60 transition-all shrink-0 flex items-center justify-center min-w-[64px] active:scale-95"
                           >
-                            {couponChecking ? '···' : 'Apply'}
+                            {couponChecking ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
                           </button>
                         </div>
                       )}
-                      {couponError && <p className="text-xs text-red-500 font-bold mt-2">{couponError}</p>}
+                      {couponError && (
+                        <p className="text-xs text-red-500 font-bold mt-2 flex items-center gap-1.5">
+                          <ShieldAlert className="w-3.5 h-3.5 shrink-0" /> {couponError}
+                        </p>
+                      )}
                     </div>
 
                     {/* Pay */}
@@ -405,12 +490,25 @@ export default function Checkout() {
                             <Sparkles className="w-4 h-4 animate-spin" /> Processing...
                           </span>
                         ) : (
-                          <span className="relative">{finalAmount > 0 ? 'Pay via UPI / Cards' : 'Claim for Free'}</span>
+                          <span className="relative flex items-center gap-2">
+                            <Lock className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            {finalAmount > 0 ? 'Pay via UPI / Cards' : 'Claim for Free'}
+                          </span>
                         )}
                       </button>
-                      <div className="flex items-center justify-center gap-4 mt-5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                        <span className="flex items-center gap-1.5"><Landmark className="w-3.5 h-3.5 text-slate-300" /> Razorpay Secured</span>
-                        <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-slate-300" /> 256-bit SSL</span>
+                      <div className="flex items-center justify-center gap-5 mt-5">
+                        <span className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                          <span className="w-6 h-6 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
+                            <Landmark className="w-3 h-3 text-slate-500" />
+                          </span>
+                          Razorpay Secured
+                        </span>
+                        <span className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                          <span className="w-6 h-6 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
+                            <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                          </span>
+                          256-bit SSL
+                        </span>
                       </div>
                     </div>
 

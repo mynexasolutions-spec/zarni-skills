@@ -24,22 +24,28 @@ def is_razorpay_enabled() -> bool:
     return bool(current_app.config.get('RAZORPAY_KEY_ID') and current_app.config.get('RAZORPAY_KEY_SECRET'))
 
 
-def create_razorpay_order(amount_inr: float, receipt: str) -> dict | None:
+def create_razorpay_order(amount_inr: float, receipt: str, notes: dict | None = None) -> dict | None:
     """
     Create a Razorpay order.
     Returns dict with {id, amount, currency} or None on failure.
+    `notes` (optional) is stored on the Razorpay order itself and echoed back
+    by the API/webhook — used by guest (non-logged-in) checkout flows to
+    recover the buyer's submitted details if the client never calls back.
     """
     client, _, _ = _get_razorpay_client()
     if client is None:
         return None
     try:
         amount_paise = int(round(amount_inr * 100))
-        order = client.order.create({
+        payload = {
             'amount': amount_paise,
             'currency': 'INR',
             'receipt': receipt,
             'payment_capture': 1,
-        })
+        }
+        if notes:
+            payload['notes'] = notes
+        order = client.order.create(payload)
         return order
     except Exception as e:
         current_app.logger.error(f'Razorpay order creation failed: {e}')
@@ -86,3 +92,25 @@ def verify_razorpay_signature(razorpay_order_id: str,
 
 def get_razorpay_key_id() -> str:
     return current_app.config.get('RAZORPAY_KEY_ID', '')
+
+
+def is_razorpay_webhook_enabled() -> bool:
+    return bool(current_app.config.get('RAZORPAY_WEBHOOK_SECRET'))
+
+
+def verify_razorpay_webhook_signature(raw_body: bytes, signature: str) -> bool:
+    """Verify the X-Razorpay-Signature header on an inbound webhook request
+    against the raw request body, using the webhook secret set in the Razorpay
+    Dashboard (Settings -> Webhooks) — separate from the API key/secret pair."""
+    import razorpay
+    secret = current_app.config.get('RAZORPAY_WEBHOOK_SECRET', '')
+    if not secret or not signature:
+        return False
+    try:
+        razorpay.Utility.verify_webhook_signature(raw_body.decode('utf-8'), signature, secret)
+        return True
+    except razorpay.errors.SignatureVerificationError:
+        return False
+    except Exception as e:
+        current_app.logger.error(f'Razorpay webhook signature verification failed: {e}')
+        return False

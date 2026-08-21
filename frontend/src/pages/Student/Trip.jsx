@@ -1,104 +1,395 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Compass, Plane, Wallet, Calendar, TrendingUp, Clock, Zap, Flag, ArrowUpRight, Sparkles, Send, CheckCircle2, XCircle, IndianRupee, Target } from 'lucide-react';
+import {
+  Compass, Plane, Wallet, Calendar, Clock, Zap, Flag, ArrowUpRight, Sparkles,
+  Send, CheckCircle2, XCircle, Lock, MapPin, Trophy, Search, X, SlidersHorizontal,
+} from 'lucide-react';
 import api from '../../utils/api';
 import AnimatedNumber from '../../components/AnimatedNumber';
 
-const TRIP_REQUEST_TITLE = 'Trip Achievement';
+// A digit tile. Keying the inner span on the digit makes React remount it the
+// instant the number changes, which is what re-triggers the flip animation —
+// a plain re-render would just swap the text with no transition.
+//
+// Two skins: `hero` is white tiles for the dark scoreboard, `card` is dark
+// tiles for the white trip cards. Same markup, inverted palette.
+const CLOCK_SKIN = {
+  hero: {
+    tile: 'bg-gradient-to-b from-white via-white to-slate-100 shadow-[0_8px_22px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.6)]',
+    size: 'w-7 h-10 sm:w-10 sm:h-12',
+    sizeSmall: 'w-7 h-10 sm:w-9 sm:h-12',
+    text: 'text-sm sm:text-xl',
+    digit: 'from-violet-700 to-fuchsia-900',
+    digitPulse: 'from-fuchsia-600 to-rose-700',
+    seam: 'bg-black/15',
+    flap: 'from-black/[0.10]',
+    label: 'text-white/60',
+    labelPulse: 'text-fuchsia-300',
+  },
+  card: {
+    tile: 'bg-gradient-to-b from-slate-800 to-slate-950 shadow-[0_4px_12px_rgba(15,23,42,0.30),inset_0_1px_0_rgba(255,255,255,0.12)]',
+    size: 'w-6 h-8 sm:w-7 sm:h-9',
+    sizeSmall: 'w-5 h-8 sm:w-6 sm:h-9',
+    text: 'text-[11px] sm:text-sm',
+    digit: 'from-white to-slate-300',
+    digitPulse: 'from-fuchsia-300 to-violet-400',
+    seam: 'bg-white/15',
+    flap: 'from-white/[0.10]',
+    label: 'text-slate-400',
+    labelPulse: 'text-violet-500',
+  },
+};
 
-function daysLeft(goalDateStr) {
-  const goalDate = new Date(goalDateStr + 'T00:00:00');
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const diffMs = goalDate.getTime() - now.getTime();
-  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+function FlipDigit({ digit, pulse, small, skin }) {
+  const k = CLOCK_SKIN[skin];
+  return (
+    <div
+      className={`relative rounded-md sm:rounded-lg overflow-hidden ${small ? k.sizeSmall : k.size} ${k.tile}`}
+      style={{ perspective: '160px' }}
+    >
+      <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+        <span
+          key={digit}
+          className={`animate-flip-in font-heading font-black bg-gradient-to-b bg-clip-text text-transparent tabular-nums ${k.text} ${pulse ? k.digitPulse : k.digit}`}
+          style={{ transformOrigin: 'center top', backfaceVisibility: 'hidden' }}
+        >
+          {digit}
+        </span>
+
+        {/* Hinge line + the shadow the top half casts as a digit lands */}
+        <span className={`absolute inset-x-0 top-1/2 h-px z-10 pointer-events-none ${k.seam}`}></span>
+        <span
+          key={`sh-${digit}`}
+          className={`absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b to-transparent animate-flip-in pointer-events-none ${k.flap}`}
+        ></span>
+      </div>
+    </div>
+  );
 }
 
-// Live Days/Hours/Minutes breakdown, ticking every 30s (minute precision is
-// all the UI shows, so a full 1s interval would just waste renders).
-function useCountdown(targetDate) {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30000);
-    return () => clearInterval(id);
-  }, []);
-  if (!targetDate) return { days: 0, hours: 0, minutes: 0, expired: true };
-  const diffMs = Math.max(0, targetDate.getTime() - now.getTime());
-  return {
-    days: Math.floor(diffMs / (1000 * 60 * 60 * 24)),
-    hours: Math.floor((diffMs / (1000 * 60 * 60)) % 24),
-    minutes: Math.floor((diffMs / (1000 * 60)) % 60),
-    expired: diffMs <= 0,
-  };
-}
-
-function CountdownUnit({ value, label }) {
+function CountdownUnit({ value, label, pulse, skin }) {
+  const k = CLOCK_SKIN[skin];
   const digits = String(value).padStart(2, '0').split('');
   return (
-    <div className="flex flex-col items-center gap-1.5 sm:gap-2">
-      <div className="flex gap-1 sm:gap-1.5">
+    <div className="flex flex-col items-center gap-1">
+      <div className="relative flex gap-0.5">
+        {pulse && (
+          <span key={value} className="absolute -inset-1 rounded-xl animate-tick-glow pointer-events-none"></span>
+        )}
         {digits.map((d, i) => (
-          <div key={i} className="relative w-8 h-10 sm:w-11 sm:h-14 rounded-lg sm:rounded-xl bg-white flex items-center justify-center text-fuchsia-800 font-black text-base sm:text-2xl shadow-[0_8px_20px_rgba(0,0,0,0.25)] overflow-hidden">
-            <span className="absolute inset-x-0 top-1/2 h-px bg-black/5"></span>
-            {d}
-          </div>
+          <FlipDigit key={i} digit={d} pulse={pulse} small={digits.length > 2} skin={skin} />
         ))}
       </div>
-      <span className="text-[9px] sm:text-[10px] font-black text-white/75 uppercase tracking-widest">{label}</span>
+      <span className={`text-[7px] sm:text-[9px] font-black uppercase tracking-[0.15em] transition-colors ${pulse ? k.labelPulse : k.label}`}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// Ticks once a second and keeps that state to itself — if the interval lived in
+// the page or card component, the whole card would re-render 60 times a minute.
+function TripCountdown({ goalDate, title, skin = 'hero' }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!goalDate) return null;
+  const diff = new Date(`${goalDate}T23:59:59`).getTime() - now;
+  if (!(diff > 0)) return null;
+
+  const units = [
+    { label: 'Days', value: Math.floor(diff / 86400000) },
+    { label: 'Hrs', value: Math.floor((diff / 3600000) % 24) },
+    { label: 'Min', value: Math.floor((diff / 60000) % 60) },
+    { label: 'Sec', value: Math.floor((diff / 1000) % 60) },
+  ];
+
+  const row = (
+    <div className={`flex items-center ${skin === 'hero' ? 'gap-1.5 sm:gap-2.5' : 'gap-1 sm:gap-1.5'}`}>
+      {units.map((u) => (
+        <CountdownUnit key={u.label} value={u.value} label={u.label} pulse={u.label === 'Sec'} skin={skin} />
+      ))}
+    </div>
+  );
+
+  if (!title) return row;
+
+  return (
+    <div className="w-full">
+      <div className="flex items-center gap-1.5 mb-2 min-w-0">
+        <Clock className="w-3.5 h-3.5 text-violet-300 shrink-0" />
+        <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/50 shrink-0">Time left for</span>
+        <span className="text-[11px] font-black text-amber-200 truncate min-w-0">{title}</span>
+      </div>
+      {row}
+    </div>
+  );
+}
+
+// One place deciding how each of the three states looks, so "earned" and
+// "still to go" can never drift into looking similar.
+const STATUS = {
+  achieved: {
+    label: 'Earned',
+    Icon: CheckCircle2,
+    pill: 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30',
+    card: 'border-emerald-300 shadow-[0_10px_30px_-12px_rgba(16,185,129,0.45)]',
+    accent: 'bg-gradient-to-r from-transparent via-emerald-400 to-transparent',
+    bar: 'from-emerald-500 to-teal-500',
+    tint: 'from-emerald-50 to-white',
+  },
+  in_progress: {
+    label: 'In Progress',
+    Icon: Zap,
+    pill: 'bg-violet-600 text-white shadow-md shadow-violet-600/30',
+    card: 'border-violet-200',
+    accent: 'bg-gradient-to-r from-transparent via-violet-400 to-transparent',
+    bar: 'from-violet-500 to-indigo-500',
+    tint: 'from-violet-50 to-white',
+  },
+  missed: {
+    label: 'Deadline Passed',
+    Icon: XCircle,
+    pill: 'bg-slate-400 text-white',
+    card: 'border-slate-200',
+    accent: 'bg-gradient-to-r from-transparent via-slate-300 to-transparent',
+    bar: 'from-slate-400 to-slate-500',
+    tint: 'from-slate-50 to-white',
+  },
+};
+
+const inr = (n) => `₹${Math.round(Number(n) || 0).toLocaleString('en-IN')}`;
+const dateLabel = (d) =>
+  d ? new Date(`${d}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+
+function TripCard({ trip, onClaim, claimingId, setClaimingId, note, setNote, submittingId }) {
+  const st = STATUS[trip.status] || STATUS.in_progress;
+  const isClaiming = claimingId === trip.id;
+
+  return (
+    <div className={`group relative overflow-hidden bg-white border rounded-3xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${st.card}`}>
+      <span className={`absolute inset-x-0 top-0 h-[3px] z-20 pointer-events-none ${st.accent}`}></span>
+
+      {/* Banner — 16:9 to match the 1200x675 derivative Cloudinary serves, so
+          the delivered crop lands in the box with nothing cut off again. */}
+      <div className="relative w-full aspect-[16/9] overflow-hidden">
+        {trip.image_display_url ? (
+          <img
+            src={trip.image_display_url}
+            alt={trip.title}
+            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${trip.status === 'missed' ? 'grayscale' : ''}`}
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
+        ) : (
+          <div className={`w-full h-full bg-gradient-to-br ${st.tint} flex items-center justify-center`}>
+            <Plane className="w-12 h-12 text-slate-300" strokeWidth={1.4} />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none"></div>
+
+        {/* The single most important thing on the card */}
+        <span className={`absolute top-3 left-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${st.pill}`}>
+          <st.Icon className="w-3.5 h-3.5" strokeWidth={2.6} /> {st.label}
+        </span>
+
+        <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-black/55 backdrop-blur-md border border-white/20 text-amber-200 text-[10px] font-black uppercase tracking-widest">
+          {inr(trip.goal_amount)}
+        </span>
+
+        <div className="absolute bottom-3 left-4 right-4">
+          <h3 className="font-heading font-black text-white text-base sm:text-lg leading-tight truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">{trip.title}</h3>
+          {trip.destination && (
+            <p className="flex items-center gap-1 text-[11px] font-semibold text-white/75 mt-0.5 truncate">
+              <MapPin className="w-3 h-3 shrink-0" /> {trip.destination}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="p-4 sm:p-5">
+        {trip.description && (
+          <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-4">{trip.description}</p>
+        )}
+
+        {/* Progress — always shown, so "how far along" is never a guess */}
+        <div className="mb-3">
+          <div className="flex items-end justify-between gap-2 mb-2">
+            <span className={`font-heading font-black text-2xl leading-none tabular-nums bg-gradient-to-r ${st.bar} bg-clip-text text-transparent`}>
+              {trip.progress_pct}<span className="text-sm">%</span>
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-wide text-slate-400 tabular-nums pb-0.5">
+              {trip.achieved ? 'Target reached' : `${inr(trip.remaining)} to go`}
+            </span>
+          </div>
+          <div className="relative w-full h-2.5 bg-slate-100 rounded-full overflow-hidden ring-1 ring-inset ring-slate-200/70">
+            <div
+              className={`relative h-full rounded-full bg-gradient-to-r ${st.bar} transition-[width] duration-1000 ease-out`}
+              style={{ width: `${trip.progress_pct}%` }}
+            >
+              <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-full bg-white/25 pointer-events-none"></span>
+            </div>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 mt-1.5">
+            <span className="text-[10px] font-black text-slate-600 tabular-nums">{inr(trip.current_earnings)}</span>
+            <span className="text-[10px] font-bold text-slate-400 tabular-nums">of {inr(trip.goal_amount)}</span>
+          </div>
+        </div>
+
+        {/* Deadline + its own live clock. Every open trip gets one, so each
+            card answers "how long do I have" without going back up the page. */}
+        <div className="pb-3 mb-3 border-b border-slate-100">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 mb-2.5">
+            <Calendar className="w-3.5 h-3.5 shrink-0" />
+            <span>{dateLabel(trip.goal_date)}</span>
+            {trip.status === 'missed' && <span className="ml-auto font-black text-slate-400">Closed</span>}
+            {trip.status !== 'missed' && trip.days_left <= 7 && trip.days_left >= 0 && (
+              <span className="ml-auto font-black text-amber-600 uppercase tracking-wide text-[10px]">Final week</span>
+            )}
+          </div>
+
+          {trip.status === 'missed' ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] font-bold text-slate-400">
+              <Clock className="w-3.5 h-3.5 shrink-0" /> Deadline has passed
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-y-1.5 gap-x-2">
+              <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400 shrink-0 hidden sm:block">
+                {trip.achieved ? 'Window closes' : 'Time left'}
+              </span>
+              <div className="ml-auto">
+                <TripCountdown goalDate={trip.goal_date} skin="card" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Action */}
+        {trip.achieved ? (
+          trip.claim_status === 'pending' ? (
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-amber-600">
+              <Clock className="w-4 h-4 shrink-0" /> Claim pending review
+            </div>
+          ) : trip.claim_status === 'approved' ? (
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-emerald-600">
+              <CheckCircle2 className="w-4 h-4 shrink-0" /> Claim approved
+            </div>
+          ) : isClaiming ? (
+            <div className="space-y-2">
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={2}
+                placeholder="Optional note (preferred dates, questions...)"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 resize-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onClaim(trip)}
+                  disabled={submittingId === trip.id}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-emerald-500/25 disabled:opacity-60"
+                >
+                  <Send className="w-3.5 h-3.5" /> {submittingId === trip.id ? 'Sending...' : 'Submit Claim'}
+                </button>
+                <button
+                  onClick={() => { setClaimingId(null); setNote(''); }}
+                  className="px-4 py-2.5 border border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-500 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {trip.claim_status === 'rejected' && (
+                <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-red-500 mb-2">
+                  <XCircle className="w-3.5 h-3.5" /> Previous claim not approved
+                </p>
+              )}
+              <button
+                onClick={() => { setClaimingId(trip.id); setNote(''); }}
+                className="group/btn relative w-full overflow-hidden flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-[10px] font-black uppercase tracking-widest ring-1 ring-inset ring-white/25 shadow-[0_8px_20px_-6px_rgba(16,185,129,0.6)] transition-all hover:-translate-y-0.5"
+              >
+                <span className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/25 to-transparent pointer-events-none"></span>
+                <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/35 to-transparent"></span>
+                <Send className="relative w-3.5 h-3.5" />
+                <span className="relative">{trip.claim_status === 'rejected' ? 'Re-Submit Claim' : 'Claim This Trip'}</span>
+              </button>
+            </>
+          )
+        ) : (
+          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-slate-400">
+            <Lock className="w-3.5 h-3.5 shrink-0" />
+            {trip.status === 'missed' ? 'Deadline passed' : 'Keep earning to unlock'}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export default function Trip() {
   const navigate = useNavigate();
-  const [goal, setGoal] = useState(null);
+  const [trips, setTrips] = useState([]);
+  const [earnings, setEarnings] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [tripRequest, setTripRequest] = useState(null);
-  const [claiming, setClaiming] = useState(false);
+  const [claimingId, setClaimingId] = useState(null);
   const [note, setNote] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [submittingId, setSubmittingId] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
-  const countdown = useCountdown(goal?.goal_date ? new Date(`${goal.goal_date}T23:59:59`) : null);
-
-  const fetchTripRequest = async () => {
+  const fetchTrips = async () => {
     try {
-      const res = await api.get('/student/achievement-requests');
-      const items = res.data.requests || [];
-      const latest = items.find((r) => !r.achievement_id && r.achievement_title === TRIP_REQUEST_TITLE);
-      setTripRequest(latest || null);
+      const res = await api.get('/student/trip-goals');
+      setTrips(res.data.trips || []);
+      setEarnings(res.data.current_earnings || 0);
     } catch (err) {
-      console.error('Error fetching trip claim status', err);
+      console.error('Error fetching trip goals', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    const fetchTripGoal = async () => {
-      try {
-        const response = await api.get('/student/trip-goal');
-        setGoal(response.data);
-      } catch (err) {
-        console.error('Error fetching trip achievement data', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTripGoal();
-    fetchTripRequest();
-  }, []);
+  useEffect(() => { fetchTrips(); }, []);
 
-  const handleClaimTrip = async () => {
-    setSubmitting(true);
+  const handleClaim = async (trip) => {
+    setSubmittingId(trip.id);
     try {
-      await api.post('/student/achievement-requests', { title: TRIP_REQUEST_TITLE, note });
-      setClaiming(false);
+      await api.post('/student/achievement-requests', { title: trip.title, note });
+      setClaimingId(null);
       setNote('');
-      fetchTripRequest();
+      fetchTrips();
     } catch (err) {
       console.error('Error submitting trip claim', err);
     } finally {
-      setSubmitting(false);
+      setSubmittingId(null);
     }
   };
+
+  // The nearest trip still within reach — the one worth putting a clock on.
+  const nextTrip = trips.find((t) => t.status === 'in_progress') || null;
+
+  const achievedCount = trips.filter((t) => t.achieved).length;
+  const remainingCount = trips.filter((t) => t.status === 'in_progress').length;
+  const missedCount = trips.filter((t) => t.status === 'missed').length;
+  const overallPct = trips.length ? Math.round((achievedCount / trips.length) * 100) : 0;
+
+  const filterTabs = [
+    { key: 'all', label: 'All', Icon: SlidersHorizontal, count: trips.length },
+    { key: 'achieved', label: 'Earned', Icon: Trophy, count: achievedCount },
+    { key: 'in_progress', label: 'To Go', Icon: Zap, count: remainingCount },
+    { key: 'missed', label: 'Closed', Icon: Flag, count: missedCount },
+  ];
+
+  const q = search.trim().toLowerCase();
+  const visibleTrips = trips.filter((t) => {
+    if (filter !== 'all' && t.status !== filter) return false;
+    if (q && !`${t.title} ${t.destination || ''}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
 
   if (loading) {
     return (
@@ -108,322 +399,194 @@ export default function Trip() {
     );
   }
 
-  const earnings = goal?.current_earnings || 0;
-
-  if (!goal?.configured) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 text-slate-800">
-        <div className="flex items-center gap-3 mb-8">
-          <Compass className="w-7 h-7 sm:w-8 sm:h-8 text-primary animate-spin shrink-0" style={{ animationDuration: '15s' }} />
-          <h2 className="text-xl sm:text-2xl font-black">Trip Achievements</h2>
-        </div>
-
-        <div className="relative overflow-hidden bg-white border border-slate-100 rounded-3xl sm:rounded-[2rem] p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow animate-scale-in">
-          <div className="absolute -top-14 -right-14 w-48 h-48 rounded-full bg-sky-500/5 blur-2xl pointer-events-none"></div>
-          <div className="relative flex flex-col sm:flex-row items-center gap-6 border-b pb-6 mb-6">
-            <div className="relative w-20 h-20 shrink-0">
-              <div className="absolute -inset-1.5 rounded-2xl bg-sky-400/30 blur-md animate-pulse"></div>
-              <div className="relative w-full h-full rounded-2xl bg-sky-50 border flex items-center justify-center text-sky-600 animate-float">
-                <Plane className="w-10 h-10" />
-              </div>
-            </div>
-            <div className="text-center sm:text-left">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2.5 py-0.5 rounded-md">Not Yet Configured</span>
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-2">No Active Trip Reward Program</h3>
-              <p className="text-slate-500 text-xs mt-1">Our team hasn't launched a travel rewards campaign yet. Check back soon — your earnings below will count toward it.</p>
-            </div>
-          </div>
-
-          <div className="relative flex items-center gap-4 bg-slate-50 rounded-2xl p-5">
-            <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <Wallet className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Active Income</p>
-              <AnimatedNumber value={earnings} prefix="₹" duration={1200} className="block text-xl sm:text-2xl font-black text-slate-900 mt-0.5" />
-              <p className="text-[10px] text-slate-400 mt-1">Only direct-referral (active) earnings count toward this goal</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const target = goal.goal_amount || 0;
-  const remaining = Math.max(0, target - earnings);
-  const pct = target > 0 ? Math.min(100, Math.round((earnings / target) * 100)) : 0;
-  const achieved = earnings >= target;
-  const remainingDays = daysLeft(goal.goal_date);
-  const goalDateLabel = new Date(goal.goal_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-  const isOverdue = !achieved && remainingDays <= 0;
-  const isUrgent = !achieved && remainingDays > 0 && remainingDays <= 7;
-  const dailyPace = !achieved && remainingDays > 0 ? Math.ceil(remaining / remainingDays) : 0;
-
-  const statusMessage = achieved
-    ? "You've hit your target — this trip is yours! 🎉"
-    : isOverdue
-    ? "The deadline has passed for this goal, but your earnings keep counting toward the next one."
-    : isUrgent
-    ? `Only ${remainingDays} day${remainingDays === 1 ? '' : 's'} left — earn ₹${dailyPace.toLocaleString('en-IN')}/day to make it.`
-    : `You're ${pct}% of the way there. Keep referring to stay on pace.`;
-
   return (
-    <div className="w-full space-y-6 sm:space-y-8 text-slate-800 animate-fade-in-up">
-      <div className="flex items-center gap-3 mb-8">
+    <div className="w-full space-y-6 sm:space-y-8 text-slate-800 animate-fade-in-up pb-12">
+
+      <div className="flex items-center gap-3">
         <Compass className="w-7 h-7 sm:w-8 sm:h-8 text-primary animate-spin shrink-0" style={{ animationDuration: '15s' }} />
         <h2 className="text-xl sm:text-2xl font-black">Trip Achievements</h2>
       </div>
 
-      {/* Trip hero: title, banner photo, live countdown, at-a-glance amounts */}
-      <div className="relative overflow-hidden rounded-3xl sm:rounded-[2rem] mb-6 text-white animate-fade-in-up animate-gradient-x"
-        style={{ background: achieved
-          ? 'linear-gradient(115deg, #064e3b 0%, #059669 30%, #10b981 55%, #059669 80%, #064e3b 100%)'
-          : 'linear-gradient(115deg, #1a0533 0%, #4c1d75 25%, #86198f 50%, #4c1d75 75%, #1a0533 100%)' }}>
-        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '18px 18px' }}></div>
-        <div className={`absolute -top-16 -right-10 w-72 h-72 rounded-full blur-[100px] pointer-events-none animate-blob ${achieved ? 'bg-blue-400/25' : 'bg-fuchsia-400/25'}`}></div>
-        <div className={`absolute -bottom-16 -left-10 w-64 h-64 rounded-full blur-[100px] pointer-events-none animate-blob ${achieved ? 'bg-emerald-400/20' : 'bg-purple-500/25'}`} style={{ animationDelay: '2.5s' }}></div>
-        <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
-        {achieved && [
-          { top: '20%', left: '58%', size: 4, delay: '0s', dur: '5s' },
-          { top: '65%', left: '48%', size: 3, delay: '1.2s', dur: '6s' },
-          { top: '35%', left: '73%', size: 5, delay: '0.6s', dur: '4.5s' },
-        ].map((s, i) => (
-          <span key={i} className="absolute rounded-full bg-amber-200/70 pointer-events-none"
-            style={{ top: s.top, left: s.left, width: s.size, height: s.size, boxShadow: '0 0 8px 2px rgba(252,211,77,0.6)', animation: `float ${s.dur} ease-in-out infinite`, animationDelay: s.delay }}
-          ></span>
-        ))}
+      {/* Scoreboard — answers "how many have I earned, how many are left" first */}
+      <div className="relative">
+        <div className="absolute -inset-3 sm:-inset-4 rounded-[3rem] overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-[#0c0722]"></div>
+          <div className="absolute -top-20 -left-12 w-80 h-80 rounded-full bg-violet-600/50 blur-[80px] animate-blob"></div>
+          <div className="absolute -bottom-24 -right-12 w-80 h-80 rounded-full bg-fuchsia-600/40 blur-[80px] animate-blob" style={{ animationDelay: '3s' }}></div>
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(12,7,34,0.72) 0%, rgba(12,7,34,0.5) 45%, rgba(12,7,34,0.94) 100%)' }}></div>
+        </div>
 
-        <div className="relative z-10 p-5 sm:p-8">
-          {/* Title */}
-          <div className="text-center mb-5">
-            {achieved && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-300/40 text-emerald-200 text-[10px] font-black uppercase tracking-widest mb-3 animate-pulse">
-                <Plane className="w-3 h-3" /> Goal Achieved!
+        <div className="relative rounded-[2.2rem] p-5 sm:p-8 text-white bg-white/[0.07] backdrop-blur-2xl border border-white/25 shadow-[0_20px_60px_rgba(12,7,34,0.5)] overflow-hidden">
+          <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent pointer-events-none"></span>
+
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center gap-6">
+            <div className="flex-1 min-w-0">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-violet-200 text-[10px] font-black uppercase tracking-widest backdrop-blur-md mb-3">
+                <Sparkles className="w-3 h-3 text-amber-300" /> Travel Rewards
               </span>
+              <h3 className="font-heading text-2xl sm:text-3xl font-black bg-gradient-to-b from-white to-amber-100 bg-clip-text text-transparent">
+                {achievedCount} of {trips.length} trips earned
+              </h3>
+              <p className="text-violet-100/80 text-xs sm:text-sm font-medium mt-2">
+                Your active income counts toward every trip below. Only direct-referral earnings qualify.
+              </p>
+
+              <div className="mt-4 h-2 w-full max-w-md rounded-full bg-black/40 ring-1 ring-inset ring-white/10 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-300 to-violet-300 shadow-[0_0_12px_rgba(252,211,77,0.45)] transition-[width] duration-1000 ease-out"
+                  style={{ width: `${overallPct}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Three counts, so nothing has to be inferred */}
+            <div className="grid grid-cols-3 gap-2.5 shrink-0 lg:w-[340px]">
+              {[
+                { label: 'Earned', value: achievedCount, Icon: Trophy, color: '#34d399' },
+                { label: 'To Go', value: remainingCount, Icon: Zap, color: '#c084fc' },
+                { label: 'Closed', value: missedCount, Icon: Flag, color: '#94a3b8' },
+              ].map(({ label, value, Icon, color }) => (
+                <div key={label} className="rounded-2xl bg-black/35 border border-white/10 px-3 py-3.5 text-center">
+                  <Icon className="w-4 h-4 mx-auto mb-2" style={{ color }} strokeWidth={2.4} />
+                  <p className="font-heading text-2xl font-black leading-none tabular-nums" style={{ color }}>{value}</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/45 mt-1.5">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Active income + countdown to the nearest reachable trip */}
+          <div className="relative z-10 mt-6 pt-6 border-t border-white/10 flex flex-col sm:flex-row sm:items-center gap-5">
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="w-11 h-11 rounded-xl bg-emerald-400/15 border border-emerald-300/30 flex items-center justify-center shrink-0">
+                <Wallet className="w-5 h-5 text-emerald-300" strokeWidth={2.2} />
+              </span>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.22em] text-white/45 mb-1">Your Active Income</p>
+                <AnimatedNumber value={earnings} prefix="₹" duration={1200}
+                  className="block font-heading text-xl sm:text-2xl font-black text-white leading-none tabular-nums" />
+              </div>
+            </div>
+
+            {nextTrip && (
+              <div className="w-full sm:w-auto sm:ml-auto">
+                <TripCountdown goalDate={nextTrip.goal_date} title={nextTrip.title} />
+              </div>
             )}
-            <h3 className="text-xl sm:text-3xl font-black">{goal.title}</h3>
-          </div>
-
-          {/* Full-width banner photo */}
-          {goal.image_url && (
-            <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden border-4 border-white/90 shadow-[0_20px_45px_rgba(0,0,0,0.35)] mb-6">
-              <img
-                src={goal.image_url}
-                alt="Trip reward"
-                className="w-full h-full object-cover"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
-            </div>
-          )}
-
-          {/* Live countdown */}
-          {!achieved && !countdown.expired && (
-            <div className="flex items-center justify-center gap-2 sm:gap-4 mb-6">
-              <CountdownUnit value={countdown.days} label="Days" />
-              <span className="text-white/40 font-black text-xl -mt-4">:</span>
-              <CountdownUnit value={countdown.hours} label="Hours" />
-              <span className="text-white/40 font-black text-xl -mt-4">:</span>
-              <CountdownUnit value={countdown.minutes} label="Minutes" />
-            </div>
-          )}
-
-          {/* Amount summary pills */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="relative flex items-center justify-between gap-3 bg-black/25 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3">
-              <div className="min-w-0">
-                <p className="text-base sm:text-lg font-black leading-none truncate">₹{target.toLocaleString('en-IN')}</p>
-                <p className="text-[10px] text-white/60 font-bold mt-1">Target Amount</p>
-              </div>
-              <span className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
-                <IndianRupee className="w-4 h-4 text-fuchsia-700" strokeWidth={2.5} />
-              </span>
-            </div>
-            <div className="relative flex items-center justify-between gap-3 bg-black/25 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3">
-              <div className="min-w-0">
-                <p className="text-base sm:text-lg font-black leading-none truncate">₹{earnings.toLocaleString('en-IN')}</p>
-                <p className="text-[10px] text-white/60 font-bold mt-1">Earn Amount</p>
-              </div>
-              <span className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
-                <IndianRupee className="w-4 h-4 text-emerald-600" strokeWidth={2.5} />
-              </span>
-            </div>
-            <div className="relative flex items-center justify-between gap-3 bg-black/25 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3">
-              <div className="min-w-0">
-                <p className="text-base sm:text-lg font-black leading-none truncate">₹{remaining.toLocaleString('en-IN')}</p>
-                <p className="text-[10px] text-white/60 font-bold mt-1">Remaining Amount</p>
-              </div>
-              <span className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
-                <IndianRupee className="w-4 h-4 text-amber-600" strokeWidth={2.5} />
-              </span>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Status banner */}
-      <div className={`relative overflow-hidden flex items-center gap-4 rounded-2xl p-4 sm:p-5 mb-6 animate-fade-in-up ${
-        achieved ? 'bg-emerald-50 border border-emerald-100' : isUrgent ? 'bg-amber-50 border border-amber-100' : 'bg-blue-50 border border-blue-100'
-      }`} style={{ animationDelay: '40ms' }}>
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-          achieved ? 'bg-emerald-500 text-white' : isUrgent ? 'bg-amber-500 text-white' : 'bg-blue-500 text-white'
-        }`}>
-          {achieved ? <Sparkles className="w-5 h-5" /> : isUrgent ? <Zap className="w-5 h-5" /> : <Flag className="w-5 h-5" />}
-        </div>
-        <p className={`text-sm font-bold flex-1 ${achieved ? 'text-emerald-800' : isUrgent ? 'text-amber-800' : 'text-blue-800'}`}>
-          {statusMessage}
-        </p>
-        {!achieved && (
-          <button
-            onClick={() => navigate('/student/referrals')}
-            className="hidden sm:inline-flex shrink-0 items-center gap-1.5 px-4 py-2 bg-white rounded-xl font-bold text-xs uppercase tracking-wider text-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-          >
-            Boost Earnings <ArrowUpRight className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-
-      {/* Claim the trip reward */}
-      {achieved && (
-        <div className="relative overflow-hidden bg-white border border-slate-100 rounded-3xl sm:rounded-[2rem] p-5 sm:p-8 shadow-sm hover:shadow-md transition-shadow animate-fade-in-up mb-6" style={{ animationDelay: '60ms' }}>
-          <div className="absolute -top-14 -right-14 w-48 h-48 rounded-full bg-emerald-500/5 blur-2xl pointer-events-none"></div>
-          <div className="relative flex items-center gap-3 mb-5">
-            <span className="relative w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0">
-              <span className="absolute inset-0 rounded-2xl bg-emerald-400/30 blur-md animate-pulse"></span>
-              <Plane className="relative w-5 h-5 text-emerald-600" />
-            </span>
-            <div>
-              <h3 className="font-bold text-lg text-slate-900">Claim Your Trip Reward</h3>
-              <p className="text-xs text-slate-400">Let our team know so they can confirm your trip booking</p>
-            </div>
+      {trips.length === 0 ? (
+        <div className="relative overflow-hidden bg-white border border-slate-100 rounded-3xl p-8 text-center shadow-sm">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-500 mb-4 animate-float">
+            <Plane className="w-8 h-8" />
           </div>
+          <h3 className="text-lg font-black text-slate-900">No Active Trip Rewards</h3>
+          <p className="text-slate-500 text-xs mt-1.5 max-w-sm mx-auto leading-relaxed">
+            Our team hasn't launched a travel rewards campaign yet. Your active income of{' '}
+            <strong className="text-slate-700">{inr(earnings)}</strong> will count toward it when they do.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Prompt to keep earning, unless everything is already won */}
+          {remainingCount > 0 && (
+            <div className="relative overflow-hidden flex items-center gap-4 rounded-2xl p-4 sm:p-5 bg-violet-50 border border-violet-100">
+              <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0">
+                <Zap className="w-5 h-5" />
+              </div>
+              <p className="text-sm font-bold text-violet-900 flex-1 min-w-0">
+                {nextTrip
+                  ? <>Next up: <strong>{nextTrip.title}</strong> — {inr(nextTrip.remaining)} more to unlock it.</>
+                  : `${remainingCount} trip${remainingCount === 1 ? '' : 's'} still open.`}
+              </p>
+              <button
+                onClick={() => navigate('/student/referrals')}
+                className="hidden sm:inline-flex shrink-0 items-center gap-1.5 px-4 py-2 bg-white rounded-xl font-bold text-xs uppercase tracking-wider text-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+              >
+                Boost Earnings <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
-          {tripRequest?.status === 'pending' ? (
-            <div className="relative flex items-center gap-3 bg-amber-50 border border-amber-100 text-amber-700 rounded-2xl p-4 text-sm font-bold">
-              <Clock className="w-5 h-5 shrink-0" /> Your claim is pending review by our team.
-            </div>
-          ) : tripRequest?.status === 'approved' ? (
-            <div className="relative flex items-center gap-3 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-2xl p-4 text-sm font-bold">
-              <CheckCircle2 className="w-5 h-5 shrink-0" /> Claim approved! Our team will reach out to arrange your trip.
-            </div>
-          ) : (
-            <div className="relative">
-              {tripRequest?.status === 'rejected' && (
-                <div className="flex items-start gap-3 bg-red-50 border border-red-100 text-red-700 rounded-2xl p-4 text-sm mb-4">
-                  <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-bold">Your previous claim wasn't approved.</p>
-                    {tripRequest.admin_note && <p className="text-xs mt-1 text-red-600/80">Reason: {tripRequest.admin_note}</p>}
-                  </div>
-                </div>
-              )}
-              {claiming ? (
-                <div className="space-y-3">
-                  <textarea
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    rows={3}
-                    placeholder="Optional note for the admin (preferred dates, destination questions, etc.)"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-shadow resize-none"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleClaimTrip}
-                      disabled={submitting}
-                      className="group relative overflow-hidden flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md shadow-emerald-500/20 hover:shadow-xl transition-all disabled:opacity-60 active:scale-[0.98]"
-                    >
-                      {!submitting && <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent"></span>}
-                      <Send className="w-3.5 h-3.5 relative" /> <span className="relative">{submitting ? 'Submitting...' : 'Submit Claim'}</span>
-                    </button>
-                    <button onClick={() => { setClaiming(false); setNote(''); }} className="px-5 py-3 border border-slate-200 rounded-xl font-bold text-xs uppercase text-slate-500 hover:bg-slate-50 transition-colors">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
+          {/* Filter + search — same dark glass control bar as the achievements page */}
+          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl p-2.5 sm:p-3 overflow-hidden bg-white border border-slate-200/80 shadow-[0_4px_20px_-6px_rgba(15,23,42,0.10)]">
+            <span className="absolute -top-16 -left-10 w-40 h-40 rounded-full bg-violet-500/[0.05] blur-3xl pointer-events-none"></span>
+
+            {/* 2x2 on phones rather than 4-across: four tabs in one narrow row
+                left no room for the labels, which truncated to "EARN…"/"CLO…". */}
+            <div className="relative grid grid-cols-2 gap-1.5 sm:flex sm:items-center">
+              {filterTabs.map((tab) => (
                 <button
-                  onClick={() => setClaiming(true)}
-                  className="group relative overflow-hidden inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md shadow-emerald-500/20 hover:shadow-xl transition-all active:scale-[0.98]"
+                  key={tab.key}
+                  onClick={() => setFilter(tab.key)}
+                  className={`min-w-0 inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide transition-all duration-300 active:scale-95 ${
+                    filter === tab.key
+                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-600/25'
+                      : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                  }`}
                 >
-                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent"></span>
-                  <Send className="w-4 h-4 relative" /> <span className="relative">{tripRequest?.status === 'rejected' ? 'Re-Submit Claim' : 'Request Trip Reward'}</span>
+                  <tab.Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span>{tab.label}</span>
+                  <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[10px] tabular-nums ${
+                    filter === tab.key ? 'bg-white/25 text-white' : 'bg-slate-200/70 text-slate-600'
+                  }`}>{tab.count}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full sm:w-60 shrink-0">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search trips..."
+                className="w-full pl-10 pr-8 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 text-xs font-semibold text-slate-700 placeholder:text-slate-400 placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 hover:bg-slate-50 focus:bg-white transition-all"
+              />
+              {search && (
+                <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 hover:bg-slate-100 rounded-md transition-colors">
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Calculator */}
-      <div className="bg-white border border-slate-100 rounded-3xl sm:rounded-[2rem] p-5 sm:p-8 shadow-sm hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '80ms' }}>
-        <h3 className="font-bold text-lg text-slate-900 mb-6 flex items-center gap-2">
-          <span className="relative w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-            <span className="absolute inset-0 rounded-lg bg-primary/30 blur-md animate-pulse"></span>
-            <TrendingUp className="relative w-3.5 h-3.5 text-primary" />
-          </span>
-          Trip Calculator
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 mb-6">
-          <div className="group relative overflow-hidden rounded-2xl p-5 bg-sky-50 border border-sky-100 transition-all hover:-translate-y-1 hover:shadow-md">
-            <Clock className="absolute -right-2 -bottom-2 w-16 h-16 text-sky-500/10 pointer-events-none transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" strokeWidth={1.5} />
-            <div className="relative flex items-center gap-2 text-sky-600 mb-2">
-              <Clock className="w-4 h-4 transition-transform group-hover:scale-110" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Time Left</span>
-            </div>
-            <p className="relative text-xl sm:text-2xl font-black text-slate-900">
-              {remainingDays > 0 ? `${remainingDays} day${remainingDays === 1 ? '' : 's'}` : 'Deadline passed'}
-            </p>
-            <p className="relative text-xs text-slate-400 mt-1 flex items-center gap-1.5">
-              <Calendar className="w-3 h-3" /> Target date: {goalDateLabel}
-            </p>
           </div>
 
-          <div className="group relative overflow-hidden rounded-2xl p-5 bg-emerald-50 border border-emerald-100 transition-all hover:-translate-y-1 hover:shadow-md">
-            <Wallet className="absolute -right-2 -bottom-2 w-16 h-16 text-emerald-500/10 pointer-events-none transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" strokeWidth={1.5} />
-            <div className="relative flex items-center gap-2 text-emerald-600 mb-2">
-              <Wallet className="w-4 h-4 transition-transform group-hover:scale-110" />
-              <span className="text-[10px] font-black uppercase tracking-widest">{achieved ? 'Goal Reached' : 'Income Left'}</span>
-            </div>
-            <AnimatedNumber value={remaining} prefix="₹" duration={1200} className="relative block text-xl sm:text-2xl font-black text-slate-900" />
-            <p className="relative text-xs text-slate-400 mt-1">of ₹{target.toLocaleString('en-IN')} target</p>
-          </div>
-
-          <div className="group relative overflow-hidden rounded-2xl p-5 bg-purple-50 border border-purple-100 transition-all hover:-translate-y-1 hover:shadow-md">
-            <Zap className="absolute -right-2 -bottom-2 w-16 h-16 text-purple-500/10 pointer-events-none transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" strokeWidth={1.5} />
-            <div className="relative flex items-center gap-2 text-purple-600 mb-2">
-              <Zap className="w-4 h-4 transition-transform group-hover:scale-110" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Daily Pace Needed</span>
-            </div>
-            <p className="relative text-xl sm:text-2xl font-black text-slate-900">
-              {achieved ? '—' : remainingDays > 0 ? `₹${dailyPace.toLocaleString('en-IN')}` : 'N/A'}
-            </p>
-            <p className="relative text-xs text-slate-400 mt-1">{achieved ? 'Goal already met' : remainingDays > 0 ? 'per day to hit the target' : 'deadline has passed'}</p>
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div>
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-2">
-            <span>₹{earnings.toLocaleString('en-IN')} earned</span>
-            <span>{pct}%</span>
-          </div>
-          <div className="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-            {[25, 50, 75].map((m) => (
-              <span key={m} className="absolute top-0 bottom-0 w-px bg-white/80 z-10" style={{ left: `${m}%` }}></span>
-            ))}
-            <div
-              className="relative h-full rounded-full bg-gradient-to-r from-primary to-indigo-600 transition-all duration-1000 ease-out overflow-visible"
-              style={{ width: `${pct}%` }}
-            >
-              <span className="absolute inset-0 rounded-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/40 to-transparent"></span>
-              {pct > 0 && (
-                <span className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-[0_0_0_3px_rgba(37,99,235,0.3)]"></span>
+          {visibleTrips.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-3xl border border-slate-100">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-4">
+                <Plane className="w-6 h-6 text-slate-300" />
+              </div>
+              <p className="text-slate-400 text-sm font-semibold px-6">
+                No trips match {search ? `"${search}"` : 'this filter'}.
+              </p>
+              {(search || filter !== 'all') && (
+                <button
+                  onClick={() => { setSearch(''); setFilter('all'); }}
+                  className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider hover:bg-slate-200 transition-colors"
+                >
+                  Clear filters
+                </button>
               )}
             </div>
-          </div>
-        </div>
-      </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+              {visibleTrips.map((trip) => (
+                <TripCard
+                  key={trip.id}
+                  trip={trip}
+                  onClaim={handleClaim}
+                  claimingId={claimingId}
+                  setClaimingId={setClaimingId}
+                  note={note}
+                  setNote={setNote}
+                  submittingId={submittingId}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
