@@ -589,8 +589,11 @@ class Commission(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    from_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    # Null for a masterclass-registration commission — that payout isn't tied
+    # to a buyer User or an Order, just a MasterclassRegistration lead (see
+    # _create_masterclass_registration). Every other commission still sets both.
+    from_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=True)
     level = db.Column(db.Integer, nullable=False)   # 1=direct referral, 2=indirect, 3=manager
     commission_percent = db.Column(db.Numeric(5, 2), nullable=False)
     commission_amount = db.Column(db.Numeric(10, 2), nullable=False)
@@ -633,6 +636,7 @@ class Withdrawal(db.Model):
         default='requested')
     processed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     note = db.Column(db.String(255))
+    transaction_id = db.Column(db.String(120), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     processed_at = db.Column(db.DateTime, nullable=True)
 
@@ -1025,6 +1029,49 @@ class EmailOtp(db.Model):
 
     def __repr__(self):
         return f'<EmailOtp {self.email} verified={self.verified}>'
+
+
+class MasterclassRegistration(db.Model):
+    """A lead who paid the masterclass registration fee through someone's
+    referral link (/masterclass/<code>). Deliberately NOT a User account —
+    this is just a lead-capture record; the referrer is paid the full fee
+    immediately regardless of what this person does next. If they later
+    decide to become a real student, they go through normal signup — at that
+    point `has_purchased` (computed by matching email against `users`, see
+    the /student/masterclass-referrals and /admin/masterclass-registrations
+    endpoints) picks them up automatically, no link between the two rows is
+    stored."""
+    __tablename__ = 'masterclass_registrations'
+
+    id = db.Column(db.Integer, primary_key=True)
+    referrer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    name = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(150), nullable=False, index=True)
+    phone = db.Column(db.String(20))
+    age = db.Column(db.String(20))
+    occupation = db.Column(db.String(120))
+    city_state = db.Column(db.String(150))
+    experience_level = db.Column(db.String(50))
+    goal = db.Column(db.String(200))
+    amount_paid = db.Column(db.Numeric(10, 2), nullable=False)
+    payment_method = db.Column(db.String(60))
+    transaction_id = db.Column(db.String(120), unique=True, nullable=True)
+    # Snapshot of the funnel's Date/Time/Mode/Language at the moment this
+    # person registered — the funnel only ever has ONE current value for
+    # these (admin edits them in place for the next batch), so without this
+    # snapshot there'd be no record of which session an earlier registrant
+    # was actually told about once admin moves on to promoting a later one.
+    session_date = db.Column(db.String(60), nullable=True)
+    session_time = db.Column(db.String(60), nullable=True)
+    session_mode = db.Column(db.String(60), nullable=True)
+    session_language = db.Column(db.String(60), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    referrer = db.relationship('User', foreign_keys=[referrer_id],
+                                backref=db.backref('masterclass_leads', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<MasterclassRegistration {self.email} ref={self.referrer_id}>'
 
 
 class PlatformFeature(db.Model):

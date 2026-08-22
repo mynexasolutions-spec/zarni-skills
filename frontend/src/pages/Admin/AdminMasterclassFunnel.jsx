@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { Rocket, CheckCircle2, Plus, Trash2, Video, ListChecks, Gift, BarChart3, MessageSquareQuote, HelpCircle, Link2, Upload, Image, Type, ShieldCheck } from 'lucide-react';
+import { Rocket, CheckCircle2, Plus, Trash2, Video, ListChecks, Gift, BarChart3, MessageSquareQuote, HelpCircle, Link2, Upload, Image, Type, ShieldCheck, Save, Loader2, FileText, IndianRupee } from 'lucide-react';
 import api from '../../utils/api';
 
+// Slug used both here (as the section's scroll-target id) and by the jump-nav
+// pills below, so a pill always lines up with its section without every
+// <Section> call site having to pass a matching id by hand.
+export function sectionSlug(title) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// Reads --tab-from/--tab-to off the nearest ancestor with those CSS custom
+// properties set (each tab's wrapper div, see TAB_COLORS below) — this is
+// how all ~24 sections pick up their active tab's accent color without every
+// individual <Section> call site having to pass a color prop by hand.
 function Section({ icon: Icon, title, desc, children }) {
   return (
-    <div className="bg-white border border-slate-200/80 rounded-[2.2rem] p-6 sm:p-8 shadow-sm transition-all duration-300 hover:shadow-md animate-fade-in-up space-y-5">
+    <div id={sectionSlug(title)} className="scroll-mt-32 bg-white border border-slate-200/80 rounded-[2.2rem] p-6 sm:p-8 shadow-sm transition-all duration-300 hover:shadow-md animate-fade-in-up space-y-5">
       <div className="flex items-center gap-3.5 border-b border-slate-100 pb-4">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-red-500/20">
+        <div
+          className="w-10 h-10 rounded-2xl text-white flex items-center justify-center shrink-0 shadow-md"
+          style={{
+            background: 'linear-gradient(to bottom right, var(--tab-from, #ef4444), var(--tab-to, #e11d48))',
+            boxShadow: '0 4px 14px 0 var(--tab-shadow, rgba(239,68,68,0.25))',
+          }}
+        >
           <Icon className="w-5 h-5" />
         </div>
         <div>
@@ -80,6 +97,56 @@ function StringListEditor({ label, items, onChange, placeholder }) {
   );
 }
 
+// Uploads into a single list item's field (e.g. a testimonial's photo) via
+// the generic /upload-image endpoint, rather than a top-level content field.
+function ItemImageField({ label, value, onChange }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleUpload = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    setError('');
+    try {
+      const fd = new FormData();
+      fd.append('image_file', file);
+      const response = await api.post('/admin/masterclass-funnel/upload-image', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (response.data.success) onChange(response.data.url);
+      else setError(response.data.message || 'Failed to upload image.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to upload image.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-1">
+      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</span>
+      <div className="flex items-center gap-2.5">
+        {value ? (
+          <img src={value} alt="" className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0" />
+        ) : (
+          <span className="w-10 h-10 rounded-full bg-slate-100 border border-dashed border-slate-300 shrink-0" />
+        )}
+        <label className="flex items-center gap-1.5 px-3 py-2 border border-dashed border-slate-300 rounded-lg text-[11px] font-bold text-slate-600 cursor-pointer hover:border-red-300 hover:text-red-600 transition-colors">
+          <Upload className="w-3.5 h-3.5 shrink-0" />
+          {uploading ? 'Uploading...' : value ? 'Replace' : 'Upload'}
+          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload(e.target.files?.[0])} />
+        </label>
+        {value && (
+          <button type="button" onClick={() => onChange('')} className="text-[11px] font-bold text-slate-400 hover:text-red-600 transition-colors">
+            Remove
+          </button>
+        )}
+      </div>
+      {error && <p className="text-[10px] font-bold text-red-600">{error}</p>}
+    </div>
+  );
+}
+
 function ObjectListEditor({ label, items, onChange, fields, emptyItem }) {
   const list = items || [];
   const update = (i, key, val) => onChange(list.map((it, idx) => (idx === i ? { ...it, [key]: val } : it)));
@@ -110,6 +177,8 @@ function ObjectListEditor({ label, items, onChange, fields, emptyItem }) {
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow placeholder:text-slate-400"
                     />
                   </div>
+                ) : f.type === 'image' ? (
+                  <ItemImageField key={f.key} label={f.placeholder || f.key} value={item[f.key] || ''} onChange={(url) => update(i, f.key, url)} />
                 ) : (
                   <div key={f.key} className="space-y-1">
                     <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{f.placeholder || f.key}</span>
@@ -137,13 +206,13 @@ const DEFAULT_CONTENT = {
   date: '', time: '', mode: '', price: '', original_price: '', language: '',
   video_url: '', video_filename: '', show_video: true,
   offer_ends_at: '', total_seats: '', seats_filled: '',
-  hero_image: '', summary_image: '', achievement_image: '',
+  hero_image: '', hero_image_mobile: '', summary_image: '', achievement_image: '', bonuses_image: '',
   includes: [], learn_items: [], why_register: [], bonuses: [], stats: [], testimonials: [], faq: [],
   feature_chips: [], achieve_items: [],
   founder_name: '', founder_title: '', founder_quote: '',
   support_phone: '', support_email: '', website_url: '', mission_text: '',
   whatsapp_group_link: '', whatsapp_support_link: '', meeting_link: '',
-  preparation_video_link: '', welcome_pdf_link: '',
+  preparation_video_link: '', preparation_video_filename: '', welcome_pdf_link: '',
   social_links: { youtube: '', instagram: '', telegram: '', facebook: '' },
 
   brand_name: '', logo_image: '', header_badges: [], hero_checks: [],
@@ -170,16 +239,16 @@ const DEFAULT_CONTENT = {
   country_code: '',
   age_options: [], occupation_options: [], experience_options: [], goal_options: [],
   payment_options: [], form_trust_items: [],
-  why_join_heading: '', privacy_heading: '', privacy_text: '', privacy_badges: [],
+  why_join_heading: '', why_join_quote: { text: '', name: '', role: '' }, privacy_heading: '', privacy_text: '', privacy_badges: [],
 
   success_title: '', success_subtitle: '', success_message: '',
-  registration_id_label: '', success_panel_heading: '',
+  registration_id_label: '', success_panel_heading: '', schedule_disclaimer_text: '',
   label_masterclass_date: '', label_time: '', label_mode: '', label_language: '',
   email_sent_text: '', whatsapp_sent_text: '', next_steps_heading: '', next_steps: [],
   community_panel_heading: '', community_panel_text: '', community_card_title: '',
   community_card_subtitle: '', community_card_cta: '',
   support_panel_heading: '', support_panel_text: '', support_card_title: '',
-  support_card_subtitle: '', support_card_cta: '',
+  support_card_subtitle: '', support_card_cta: '', support_avatar_image: '',
   success_banner_title: '', success_banner_subtitle: '', success_trust_items: [],
 
   footer_links_heading: '', footer_contact_heading: '', footer_social_heading: '',
@@ -197,21 +266,64 @@ export default function AdminMasterclassFunnel() {
   const [videoError, setVideoError] = useState('');
   const [imageUploading, setImageUploading] = useState('');
   const [imageError, setImageError] = useState('');
+  const [docUploading, setDocUploading] = useState(false);
+  const [docError, setDocError] = useState('');
+  const [prepVideoUploading, setPrepVideoUploading] = useState(false);
+  const [prepVideoError, setPrepVideoError] = useState('');
   const [activeTab, setActiveTab] = useState('hero');
+  // Snapshot of `content` as of the last load/save — comparing against it is
+  // how the Save button knows whether there's anything worth clicking it
+  // for, so admin isn't left guessing whether an edit actually "took".
+  const [savedContent, setSavedContent] = useState(null);
+  const isDirty = savedContent !== null && JSON.stringify(content) !== savedContent;
 
+  // Each tab gets its own accent instead of the whole page being one flat
+  // red — with 24 sections across 5 tabs, a single color made every screen
+  // look interchangeable; the color is now the fastest way to tell "which
+  // area am I in" before even reading a heading. `tw` drives the tab button
+  // itself, `from`/`to`/`shadow` feed the CSS vars every <Section> icon
+  // badge inside that tab reads (see the wrapper div around each tab's
+  // content further down, and the Section component up top).
   const TABS = [
-    { key: 'hero', label: 'Hero & Branding', Icon: Video },
-    { key: 'landing', label: 'Landing Content', Icon: ListChecks },
-    { key: 'form', label: 'Registration Form', Icon: Type },
-    { key: 'success', label: 'Success Page', Icon: CheckCircle2 },
-    { key: 'footer', label: 'Footer & Contact', Icon: Link2 },
+    { key: 'hero', label: 'Hero & Branding', Icon: Video, tw: 'from-blue-600 to-indigo-600', shadowTw: 'shadow-blue-500/25', from: '#2563eb', to: '#4f46e5', shadow: 'rgba(37,99,235,0.25)' },
+    { key: 'landing', label: 'Landing Content', Icon: ListChecks, tw: 'from-purple-600 to-fuchsia-600', shadowTw: 'shadow-purple-500/25', from: '#7c3aed', to: '#a21caf', shadow: 'rgba(124,58,237,0.25)' },
+    { key: 'form', label: 'Registration Form', Icon: Type, tw: 'from-emerald-600 to-teal-600', shadowTw: 'shadow-emerald-500/25', from: '#059669', to: '#0d9488', shadow: 'rgba(5,150,105,0.25)' },
+    { key: 'success', label: 'Success Page', Icon: CheckCircle2, tw: 'from-amber-500 to-orange-600', shadowTw: 'shadow-amber-500/25', from: '#d97706', to: '#ea580c', shadow: 'rgba(217,119,6,0.25)' },
+    { key: 'footer', label: 'Footer & Contact', Icon: Link2, tw: 'from-slate-600 to-slate-800', shadowTw: 'shadow-slate-500/25', from: '#475569', to: '#334155', shadow: 'rgba(71,85,105,0.25)' },
   ];
+  const activeTabColor = TABS.find((t) => t.key === activeTab) || TABS[0];
+
+  // Every <Section title="…"> inside each tab, in the order it appears —
+  // powers the "jump to" pill row so a field can be found by clicking
+  // straight to its section instead of scroll-hunting through the whole tab.
+  const TAB_SECTIONS = {
+    hero: ['Hero & Video', 'Page Images', 'Branding & Header', 'Urgency & Seats'],
+    landing: [
+      'Landing Section Headings', 'Bottom CTA & Trust Bar', 'Feature Chips & Achievements',
+      "What's Included", "What You'll Learn", 'Why Register & Bonuses', 'Stats', 'Testimonials', 'FAQ',
+    ],
+    form: [
+      'Form Page — Headings & Labels', 'Invalid Link Message', 'Form Dropdown Options',
+      'Order Summary & Payment Options', 'Form Page — Trust & Privacy Bands',
+    ],
+    success: [
+      'Success Page — Copy', 'Next Steps Cards', 'Community & Support Panels',
+      'Post-Registration Links', 'Founder Quote',
+    ],
+    footer: ['Footer & Contact'],
+  };
+
+  const jumpToSection = (title) => {
+    document.getElementById(sectionSlug(title))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   useEffect(() => {
     const fetchContent = async () => {
       try {
         const response = await api.get('/admin/masterclass-funnel');
-        setContent({ ...DEFAULT_CONTENT, ...response.data.content });
+        const loaded = { ...DEFAULT_CONTENT, ...response.data.content };
+        setContent(loaded);
+        setSavedContent(JSON.stringify(loaded));
       } catch (err) {
         console.error(err);
       } finally {
@@ -227,9 +339,12 @@ export default function AdminMasterclassFunnel() {
   const setSocial = (key) => (e) => setContent(prev => ({
     ...prev, social_links: { ...(prev.social_links || {}), [key]: e.target.value },
   }));
+  const setWhyJoinQuote = (key) => (e) => setContent(prev => ({
+    ...prev, why_join_quote: { ...(prev.why_join_quote || {}), [key]: e.target.value },
+  }));
 
   const handleSave = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     setSaving(true);
     setSuccess(false);
     try {
@@ -300,11 +415,71 @@ export default function AdminMasterclassFunnel() {
     }
   };
 
-  const ImageField = ({ label, field, hint }) => (
+  const handleDocumentUpload = async (file) => {
+    if (!file) return;
+    setDocUploading(true);
+    setDocError('');
+    try {
+      const fd = new FormData();
+      fd.append('document_file', file);
+      const response = await api.post('/admin/masterclass-funnel/document', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (response.data.success) {
+        setContent(prev => ({ ...prev, welcome_pdf_link: response.data.url }));
+      } else {
+        setDocError(response.data.message || 'Failed to upload document.');
+      }
+    } catch (err) {
+      setDocError(err.response?.data?.message || 'Failed to upload document.');
+    } finally {
+      setDocUploading(false);
+    }
+  };
+
+  const handlePrepVideoUpload = async (file) => {
+    if (!file) return;
+    setPrepVideoUploading(true);
+    setPrepVideoError('');
+    try {
+      const fd = new FormData();
+      fd.append('video_file', file);
+      fd.append('field', 'preparation_video_filename');
+      const response = await api.post('/admin/masterclass-funnel/video', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (response.data.success) {
+        setContent(prev => ({ ...prev, preparation_video_filename: response.data.video_filename }));
+      } else {
+        setPrepVideoError(response.data.message || 'Failed to upload video.');
+      }
+    } catch (err) {
+      setPrepVideoError(err.response?.data?.message || 'Failed to upload video.');
+    } finally {
+      setPrepVideoUploading(false);
+    }
+  };
+
+  // Hero Image is the wide banner behind the headline, so its preview box is
+  // 16:9 to match how it's actually cropped on the live page. Hero Image
+  // (Mobile) is the portrait crop used behind the headline overlay on phones,
+  // so it previews at 4:5. Logo is 3:2. Every other funnel image (summary,
+  // achievement, support avatar, bonuses) is shown/cropped square (1:1).
+  const ImageField = ({ label, field, hint }) => {
+    const aspectClass = field === 'hero_image' ? 'aspect-video'
+      : field === 'hero_image_mobile' ? 'aspect-[4/5]'
+      : field === 'logo_image' ? 'aspect-[3/2]'
+      : 'aspect-square';
+    return (
     <div className="space-y-1.5">
       <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider">{label}</label>
       {content[field] && (
-        <img src={content[field]} alt="" className="h-24 w-auto rounded-xl border border-slate-200 object-contain bg-slate-50 mb-2" />
+        <div className={`w-full max-w-[280px] ${aspectClass} rounded-xl border border-slate-200 bg-slate-50 overflow-hidden mb-2`}>
+          {/* Logo is never actually cropped on the live page (it renders at
+              its natural ratio via object-contain — see MasterclassRegister.jsx),
+              so the preview must match that instead of zoom-cropping it. */}
+          <img src={content[field]} alt="" className={`w-full h-full ${field === 'logo_image' ? 'object-contain p-2' : 'object-cover'}`} />
+        </div>
       )}
       <div className="flex flex-wrap items-center gap-2.5">
         <label className="flex items-center gap-2 px-4 py-2.5 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 cursor-pointer hover:border-red-300 hover:text-red-600 transition-colors">
@@ -328,7 +503,8 @@ export default function AdminMasterclassFunnel() {
       />
       {hint && <p className="text-[11px] text-slate-400 font-semibold mt-1">{hint}</p>}
     </div>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -366,23 +542,67 @@ export default function AdminMasterclassFunnel() {
         </div>
       )}
 
-      {/* Tab navigation — keeps only one group of sections on screen at a time */}
-      <div className="sticky top-0 z-20 -mx-1 px-1 py-2 mb-6 bg-slate-50/90 backdrop-blur-md">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {TABS.map(({ key, label, Icon }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setActiveTab(key)}
-              className={`shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide whitespace-nowrap transition-all ${
-                activeTab === key
-                  ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md shadow-red-500/25'
-                  : 'bg-white text-slate-500 border border-slate-200 hover:border-red-200 hover:text-red-600'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" /> {label}
-            </button>
-          ))}
+      {/* Tab navigation — keeps only one group of sections on screen at a time.
+          Save lives here (top, always visible) instead of as a floating bar
+          at the bottom of a very long form — that bottom bar used to overlap
+          whatever content happened to be at the fold, which read as broken. */}
+      <div className="sticky top-0 z-20 -mx-1 px-1 py-2 mb-6 bg-slate-50/90 backdrop-blur-md border-b border-slate-200/70">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+          <div className="relative min-w-0 flex-1">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {TABS.map(({ key, label, Icon, tw, shadowTw }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => { setActiveTab(key); document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className={`shrink-0 inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wide whitespace-nowrap transition-all ${
+                    activeTab === key
+                      ? `bg-gradient-to-r ${tw} text-white shadow-md ${shadowTw}`
+                      : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300 hover:text-slate-700'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" /> {label}
+                </button>
+              ))}
+            </div>
+            {/* Fade hint so a horizontally-scrollable tab row doesn't look
+                like "that's all the tabs" on narrow/mobile screens. */}
+            <span className="pointer-events-none absolute top-0 bottom-1 right-0 w-8 bg-gradient-to-l from-slate-50 to-transparent sm:hidden"></span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleSave()}
+            disabled={saving}
+            className={`group relative overflow-hidden w-full sm:w-auto shrink-0 sm:ml-auto flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 bg-gradient-to-r ${activeTabColor.tw} text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-md ${activeTabColor.shadowTw} hover:shadow-lg transition-all disabled:opacity-60 active:scale-95`}
+          >
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            <span>{saving ? 'Saving...' : isDirty ? 'Save Changes' : 'Saved'}</span>
+            {isDirty && !saving && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-300 ring-2 ring-white/60 animate-pulse" title="Unsaved changes"></span>
+            )}
+          </button>
+        </div>
+
+        {/* "Jump to" pills for the sections inside the active tab — this tab
+            alone can hold 9 sections (Landing Content), so scroll-hunting for
+            one field was the main source of confusion; clicking a pill scrolls
+            straight to that section instead. */}
+        <div className="relative mt-2">
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-2 pb-1 border-t border-slate-200/70 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <span className="shrink-0 text-[9px] font-black uppercase tracking-widest text-slate-400 pr-1">Jump to:</span>
+            {(TAB_SECTIONS[activeTab] || []).map((title) => (
+              <button
+                key={title}
+                type="button"
+                onClick={() => jumpToSection(title)}
+                className="shrink-0 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-[11px] font-bold text-slate-500 whitespace-nowrap hover:border-slate-300 hover:text-slate-800 transition-colors"
+              >
+                {title}
+              </button>
+            ))}
+          </div>
+          <span className="pointer-events-none absolute top-2 bottom-1 right-0 w-8 bg-gradient-to-l from-slate-50 to-transparent sm:hidden"></span>
         </div>
       </div>
 
@@ -391,7 +611,10 @@ export default function AdminMasterclassFunnel() {
         {activeTab === 'hero' && (<>
         <Section icon={Video} title="Hero & Video" desc="The top of the landing page — badge, headline, video, and session details.">
           <Field label="Badge Text" value={content.badge_text} onChange={set('badge_text')} placeholder="LIVE MASTERCLASS" />
-          <Field label="Hero Title" value={content.hero_title} onChange={set('hero_title')} placeholder="ONLINE EARNING & ONLINE BUSINESS" />
+          <div>
+            <Field label="Hero Title" value={content.hero_title} onChange={set('hero_title')} placeholder="How To Make {{Money Online}} Business" />
+            <p className="text-[11px] text-slate-400 mt-1.5">Wrap any part in double curly braces to highlight it in blue — e.g. How To Make {'{{Money Online}}'} Business</p>
+          </div>
           <Field label="Hero Subtitle" value={content.hero_subtitle} onChange={set('hero_subtitle')} placeholder="सीखें घर बैठे Online Income बनाने के 5 Powerful तरीके" />
           <div className="space-y-1.5">
             <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">Hero Description</label>
@@ -419,7 +642,9 @@ export default function AdminMasterclassFunnel() {
             <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wide">Hero Video (uploaded file)</label>
             {videoError && <div className="p-2.5 bg-red-50 border border-red-100 text-red-700 rounded-lg text-xs font-bold mb-2">{videoError}</div>}
             {(videoPreview || content.video_filename) && (
-              <video src={videoPreview || content.video_filename} controls className="w-full max-h-56 rounded-xl bg-black mb-3" />
+              <div className="w-full max-w-[280px] aspect-square rounded-xl overflow-hidden bg-black mb-3">
+                <video src={videoPreview || content.video_filename} controls className="w-full h-full object-cover" />
+              </div>
             )}
             <div className="flex flex-wrap items-center gap-2.5">
               <label className="flex items-center gap-2 px-4 py-2.5 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 cursor-pointer hover:border-red-300 hover:text-red-600 transition-colors">
@@ -448,18 +673,56 @@ export default function AdminMasterclassFunnel() {
             <Field label="Mode" value={content.mode} onChange={set('mode')} placeholder="Online (Zoom Live)" />
             <Field label="Language" value={content.language} onChange={set('language')} placeholder="Hindi" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Registration Price (₹)" type="number" value={content.price} onChange={set('price')} placeholder="99" />
-            <Field label="Original Price (strikethrough)" type="number" value={content.original_price} onChange={set('original_price')} placeholder="499" />
+          <div className="bg-amber-500/10 border-2 border-amber-400/40 rounded-2xl p-4 sm:p-5 space-y-4">
+            <p className="flex items-center gap-1.5 text-[10px] font-black text-amber-700 uppercase tracking-widest">
+              <IndianRupee className="w-4 h-4" /> Price &amp; GST — what the student sees on the order summary
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Registration Price (₹)" type="number" value={content.price} onChange={set('price')} placeholder="99" />
+              <Field label="Original Price (strikethrough)" type="number" value={content.original_price} onChange={set('original_price')} placeholder="499" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="GST Label (clear to hide row)" value={content.gst_label} onChange={set('gst_label')} placeholder="GST (18%)" />
+              <div className="space-y-1.5">
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider">GST Amount (₹)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number" value={content.gst_amount} onChange={set('gst_amount')} placeholder="0"
+                    className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow shadow-sm placeholder:text-slate-400"
+                  />
+                  <button
+                    type="button"
+                    title="Fill with 18% of the registration price"
+                    onClick={() => setContent(prev => ({ ...prev, gst_amount: Math.round((parseFloat(prev.price) || 0) * 0.18 * 100) / 100 }))}
+                    className="shrink-0 px-3 rounded-xl border border-amber-300 bg-white text-[10px] font-black text-amber-700 uppercase tracking-wide hover:bg-amber-50 transition-colors"
+                  >
+                    18%
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* Live total — mirrors exactly what the public order summary
+                computes (price + gst_amount), so admin sees the real total
+                the student will pay instead of doing this math by hand. */}
+            {parseFloat(content.price) > 0 && (
+              <div className="flex items-center justify-between bg-white border border-amber-200 rounded-xl px-4 py-3">
+                <span className="text-xs font-bold text-slate-500">Student Pays (Total)</span>
+                <span className="text-lg font-black text-amber-700">
+                  ₹{(Number(content.price) || 0) + (Number(content.gst_amount) || 0)}
+                </span>
+              </div>
+            )}
           </div>
         </Section>
 
         <Section icon={Image} title="Page Images" desc="Upload the images shown across the registration pages. Leave one empty to hide it.">
           {imageError && <div className="p-2.5 bg-red-50 border border-red-100 text-red-700 rounded-lg text-xs font-bold">{imageError}</div>}
           <ImageField label="Logo" field="logo_image" hint="Shown in the page header and footer." />
-          <ImageField label="Hero Image" field="hero_image" hint="Beside the headline on the landing page." />
+          <ImageField label="Hero Image" field="hero_image" hint="Wide 16:9 banner behind the headline — leave empty space on the left/top for the text to sit on." />
+          <ImageField label="Hero Image (Mobile)" field="hero_image_mobile" hint="Portrait 4:5 crop shown behind the headline on phones/tablets — the badge and title overlay the bottom of this image, so leave that area uncluttered. Falls back to Hero Image (cropped) if left empty." />
           <ImageField label="Order Summary / Success Image" field="summary_image" hint="Inside the dark order-summary card and the success panel." />
           <ImageField label="Achievement Image" field="achievement_image" hint="Beside the 'What You Will Achieve' list." />
+          <ImageField label="Bonuses Image" field="bonuses_image" hint="Beside the 'Exclusive Bonuses' list." />
         </Section>
 
         <Section icon={Type} title="Branding & Header" desc="Brand name, the header badge chips, and the hero checkmarks.">
@@ -477,7 +740,13 @@ export default function AdminMasterclassFunnel() {
           <Field label="Offer Ends At" type="datetime-local" value={content.offer_ends_at} onChange={set('offer_ends_at')} />
           <div className="grid grid-cols-2 gap-4">
             <Field label="Total Seats" type="number" value={content.total_seats} onChange={set('total_seats')} placeholder="100" />
-            <Field label="Seats Filled" type="number" value={content.seats_filled} onChange={set('seats_filled')} placeholder="87" />
+            <div className="space-y-1.5">
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider">Seats Filled (Live)</label>
+              <div className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-700">
+                {content.seats_filled || 0}
+              </div>
+              <p className="text-[11px] text-slate-400 font-semibold">Counts real masterclass registrations automatically — not editable.</p>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Offer Card Header" value={content.offer_header_text} onChange={set('offer_header_text')} placeholder="Limited Time Offer" />
@@ -491,7 +760,16 @@ export default function AdminMasterclassFunnel() {
             <Field label="Seats Left Text — use {left}" value={content.seats_left_text} onChange={set('seats_left_text')} placeholder="Only {left} Seats Left!" />
             <Field label="Seats Filled Text — use {filled} / {total}" value={content.seats_filled_text} onChange={set('seats_filled_text')} placeholder="{filled} / {total} Seats Filled" />
           </div>
-          <StringListEditor label="Live Registrations Ticker" items={content.live_registrations} onChange={setList('live_registrations')} placeholder="Rahul from Jaipur" />
+          <ObjectListEditor
+            label="Live Registrations Ticker"
+            items={content.live_registrations}
+            onChange={setList('live_registrations')}
+            fields={[
+              { key: 'name', placeholder: 'Rahul from Jaipur' },
+              { key: 'avatar', placeholder: 'Photo (optional — falls back to initial)', type: 'image' },
+            ]}
+            emptyItem={{ name: '', avatar: '' }}
+          />
           <div className="grid grid-cols-2 gap-4">
             <Field label="Ticker Heading" value={content.live_registrations_label} onChange={set('live_registrations_label')} placeholder="Live Registrations" />
             <Field label="Ticker Badge" value={content.live_registrations_badge} onChange={set('live_registrations_badge')} placeholder="Just Registered" />
@@ -568,8 +846,9 @@ export default function AdminMasterclassFunnel() {
               { key: 'name', placeholder: 'Student name' },
               { key: 'text', placeholder: 'Testimonial text', type: 'textarea' },
               { key: 'rating', placeholder: 'Rating (1-5)', type: 'number' },
+              { key: 'image', placeholder: 'Photo (optional — falls back to initials)', type: 'image' },
             ]}
-            emptyItem={{ name: '', text: '', rating: 5 }}
+            emptyItem={{ name: '', text: '', rating: 5, image: '' }}
           />
         </Section>
 
@@ -643,11 +922,15 @@ export default function AdminMasterclassFunnel() {
         </Section>
 
         <Section icon={BarChart3} title="Order Summary & Payment Options" desc="The pricing rows and the payment method list on the form page.">
+          <div className="flex items-start gap-2.5 bg-amber-500/10 border border-amber-400/40 rounded-xl px-4 py-3">
+            <IndianRupee className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+            <p className="text-[11px] font-bold text-amber-800 leading-relaxed">
+              Price and GST amount are set together under the <strong>"Hero & Branding"</strong> tab → <strong>"Hero &amp; Video"</strong> section (with a live total preview) — this section only has their labels/notes.
+            </p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Order Item Title" value={content.order_item_title} onChange={set('order_item_title')} placeholder="Live Masterclass Registration" />
             <Field label="Total Label" value={content.total_label} onChange={set('total_label')} placeholder="Total Amount" />
-            <Field label="GST Label (clear to hide row)" value={content.gst_label} onChange={set('gst_label')} placeholder="GST (18%)" />
-            <Field label="GST Amount (₹)" type="number" value={content.gst_amount} onChange={set('gst_amount')} placeholder="0" />
             <Field label="Tax Note" value={content.tax_note} onChange={set('tax_note')} placeholder="(All taxes included)" />
             <Field label="Payment Secure Note" value={content.payment_secure_note} onChange={set('payment_secure_note')} placeholder="Secure payment powered by Razorpay" />
           </div>
@@ -659,8 +942,9 @@ export default function AdminMasterclassFunnel() {
               { key: 'label', placeholder: 'UPI' },
               { key: 'desc', placeholder: 'Pay using any UPI app' },
               { key: 'brand', placeholder: 'Brand label shown on the right (e.g. UPI)' },
+              { key: 'logo_image', type: 'image', placeholder: 'Real Logo (optional — falls back to a matching icon if left empty)' },
             ]}
-            emptyItem={{ label: '', desc: '', brand: '' }}
+            emptyItem={{ label: '', desc: '', brand: '', logo_image: '' }}
           />
         </Section>
 
@@ -673,6 +957,31 @@ export default function AdminMasterclassFunnel() {
             emptyItem={{ title: '', desc: '' }}
           />
           <Field label="Why Join Heading" value={content.why_join_heading} onChange={set('why_join_heading')} placeholder="Why Thousands Are Joining" />
+          <div className="bg-slate-50/60 border border-slate-200/80 rounded-2xl p-4 space-y-2.5">
+            <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Why Join Banner — Short Quote</label>
+            <div className="space-y-1">
+              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quote</span>
+              <textarea
+                rows={2}
+                value={content.why_join_quote?.text || ''}
+                onChange={setWhyJoinQuote('text')}
+                placeholder="This masterclass changed the way I think about online income. Highly recommended!"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow placeholder:text-slate-400"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Name</span>
+                <input value={content.why_join_quote?.name || ''} onChange={setWhyJoinQuote('name')} placeholder="Rohit Sharma"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow placeholder:text-slate-400" />
+              </div>
+              <div className="space-y-1">
+                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Role</span>
+                <input value={content.why_join_quote?.role || ''} onChange={setWhyJoinQuote('role')} placeholder="Freelancer"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-shadow placeholder:text-slate-400" />
+              </div>
+            </div>
+          </div>
           <Field label="Privacy Heading (clear to hide band)" value={content.privacy_heading} onChange={set('privacy_heading')} placeholder="Your Information is Safe With Us" />
           <div className="space-y-1.5">
             <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">Privacy Text</label>
@@ -719,6 +1028,7 @@ export default function AdminMasterclassFunnel() {
             <Field label="Mode Label" value={content.label_mode} onChange={set('label_mode')} placeholder="Mode" />
             <Field label="Language Label" value={content.label_language} onChange={set('label_language')} placeholder="Language" />
           </div>
+          <Field label="Schedule Disclaimer (shown under the Date/Time/Mode/Language box)" value={content.schedule_disclaimer_text} onChange={set('schedule_disclaimer_text')} placeholder="This schedule isn't final yet — join our WhatsApp Community below and we'll confirm the exact date & time there." />
           <StringListEditor label="Success Trust Items" items={content.success_trust_items} onChange={setList('success_trust_items')} placeholder="100% Secure Payment" />
         </Section>
 
@@ -752,13 +1062,60 @@ export default function AdminMasterclassFunnel() {
             <Field label="Support Card Subtitle" value={content.support_card_subtitle} onChange={set('support_card_subtitle')} placeholder="We're here to help you!" />
             <Field label="Support Button" value={content.support_card_cta} onChange={set('support_card_cta')} placeholder="Chat Now" />
           </div>
+          <ImageField label="Support Agent Photo" field="support_avatar_image" hint="Shown next to 'Chat on WhatsApp' on the success page. Leave empty to show a plain icon instead." />
         </Section>
 
         <Section icon={Link2} title="Post-Registration Links" desc="Shown as the 'Next Steps' cards on the success screen. Leave a link blank to hide its card.">
           <Field label="WhatsApp Group Link" value={content.whatsapp_group_link} onChange={set('whatsapp_group_link')} placeholder="https://chat.whatsapp.com/..." />
           <Field label="WhatsApp Support Link" value={content.whatsapp_support_link} onChange={set('whatsapp_support_link')} placeholder="https://wa.me/91..." />
-          <Field label="Preparation Video Link" value={content.preparation_video_link} onChange={set('preparation_video_link')} placeholder="https://youtube.com/..." />
-          <Field label="Welcome PDF Link" value={content.welcome_pdf_link} onChange={set('welcome_pdf_link')} placeholder="https://.../welcome.pdf" />
+          <div className="space-y-1.5">
+            <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider">Preparation Video</label>
+            {prepVideoError && <div className="p-2.5 bg-red-50 border border-red-100 text-red-700 rounded-lg text-xs font-bold">{prepVideoError}</div>}
+            {content.preparation_video_filename && (
+              <video src={content.preparation_video_filename} controls className="w-full max-w-xs rounded-xl bg-black mb-2" />
+            )}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <label className="flex items-center gap-2 px-4 py-2.5 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 cursor-pointer hover:border-red-300 hover:text-red-600 transition-colors">
+                <Upload className="w-4 h-4 shrink-0" />
+                {prepVideoUploading ? 'Uploading...' : content.preparation_video_filename ? 'Replace Video' : 'Upload Video'}
+                <input type="file" accept="video/*" className="hidden"
+                  onChange={(e) => handlePrepVideoUpload(e.target.files?.[0])} />
+              </label>
+              {content.preparation_video_filename && (
+                <button type="button" onClick={() => setContent(prev => ({ ...prev, preparation_video_filename: '' }))}
+                  className="px-3 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+                  Remove
+                </button>
+              )}
+            </div>
+            <Field label="…or a Video Link (YouTube etc. — used if no file is uploaded)" value={content.preparation_video_link} onChange={set('preparation_video_link')} placeholder="https://youtube.com/..." />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider">Welcome PDF</label>
+            {docError && <div className="p-2.5 bg-red-50 border border-red-100 text-red-700 rounded-lg text-xs font-bold">{docError}</div>}
+            {content.welcome_pdf_link && (
+              <a href={content.welcome_pdf_link} target="_blank" rel="noreferrer"
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-600 hover:text-red-600 hover:border-red-200 transition-colors w-fit">
+                <FileText className="w-4 h-4 shrink-0" /> {content.welcome_pdf_link.split('/').pop()}
+              </a>
+            )}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <label className="flex items-center gap-2 px-4 py-2.5 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 cursor-pointer hover:border-red-300 hover:text-red-600 transition-colors">
+                <Upload className="w-4 h-4 shrink-0" />
+                {docUploading ? 'Uploading...' : content.welcome_pdf_link ? 'Replace PDF' : 'Upload PDF'}
+                <input type="file" accept=".pdf,.doc,.docx" className="hidden"
+                  onChange={(e) => handleDocumentUpload(e.target.files?.[0])} />
+              </label>
+              {content.welcome_pdf_link && (
+                <button type="button" onClick={() => setContent(prev => ({ ...prev, welcome_pdf_link: '' }))}
+                  className="px-3 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+                  Remove
+                </button>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-400 font-semibold">PDF, DOC, or DOCX — uploads and links itself, no need to host it elsewhere.</p>
+          </div>
           <Field label="Meeting Link" value={content.meeting_link} onChange={set('meeting_link')} placeholder="https://zoom.us/..." />
         </Section>
 
@@ -825,9 +1182,10 @@ export default function AdminMasterclassFunnel() {
         <button
           type="submit"
           disabled={saving}
-          className="group relative overflow-hidden w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md shadow-red-600/25 hover:shadow-xl transition-all hover:-translate-y-0.5 disabled:opacity-60 active:scale-[0.98]"
+          className="group relative overflow-hidden w-full py-4 bg-gradient-to-r from-red-600 to-rose-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-900/30 hover:shadow-xl transition-all hover:-translate-y-0.5 disabled:opacity-60 active:scale-[0.98] flex items-center justify-center gap-2"
         >
           {!saving && <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent"></span>}
+          {saving ? <Loader2 className="w-4 h-4 animate-spin relative" /> : <Save className="w-4 h-4 relative" />}
           <span className="relative">{saving ? 'Saving...' : 'Save Funnel Content'}</span>
         </button>
       </form>

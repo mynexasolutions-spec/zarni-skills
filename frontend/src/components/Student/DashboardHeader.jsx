@@ -184,7 +184,7 @@ export default function DashboardHeader({ onToggleSidebar }) {
             {notifOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)}></div>
-                <div className="absolute right-0 mt-3.5 w-80 max-w-[calc(100vw-2rem)] bg-white border border-slate-100 rounded-2xl shadow-2xl overflow-hidden z-50 text-slate-800 animate-slide-down">
+                <div className="fixed md:absolute top-16 md:top-auto left-4 md:left-auto right-4 md:right-0 mt-3.5 w-auto md:w-80 bg-white border border-slate-100 rounded-2xl shadow-2xl overflow-hidden z-50 text-slate-800 animate-slide-down">
                   <div className="px-5 py-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                     <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Notifications</span>
                     <button onClick={handleMarkAllRead} className="text-[10px] font-bold text-blue-600 hover:underline">Mark all read</button>

@@ -919,6 +919,10 @@ def withdraw():
             flash('Insufficient balance.', 'danger')
             return redirect(url_for('student.wallet'))
 
+        if not current_user.kyc or current_user.kyc.status != 'approved':
+            flash('Please complete and get your KYC approved before requesting a withdrawal.', 'danger')
+            return redirect(url_for('student.wallet'))
+
         wd = Withdrawal(
             user_id=current_user.id,
             amount=amount,

@@ -4,11 +4,21 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy import func
 
 
+IST_OFFSET = timedelta(hours=5, minutes=30)
+
+
 def earnings_windows(now=None):
-    """Rolling-window start datetimes used for today/7/30-day earnings breakdowns."""
+    """Rolling-window start datetimes used for today/7/30-day earnings breakdowns.
+
+    'today' is anchored to IST midnight, not UTC midnight — all created_at
+    timestamps are stored in UTC, and this app's users/admins are IST-based,
+    so a plain UTC-midnight cutoff makes "today" roll over at 5:30 AM IST
+    instead of 12:00 AM IST.
+    """
     now = now or datetime.now(timezone.utc)
+    today_ist_midnight = (now + IST_OFFSET).replace(hour=0, minute=0, second=0, microsecond=0)
     return {
-        'today': now.replace(hour=0, minute=0, second=0, microsecond=0),
+        'today': today_ist_midnight - IST_OFFSET,
         '7days': now - timedelta(days=7),
         '30days': now - timedelta(days=30),
     }
@@ -56,18 +66,43 @@ def sum_team_earnings(user_ids, since=None, status='completed'):
 
 
 def promote_to_manager(user, commit=True):
-    """Promote `user` to manager and carve out their direct referrals so future
-    manager-override commissions route to the new manager instead of whoever
-    previously received them (the "500 -> 1 becomes manager -> 100 came by him"
-    reassignment). Only touches DIRECT referrals, not the whole downline.
+    """Promote `user` to manager and carve out their entire existing downline
+    (direct referrals, and referrals-of-referrals, etc.) so future manager-
+    override commissions AND team/dashboard stats route to the new manager
+    instead of whoever previously received them (the "500 -> 1 becomes
+    manager -> 100 came by him" reassignment). Descent stops at any node that
+    is itself a manager — that sub-manager's own downline stays under them
+    rather than being folded into the newly promoted manager's team.
     Idempotent — safe to call even if `user` is already a manager."""
     user.role = 'manager'
-    direct_referrals = User.query.filter_by(referred_by=user.id).all()
-    for u in direct_referrals:
-        u.manager_id = user.id
+    frontier = User.query.filter_by(referred_by=user.id).all()
+    assigned = 0
+    while frontier:
+        next_frontier = []
+        for u in frontier:
+            u.manager_id = user.id
+            assigned += 1
+            if u.role != 'manager':
+                next_frontier.extend(User.query.filter_by(referred_by=u.id).all())
+        frontier = next_frontier
     if commit:
         db.session.commit()
-    return len(direct_referrals)
+    return assigned
+
+
+def demote_manager(user, commit=True):
+    """Reverse of `promote_to_manager`: clear `manager_id` on every user this
+    manager's carve-out currently owns, so future orders from that downline
+    stop paying override commissions to `user` once they're no longer a
+    manager. Without this, `_award_manager_override` (which resolves the
+    payee purely via the `manager_id` FK, not `role`) would keep paying a
+    demoted user forever off sales from a team they no longer manage."""
+    cleared = User.query.filter_by(manager_id=user.id).update(
+        {'manager_id': None}, synchronize_session=False
+    )
+    if commit:
+        db.session.commit()
+    return cleared
 
 
 def _award_manager_override(referrer, buyer, order, hop1_percent, hop2_percent):
@@ -259,13 +294,17 @@ def approve_commission(commission: Commission):
         pass
 
 
-def approve_withdrawal(withdrawal, admin_user_id: int, approved: bool, note: str = ''):
+def approve_withdrawal(withdrawal, admin_user_id: int, approved: bool, note: str = '', transaction_id: str = ''):
     """Admin approves or rejects a withdrawal request.
 
     Re-checks the payout against the user's actual completed earnings at
     approval time (not just at request time) — this is what stops a user's
     other still-pending requests, or a since-reversed commission, from
     letting total payouts exceed what they've actually earned.
+
+    transaction_id is the real bank/UPI transfer reference (UTR) the admin
+    enters after manually sending the money — there's no payment gateway
+    behind payouts, so this is the only place that reference gets captured.
     """
     from app.models import Withdrawal, WalletTransaction, User
 
@@ -285,6 +324,7 @@ def approve_withdrawal(withdrawal, admin_user_id: int, approved: bool, note: str
             return
         withdrawal.status = 'paid'
         withdrawal.note = note
+        withdrawal.transaction_id = transaction_id or None
         db.session.add(WalletTransaction(
             user_id=withdrawal.user_id,
             type='withdrawal',

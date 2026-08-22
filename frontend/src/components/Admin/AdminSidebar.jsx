@@ -44,6 +44,7 @@ export default function AdminSidebar({ onNavigate }) {
         { label: 'Community Links', path: '/admin/community-links', icon: <Users2 className="w-[15px] h-[15px]" strokeWidth={1.8} /> },
         { label: 'Trainings', path: '/admin/trainings', icon: <GraduationCap className="w-[15px] h-[15px]" strokeWidth={1.8} /> },
         { label: 'Masterclass Funnel', path: '/admin/masterclass-funnel', icon: <Rocket className="w-[15px] h-[15px]" strokeWidth={1.8} /> },
+        { label: 'Masterclass Registrations', path: '/admin/masterclass-registrations', icon: <GraduationCap className="w-[15px] h-[15px]" strokeWidth={1.8} /> },
         { label: 'Achievements', path: '/admin/achievements', icon: <Award className="w-[15px] h-[15px]" strokeWidth={1.8} /> },
         { label: 'Certificate Template', path: '/admin/certificate-template', icon: <FileBadge className="w-[15px] h-[15px]" strokeWidth={1.8} /> },
       ]

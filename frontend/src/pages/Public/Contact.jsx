@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import api from '../../utils/api';
 import Reveal from '../../components/Reveal';
 import useTilt from '../../hooks/useTilt';
-import { Mail, User, FileText, Send, MapPin, Clock, MessageCircle, ArrowUpRight, Sparkles, Navigation } from 'lucide-react';
+import { Mail, User, FileText, Send, MapPin, Clock, MessageCircle, ArrowUpRight, Sparkles, Navigation, Phone } from 'lucide-react';
 
 const SOCIALS = [
   { label: 'Facebook', href: '#', path: 'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z' },
@@ -18,12 +18,20 @@ export default function Contact() {
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState('');
   const [supportEmail, setSupportEmail] = useState('support@zarniskills.com');
+  const [supportPhone, setSupportPhone] = useState('');
+  const [supportAddress, setSupportAddress] = useState('123 Skills Tower, New Delhi, India - 110001');
 
   useEffect(() => {
     api.get('/global-data')
-      .then(res => { if (res.data.support_email) setSupportEmail(res.data.support_email); })
+      .then(res => {
+        if (res.data.support_email) setSupportEmail(res.data.support_email);
+        if (res.data.support_phone) setSupportPhone(res.data.support_phone);
+        if (res.data.support_address) setSupportAddress(res.data.support_address);
+      })
       .catch(() => {});
   }, []);
+
+  const mapsQuery = encodeURIComponent(supportAddress);
 
   const panelRef = useRef(null);
   const { ref: tiltRef, onMouseMove, onMouseLeave } = useTilt(2.5);
@@ -158,12 +166,23 @@ export default function Contact() {
                       <p className="text-white/60 text-[11px] font-black uppercase tracking-widest mt-0.5">Email Us</p>
                     </div>
                   </a>
+                  {supportPhone && (
+                    <a href={`tel:${supportPhone}`} className="group flex items-start gap-4 p-2.5 rounded-2xl hover:bg-white/10 transition-all duration-300">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-primary group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300">
+                        <Phone className="w-5 h-5 text-white group-hover:text-primary transition-colors duration-300" strokeWidth={2} />
+                      </div>
+                      <div className="pt-1.5">
+                        <p className="text-white font-bold text-sm group-hover:underline">{supportPhone}</p>
+                        <p className="text-white/60 text-[11px] font-black uppercase tracking-widest mt-0.5">Call Us</p>
+                      </div>
+                    </a>
+                  )}
                   <div className="group flex items-start gap-4 p-2.5 rounded-2xl hover:bg-white/10 transition-all duration-300">
                     <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300">
                       <MapPin className="w-5 h-5 text-white group-hover:animate-bounce" strokeWidth={2} style={{ animationDelay: '0.1s' }} />
                     </div>
                     <div className="pt-1.5">
-                      <p className="text-white font-bold text-sm">123 Skills Tower, New Delhi</p>
+                      <p className="text-white font-bold text-sm">{supportAddress}</p>
                       <p className="text-white/60 text-[11px] font-black uppercase tracking-widest mt-0.5">Visit Office</p>
                     </div>
                   </div>
@@ -322,9 +341,9 @@ export default function Contact() {
             </div>
           </div>
           <p className="font-heading font-black text-slate-900 text-lg">Zarni Skills HQ</p>
-          <p className="text-slate-500 text-sm font-medium mt-1">123 Skills Tower, New Delhi, India - 110001</p>
+          <p className="text-slate-500 text-sm font-medium mt-1">{supportAddress}</p>
           <a
-            href="https://maps.google.com/?q=New+Delhi,India"
+            href={`https://maps.google.com/?q=${mapsQuery}`}
             target="_blank"
             rel="noopener noreferrer"
             className="group inline-flex items-center gap-1.5 mt-4 text-primary font-bold text-sm hover:underline active:scale-95 transition-transform"
@@ -350,7 +369,7 @@ export default function Contact() {
               <div className="relative rounded-[1.7rem] overflow-hidden">
                 <iframe
                   title="Zarni Skills HQ Location"
-                  src="https://maps.google.com/maps?q=New+Delhi,India&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                  src={`https://maps.google.com/maps?q=${mapsQuery}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
                   width="100%"
                   height="340"
                   style={{ border: 0, filter: 'saturate(1.1) contrast(1.02)' }}
@@ -383,7 +402,7 @@ export default function Contact() {
 
                 {/* Hover overlay CTA */}
                 <a
-                  href="https://maps.google.com/?q=New+Delhi,India"
+                  href={`https://maps.google.com/?q=${mapsQuery}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="absolute inset-0 flex items-end justify-center pb-6 bg-gradient-to-t from-slate-900/70 via-slate-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"

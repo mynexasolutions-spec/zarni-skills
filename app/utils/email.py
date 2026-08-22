@@ -232,108 +232,222 @@ def send_welcome_email(user, password: str | None = None, profile_link: str | No
     Shares _brand_shell with every other template, so the responsive rules and
     any future brand change apply here too instead of drifting.
     """
+    from app.models import SiteSettings, Order
+
     credentials_block = ''
     if password:
         credentials_block = f"""
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
           <tr>
             <td bgcolor="#eef2ff" style="background-color:#eef2ff;border:1px solid #c7d2fe;border-radius:16px;padding:22px 24px;">
-              <p class="sh-tiny" style="margin:0 0 14px;font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#4338ca;">Your Login Details</p>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td class="sh-label" style="padding:0 0 8px;font-size:13px;color:#64748b;width:84px;">Email</td>
-                  <td class="sh-value" style="padding:0 0 8px;font-size:14px;color:#0f172a;font-weight:700;word-break:break-all;">{user.email}</td>
-                </tr>
-                <tr>
-                  <td class="sh-label" style="font-size:13px;color:#64748b;">Password</td>
-                  <td class="sh-value" style="font-size:14px;color:#0f172a;font-weight:700;font-family:'Courier New',monospace;">{password}</td>
-                </tr>
-              </table>
+              <p class="sh-tiny" style="margin:0 0 14px;font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#4338ca;">Your Login Password</p>
+              <p class="sh-value" style="margin:0;font-size:15px;color:#0f172a;font-weight:700;font-family:'Courier New',monospace;">{password}</p>
               <p class="sh-tiny" style="margin:14px 0 0;color:#6366f1;font-size:11.5px;line-height:1.6;">For your security, please change this password after your first login.</p>
             </td>
           </tr>
         </table>
         """
 
-    profile_button = ''
-    if profile_link:
-        profile_button = f"""
+    # Only meaningful if a package was already attached by the time this
+    # fires — at registration that's usually not yet true (checkout is a
+    # separate step after account creation), so this quietly omits itself
+    # rather than showing an empty row.
+    package_name = None
+    paid_order = user.orders.filter_by(payment_status='paid').filter(Order.package_id.isnot(None)).first()
+    if paid_order and paid_order.package:
+        package_name = paid_order.package.name
+
+    user_id_display = f'ZS{100000 + user.id}'
+    login_link = profile_link or f'{os.environ.get("FRONTEND_URL", "https://zarniskills.com").rstrip("/")}/login'
+    whatsapp_number = SiteSettings.get('support_phone', '') or ''
+
+    login_button = f"""
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="sh-btn" style="margin:4px 0 8px;">
           <tr>
             <td align="center" bgcolor="#2563eb" style="border-radius:14px;background-color:#2563eb;background-image:linear-gradient(135deg,#2563eb 0%,#4f46e5 100%);">
-              <a href="{profile_link}" style="display:inline-block;padding:16px 42px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:0.3px;color:#ffffff;text-decoration:none;border-radius:14px;">
-                Complete Your Profile &nbsp;&rarr;
+              <a href="{login_link}" style="display:inline-block;padding:16px 42px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:0.3px;color:#ffffff;text-decoration:none;border-radius:14px;">
+                🔐 Login Dashboard &nbsp;&rarr;
+              </a>
+            </td>
+          </tr>
+        </table>
+    """
+
+    whatsapp_block = ''
+    if whatsapp_number:
+        whatsapp_block = f"""
+              <p class="sh-small" style="margin:20px 0 0;color:#64748b;font-size:13.5px;line-height:1.7;text-align:center;">
+                💬 Need Help? WhatsApp: <strong style="color:#0f172a;">{whatsapp_number}</strong>
+              </p>
+        """
+
+    info_rows = f"""
+                <tr>
+                  <td class="sh-label" style="padding:0 0 10px;font-size:13px;color:#64748b;width:110px;">👤 User ID</td>
+                  <td class="sh-value" style="padding:0 0 10px;font-size:14px;color:#0f172a;font-weight:700;">{user_id_display}</td>
+                </tr>"""
+    if package_name:
+        info_rows += f"""
+                <tr>
+                  <td class="sh-label" style="padding:0 0 10px;font-size:13px;color:#64748b;">📦 Package</td>
+                  <td class="sh-value" style="padding:0 0 10px;font-size:14px;color:#0f172a;font-weight:700;">{package_name}</td>
+                </tr>"""
+    info_rows += f"""
+                <tr>
+                  <td class="sh-label" style="font-size:13px;color:#64748b;">📧 Email</td>
+                  <td class="sh-value" style="font-size:14px;color:#0f172a;font-weight:700;word-break:break-all;">{user.email}</td>
+                </tr>"""
+
+    hero_html = f"""
+          <tr>
+            <td align="center" bgcolor="#0b1428"
+                style="background-color:#0b1428;background-image:linear-gradient(135deg,#0b1428 0%,#1e3a8a 55%,#3730a3 100%);padding:42px 32px 38px;">
+              <p class="sh-eyebrow" style="margin:0 0 12px;color:#fcd34d;letter-spacing:3px;text-transform:uppercase;font-size:10px;font-weight:800;">Your Journey Begins</p>
+{_hero_icon('spark')}
+              <h1 class="sh-h1" style="margin:0;color:#ffffff;font-size:26px;line-height:1.3;font-weight:800;">🎉 Congratulations &amp; Warm Welcome to the Zarni Skills Family!</h1>
+            </td>
+          </tr>
+    """
+
+    body_html = f"""
+              <p class="sh-body" style="margin:0 0 20px;color:#0f172a;font-size:14.5px;line-height:1.75;">Dear {user.name},</p>
+
+              <p class="sh-body" style="margin:0 0 18px;color:#475569;font-size:14.5px;line-height:1.75;">
+                Your registration has been completed successfully. You have taken your first step towards a journey of <strong style="color:#0f172a;">Learning, Growth &amp; Earning.</strong> 🚀
+              </p>
+
+              <p class="sh-body" style="margin:0 0 26px;color:#475569;font-size:14.5px;line-height:1.75;">
+                ✨ Your e-learning journey officially begins today. Keep learning, build your skills, take action and grow with us.
+              </p>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
+                <tr>
+                  <td bgcolor="#eef2ff" style="background-color:#eef2ff;border:1px solid #c7d2fe;border-radius:16px;padding:22px 24px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      {info_rows}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              {credentials_block}
+              {login_button}
+              {whatsapp_block}
+
+              <p class="sh-body" style="margin:28px 0 4px;color:#475569;font-size:14.5px;line-height:1.75;text-align:center;">
+                Wishing you great success in your new journey! 🌟
+              </p>
+              <p class="sh-small" style="margin:0 0 4px;color:#2563eb;font-size:13.5px;font-weight:800;letter-spacing:0.5px;text-align:center;">
+                Learn &bull; Grow &bull; Earn
+              </p>
+              <p class="sh-small" style="margin:16px 0 0;color:#64748b;font-size:13px;line-height:1.7;text-align:center;">
+                Regards,<br/>Team Zarni Skills<br/>EARN WHILE LEARN 💙
+              </p>
+    """
+
+    preheader = "Your registration is complete — here's your login and everything you need to get started."
+    html = _brand_shell(hero_html, body_html, preheader)
+    return send_email(user.email, '🎉 Welcome to Zarni Skills – Your Journey Begins!', html)
+
+
+def send_masterclass_confirmation(name: str, email: str, registration_id: str, amount: float,
+                                   session_info: dict | None = None, whatsapp_link: str | None = None) -> bool:
+    """Sent right after a masterclass registration payment succeeds
+    (_create_masterclass_registration). Unlike send_welcome_email, this never
+    carries login credentials — a masterclass registration is a lead, not a
+    User account, so there's nothing to log into.
+
+    session_info is the funnel's Date/Time/Mode/Language *as captured at this
+    registration* (the same snapshot stored on session_date/time/mode/
+    language) — shown with a note that it isn't final, matching the same
+    disclaimer shown on the success page, since admin can still move the
+    date for a later batch after this email is already sent."""
+    session_info = session_info or {}
+
+    def row(label, value, shaded, mono=False):
+        bg = 'background-color:#f8fafc;' if shaded else ''
+        font = "font-family:'Courier New',monospace;" if mono else ''
+        return f"""
+        <tr>
+          <td class="sh-label" style="{bg}padding:13px 16px;font-size:12.5px;color:#64748b;font-weight:600;border-radius:10px 0 0 10px;width:38%;">{label}</td>
+          <td class="sh-value" style="{bg}padding:13px 16px;font-size:13.5px;color:#0f172a;font-weight:700;{font}border-radius:0 10px 10px 0;">{value}</td>
+        </tr>
+        """
+
+    session_rows = ''
+    session_fields = [
+        ('Date', session_info.get('date')), ('Time', session_info.get('time')),
+        ('Mode', session_info.get('mode')), ('Language', session_info.get('language')),
+    ]
+    for i, (label, value) in enumerate(f for f in session_fields if f[1]):
+        session_rows += row(label, value, i % 2 == 0)
+
+    whatsapp_button = ''
+    if whatsapp_link:
+        whatsapp_button = f"""
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="sh-btn" style="margin:6px 0 8px;">
+          <tr>
+            <td align="center" bgcolor="#25D366" style="border-radius:14px;background-color:#25D366;background-image:linear-gradient(135deg,#25D366 0%,#128C7E 100%);">
+              <a href="{whatsapp_link}" style="display:inline-block;padding:16px 42px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:0.3px;color:#ffffff;text-decoration:none;border-radius:14px;">
+                💬 Join WhatsApp Community &nbsp;&rarr;
               </a>
             </td>
           </tr>
         </table>
         """
 
-    referral_code = getattr(user, 'referral_code', None) or '—'
-
-    steps = [
-        ('Learn', 'Browse and unlock premium skill packages or single courses.'),
-        ('Refer', 'Share your referral link and earn commission on every sale.'),
-        ('Withdraw', 'Track earnings in your wallet and cash out to UPI anytime.'),
-    ]
-    steps_html = ''
-    for i, (step_title, step_desc) in enumerate(steps, start=1):
-        steps_html += f"""
-        <tr>
-          <td valign="top" width="44" style="padding:0 14px 16px 0;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td align="center" valign="middle" width="30" height="30" bgcolor="#1e3a8a"
-                    style="width:30px;height:30px;background-color:#1e3a8a;border-radius:15px;color:#ffffff;font-size:12px;font-weight:800;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">{i}</td>
-              </tr>
-            </table>
-          </td>
-          <td valign="top" style="padding:0 0 16px;">
-            <p class="sh-value" style="margin:0 0 3px;font-size:14px;font-weight:800;color:#0f172a;">{step_title}</p>
-            <p class="sh-small" style="margin:0;font-size:13.5px;line-height:1.6;color:#64748b;">{step_desc}</p>
-          </td>
-        </tr>
-        """
-
     hero_html = f"""
           <tr>
             <td align="center" bgcolor="#0b1428"
-                style="background-color:#0b1428;background-image:linear-gradient(135deg,#0b1428 0%,#1e3a8a 55%,#3730a3 100%);padding:42px 32px 38px;">
-              <p class="sh-eyebrow" style="margin:0 0 12px;color:#fcd34d;letter-spacing:3px;text-transform:uppercase;font-size:10px;font-weight:800;">Welcome Aboard</p>
-{_hero_icon('spark')}
-              <h1 class="sh-h1" style="margin:0;color:#ffffff;font-size:28px;line-height:1.25;font-weight:800;">Hi {user.name}, you're in</h1>
-              <p class="sh-body" style="margin:12px 0 0;color:#bfdbfe;font-size:14px;line-height:1.6;">Your account is live and ready to earn.</p>
+                style="background-color:#0b1428;background-image:linear-gradient(135deg,#0b1428 0%,#1e3a8a 55%,#2563eb 100%);padding:40px 32px 36px;">
+              <p class="sh-eyebrow" style="margin:0 0 14px;color:#93c5fd;letter-spacing:3px;text-transform:uppercase;font-size:10px;font-weight:800;">Registration Confirmed</p>
+{_hero_icon('check')}
+              <h1 class="sh-h1" style="margin:0;color:#ffffff;font-size:26px;line-height:1.25;font-weight:800;">You're all set for the Live Masterclass!</h1>
+              <p class="sh-body" style="margin:10px 0 0;color:#bfdbfe;font-size:14px;line-height:1.6;">Welcome to the Zarni Skills family, {name}.</p>
             </td>
           </tr>
     """
 
-    body_html = f"""
-              <p class="sh-body" style="margin:0 0 24px;color:#475569;font-size:14.5px;line-height:1.75;">
-                Congratulations on joining <strong style="color:#0f172a;">Zarni Skills</strong> — a community learning high-income skills and earning commissions while doing it. Here is how to get started:
+    schedule_note = ''
+    if session_rows:
+        schedule_note = """
+              <p class="sh-tiny" style="margin:10px 0 24px;color:#94a3b8;font-size:11px;line-height:1.6;text-align:center;">
+                This schedule isn't final yet — join the WhatsApp community below and we'll confirm the exact date &amp; time there.
               </p>
+        """
+
+    body_html = f"""
+              <p class="sh-body" style="margin:0 0 22px;color:#475569;font-size:14.5px;line-height:1.75;">Hi <strong style="color:#0f172a;">{name}</strong>,</p>
 
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
-                {steps_html}
-              </table>
-
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
                 <tr>
-                  <td align="center" bgcolor="#0b1428"
-                      style="background-color:#0b1428;background-image:linear-gradient(135deg,#0b1428 0%,#1e293b 100%);border-radius:16px;padding:24px 16px;">
-                    <p class="sh-tiny" style="margin:0 0 10px;color:#94a3b8;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;">Your Referral Code</p>
-                    <p class="sh-amount" style="margin:0;color:#fcd34d;font-size:26px;font-weight:800;letter-spacing:4px;font-family:'Courier New',monospace;word-break:break-all;">{referral_code}</p>
-                    <p class="sh-tiny" style="margin:12px 0 0;color:#94a3b8;font-size:11.5px;line-height:1.6;">Share this code — you earn every time someone joins through it.</p>
+                  <td align="center" bgcolor="#f8fafc" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:26px 20px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 12px;">
+                      <tr>
+                        <td bgcolor="#dcfce7" style="background-color:#dcfce7;border-radius:999px;padding:6px 18px;color:#15803d;font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;">Paid</td>
+                      </tr>
+                    </table>
+                    <p class="sh-amount" style="margin:0;font-size:40px;line-height:1.1;font-weight:800;color:#16a34a;">₹{amount:,.2f}</p>
                   </td>
                 </tr>
               </table>
 
-              {credentials_block}
-              {profile_button}
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:0 5px;margin:0 0 4px;">
+                {row('Registration ID', registration_id, True, mono=True)}
+                {session_rows}
+              </table>
+              {schedule_note}
+
+              {whatsapp_button}
+
+              <p class="sh-small" style="margin:24px 0 0;color:#64748b;font-size:13px;line-height:1.7;text-align:center;">
+                Keep this email for your records — quote your Registration ID if you ever need support.
+              </p>
     """
 
-    preheader = "Your Zarni Skills account is live — here is your referral code and what to do next."
+    preheader = f'Your masterclass registration ({registration_id}) is confirmed — ₹{amount:,.2f} paid.'
     html = _brand_shell(hero_html, body_html, preheader)
-    return send_email(user.email, f'Welcome to Zarni Skills, {user.name}', html)
+    return send_email(email, f'Registration Confirmed — {registration_id}', html)
 
 
 def send_purchase_confirmation(user, order) -> bool:
@@ -455,55 +569,95 @@ def send_commission_notification(user, commission) -> bool:
 
 
 def send_withdrawal_status_email(user, withdrawal) -> bool:
-    """Sent from approve_withdrawal() the moment an admin settles a payout —
-    'paid' and 'rejected' share one layout and differ only in colour, copy
-    and which detail rows make sense (a rejection has no UPI/processed line
-    worth showing, but does carry the admin's reason)."""
+    """Sent from approve_withdrawal() the moment an admin settles a payout.
+    'paid' gets the full celebratory receipt (checkmark hero, itemised
+    detail rows, thank-you note) the business asked for; 'rejected' keeps
+    the simpler amount+reason layout — there's nothing to celebrate there."""
     amount_str = f"₹{float(withdrawal.amount):,.2f}"
-    processed_str = withdrawal.processed_at.strftime('%d %B %Y, %I:%M %p') if withdrawal.processed_at else '—'
     is_paid = withdrawal.status == 'paid'
 
-    def detail_row(label, value, shaded, mono=False):
-        bg = 'background-color:#f8fafc;' if shaded else ''
-        font = "font-family:'Courier New',monospace;font-weight:700;" if mono else ''
-        return f"""
-        <tr>
-          <td class="sh-label" style="{bg}padding:13px 16px;font-size:12.5px;color:#64748b;font-weight:600;border-radius:10px 0 0 10px;width:42%;">{label}</td>
-          <td class="sh-value" style="{bg}padding:13px 16px;font-size:13.5px;color:#0f172a;font-weight:700;{font}border-radius:0 10px 10px 0;">{value}</td>
-        </tr>
+    if is_paid:
+        processed_str = withdrawal.processed_at.strftime('%d %B %Y') if withdrawal.processed_at else '—'
+        # Real UTR/reference the admin enters when marking the payout paid
+        # (no payment gateway sits behind manual payouts). Falls back to a
+        # synthesized reference only for older records saved before this
+        # field existed.
+        txn_id = withdrawal.transaction_id or f'TXN{withdrawal.id:08d}'
+
+        def icon_row(emoji, label, value):
+            return f"""
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;">
+                <tr>
+                  <td width="44" valign="top">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" valign="middle" width="36" height="36" bgcolor="#eef2ff"
+                            style="width:36px;height:36px;background-color:#eef2ff;border-radius:18px;font-size:16px;">{emoji}</td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td valign="middle" style="padding-left:4px;">
+                    <p class="sh-tiny" style="margin:0 0 2px;font-size:11px;color:#64748b;font-weight:700;">{label}</p>
+                    <p class="sh-value" style="margin:0;font-size:15px;color:#0f172a;font-weight:800;">{value}</p>
+                  </td>
+                </tr>
+              </table>
         """
 
-    if is_paid:
-        hero_gradient = 'linear-gradient(135deg,#0b1428 0%,#065f46 55%,#059669 100%)'
-        eyebrow_color, sub_color = '#6ee7b7', '#a7f3d0'
-        heading, subheading = 'Payout Sent', 'Your money is on its way to your UPI ID.'
-        badge_bg, badge_text, badge_label = '#dcfce7', '#15803d', 'Paid'
-        amount_color = '#059669'
-        rows = (
-            detail_row('UPI ID', withdrawal.upi_id or 'N/A', True, mono=True)
-            + detail_row('Reference ID', f'#{withdrawal.id}', False)
-            + detail_row('Processed On', processed_str, True)
-        )
-        footer_note = 'Depending on your bank it can take a few minutes to reflect. Keep earning, keep growing.'
-    else:
-        hero_gradient = 'linear-gradient(135deg,#0b1428 0%,#7f1d1d 55%,#dc2626 100%)'
-        eyebrow_color, sub_color = '#fca5a5', '#fecaca'
-        heading, subheading = 'Payout Request Rejected', 'This withdrawal could not be processed.'
-        badge_bg, badge_text, badge_label = '#fee2e2', '#b91c1c', 'Rejected'
-        amount_color = '#dc2626'
-        rows = detail_row('Reference ID', f'#{withdrawal.id}', True)
-        if withdrawal.note:
-            rows += detail_row('Reason', withdrawal.note, False)
-        footer_note = 'The amount stays safe in your wallet — you can submit a new withdrawal request anytime.'
+        hero_html = f"""
+          <tr>
+            <td align="center" bgcolor="#0b1428"
+                style="background-color:#0b1428;background-image:linear-gradient(135deg,#0b1428 0%,#1e3a8a 55%,#2563eb 100%);padding:40px 32px 38px;">
+              <h1 class="sh-h1" style="margin:0 0 8px;color:#ffffff;font-size:24px;line-height:1.3;font-weight:800;">Congratulations <span style="color:#fcd34d;">{user.name}!</span></h1>
+              <p class="sh-body" style="margin:0 0 20px;color:#bfdbfe;font-size:15px;line-height:1.5;"><strong style="color:#4ade80;font-size:17px;">{amount_str}</strong> has been transferred successfully.</p>
+{_hero_icon('check')}
+            </td>
+          </tr>
+        """
+
+        body_html = f"""
+              {icon_row('💰', 'Amount', f'<span style="color:#059669;">{amount_str}</span>')}
+              {icon_row('📄', 'Transaction ID', txn_id)}
+              {icon_row('📅', 'Date', processed_str)}
+              {icon_row('🏦', 'Bank Transfer', 'The amount has been credited to your registered bank account.')}
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 4px;">
+                <tr>
+                  <td bgcolor="#f0fdf4" style="background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:18px 20px;">
+                    <p class="sh-value" style="margin:0 0 3px;font-size:14px;color:#0f172a;font-weight:800;">💚 Thank you for growing with Zarni Skills.</p>
+                    <p class="sh-small" style="margin:0;font-size:13px;color:#166534;line-height:1.6;">Your trust inspires us to keep delivering the best.</p>
+                  </td>
+                </tr>
+              </table>
+        """
+        preheader = f'{amount_str} has been transferred to your registered bank account.'
+        subject = 'Your Payment Has Been Credited Successfully! 🎉'
+        html = _brand_shell(hero_html, body_html, preheader)
+        return send_email(user.email, subject, html)
+
+    # Rejected
+    rows = f"""
+        <tr>
+          <td class="sh-label" style="background-color:#f8fafc;padding:13px 16px;font-size:12.5px;color:#64748b;font-weight:600;border-radius:10px 0 0 10px;width:42%;">Reference ID</td>
+          <td class="sh-value" style="background-color:#f8fafc;padding:13px 16px;font-size:13.5px;color:#0f172a;font-weight:700;border-radius:0 10px 10px 0;">#{withdrawal.id}</td>
+        </tr>
+    """
+    if withdrawal.note:
+        rows += f"""
+        <tr>
+          <td class="sh-label" style="padding:13px 16px;font-size:12.5px;color:#64748b;font-weight:600;width:42%;">Reason</td>
+          <td class="sh-value" style="padding:13px 16px;font-size:13.5px;color:#0f172a;font-weight:700;">{withdrawal.note}</td>
+        </tr>
+        """
 
     hero_html = f"""
           <tr>
             <td align="center" bgcolor="#0b1428"
-                style="background-color:#0b1428;background-image:{hero_gradient};padding:40px 32px 36px;">
-              <p class="sh-eyebrow" style="margin:0 0 14px;color:{eyebrow_color};letter-spacing:3px;text-transform:uppercase;font-size:10px;font-weight:800;">Zarni Skills Wallet</p>
-{_hero_icon('send' if is_paid else 'alert')}
-              <h1 class="sh-h1" style="margin:0;color:#ffffff;font-size:26px;line-height:1.25;font-weight:800;">{heading}</h1>
-              <p class="sh-body" style="margin:10px 0 0;color:{sub_color};font-size:14px;line-height:1.6;">{subheading}</p>
+                style="background-color:#0b1428;background-image:linear-gradient(135deg,#0b1428 0%,#7f1d1d 55%,#dc2626 100%);padding:40px 32px 36px;">
+              <p class="sh-eyebrow" style="margin:0 0 14px;color:#fca5a5;letter-spacing:3px;text-transform:uppercase;font-size:10px;font-weight:800;">Zarni Skills Wallet</p>
+{_hero_icon('alert')}
+              <h1 class="sh-h1" style="margin:0;color:#ffffff;font-size:26px;line-height:1.25;font-weight:800;">Payout Request Rejected</h1>
+              <p class="sh-body" style="margin:10px 0 0;color:#fecaca;font-size:14px;line-height:1.6;">This withdrawal could not be processed.</p>
             </td>
           </tr>
     """
@@ -516,10 +670,10 @@ def send_withdrawal_status_email(user, withdrawal) -> bool:
                   <td align="center" bgcolor="#f8fafc" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:26px 20px;">
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 12px;">
                       <tr>
-                        <td bgcolor="{badge_bg}" style="background-color:{badge_bg};border-radius:999px;padding:6px 18px;color:{badge_text};font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;">{badge_label}</td>
+                        <td bgcolor="#fee2e2" style="background-color:#fee2e2;border-radius:999px;padding:6px 18px;color:#b91c1c;font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;">Rejected</td>
                       </tr>
                     </table>
-                    <p class="sh-amount" style="margin:0;font-size:40px;line-height:1.1;font-weight:800;color:{amount_color};">{amount_str}</p>
+                    <p class="sh-amount" style="margin:0;font-size:40px;line-height:1.1;font-weight:800;color:#dc2626;">{amount_str}</p>
                   </td>
                 </tr>
               </table>
@@ -528,15 +682,12 @@ def send_withdrawal_status_email(user, withdrawal) -> bool:
                 {rows}
               </table>
 
-              <p class="sh-small" style="margin:0 0 6px;color:#64748b;font-size:13px;line-height:1.7;text-align:center;">{footer_note}</p>
+              <p class="sh-small" style="margin:0 0 6px;color:#64748b;font-size:13px;line-height:1.7;text-align:center;">The amount stays safe in your wallet — you can submit a new withdrawal request anytime.</p>
     """
 
-    preheader = (
-        f'{amount_str} has been sent to your UPI ID.' if is_paid
-        else f'Your {amount_str} withdrawal request was rejected — the amount is still in your wallet.'
-    )
+    preheader = f'Your {amount_str} withdrawal request was rejected — the amount is still in your wallet.'
     html = _brand_shell(hero_html, body_html, preheader)
-    return send_email(user.email, f'{heading} — {amount_str}', html)
+    return send_email(user.email, f'Payout Request Rejected — {amount_str}', html)
 
 
 def send_password_reset_email(user, reset_link: str) -> bool:

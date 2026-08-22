@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Network, Users, Loader2, UserCheck, Sparkles, GitBranch, Copy, Check, Crown, Clock, CheckCircle2, Search, Filter, Share2, ShieldCheck, ArrowUpRight, Award, ChevronRight } from 'lucide-react';
+import { Network, Users, Loader2, UserCheck, Sparkles, GitBranch, Copy, Check, Crown, Clock, CheckCircle2, Search, Filter, Share2, ShieldCheck, ArrowUpRight, Award, ChevronRight, X, Mail, Phone, MapPin, Calendar, User as UserIcon } from 'lucide-react';
 import api from '../../utils/api';
 import AnimatedNumber from '../../components/AnimatedNumber';
 import Reveal from '../../components/Reveal';
@@ -48,6 +48,91 @@ function ReferralCode({ code, copied, onCopy }) {
   );
 }
 
+function MemberProfileModal({ member, loading, onClose }) {
+  if (member === null) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-fade-in-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div
+          className="p-8 pb-16 text-white relative"
+          style={{ background: 'linear-gradient(135deg, #0b1428 0%, #1e3a8a 50%, #2563eb 100%)' }}
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none"></div>
+        </div>
+
+        {loading || !member.id ? (
+          <div className="p-12 -mt-14 relative flex flex-col items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Profile...</p>
+          </div>
+        ) : (
+          <div className="px-6 pb-6 -mt-14 relative">
+            {member.profile_image_url ? (
+              <img
+                src={member.profile_image_url}
+                alt={member.name}
+                className="w-24 h-24 rounded-3xl object-cover border-4 border-white shadow-lg bg-slate-100"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-2xl font-black flex items-center justify-center border-4 border-white shadow-lg">
+                {initialsOf(member.name)}
+              </div>
+            )}
+            <h3 className="mt-4 text-xl font-heading font-black text-slate-900">{member.name}</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mt-1">
+              <Calendar className="w-3.5 h-3.5" /> Joined {member.created_at}
+            </p>
+
+            <div className="mt-5 space-y-2.5">
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <Mail className="w-4 h-4 text-blue-500 shrink-0" />
+                <span className="text-sm font-semibold text-slate-700 truncate">{member.email || 'N/A'}</span>
+              </div>
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="text-sm font-semibold text-slate-700">{member.phone || 'N/A'}</span>
+              </div>
+              {member.address && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span className="text-sm font-semibold text-slate-700">{member.address}</span>
+                </div>
+              )}
+              {(member.age || member.gender) && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <UserIcon className="w-4 h-4 text-purple-500 shrink-0" />
+                  <span className="text-sm font-semibold text-slate-700">
+                    {[member.age ? `${member.age} yrs` : null, member.gender].filter(Boolean).join(' · ')}
+                  </span>
+                </div>
+              )}
+              {(member.bio || member.about) && (
+                <div className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">About</p>
+                  <p className="text-sm font-medium text-slate-600 leading-relaxed">{member.bio || member.about}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function MyTeam() {
   const [stats, setStats] = useState({ l1_total: 0, l1_active: 0, l2_total: 0, l2_active: 0 });
   const [level1, setLevel1] = useState([]);
@@ -58,12 +143,28 @@ export default function MyTeam() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'Paid' | 'Pending'
   const [activeTab, setActiveTab] = useState('ALL'); // 'ALL' | 'LEVEL1' | 'LEVEL2'
+  const [profileModal, setProfileModal] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   const { ref: tiltRef, onMouseMove, onMouseLeave } = useTilt(3);
 
   const copyCode = (code) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 1800);
+  };
+
+  const openMemberProfile = async (memberId) => {
+    setProfileLoading(true);
+    setProfileModal({});
+    try {
+      const response = await api.get(`/student/my-team/profile/${memberId}`);
+      setProfileModal(response.data.user);
+    } catch (err) {
+      console.error('Error fetching member profile', err);
+      setProfileModal(null);
+    } finally {
+      setProfileLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -327,7 +428,7 @@ export default function MyTeam() {
                         {filteredLevel1.map((u, idx) => (
                           <tr key={u.id} className="group bg-slate-50/60 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/40 border border-slate-200/80 hover:border-blue-300 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md">
                             <td className="py-4 px-4 font-bold text-slate-900 rounded-l-2xl">
-                              <div className="flex items-center gap-3.5">
+                              <button type="button" onClick={() => openMemberProfile(u.id)} className="flex items-center gap-3.5 text-left group/person">
                                 <div className="relative shrink-0">
                                   <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]} text-white text-xs font-black flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
                                     {initialsOf(u.name)}
@@ -339,10 +440,10 @@ export default function MyTeam() {
                                   )}
                                 </div>
                                 <div>
-                                  <p className="font-heading font-black text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{u.name}</p>
+                                  <p className="font-heading font-black text-slate-900 text-sm group-hover:text-blue-600 group-hover/person:text-blue-600 transition-colors">{u.name}</p>
                                   <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wider mt-0.5">Direct Sponsor Payout</p>
                                 </div>
-                              </div>
+                              </button>
                             </td>
                             <td className="py-4 px-4">
                               <ReferralCode code={u.referral_code} copied={copiedCode} onCopy={copyCode} />
@@ -365,7 +466,7 @@ export default function MyTeam() {
                       <div key={u.id} className="bg-slate-50/90 border border-slate-200/90 p-4 sm:p-5 rounded-3xl space-y-3.5 shadow-sm">
                         <div className="flex flex-col gap-2.5">
                           <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-3 min-w-0">
+                            <button type="button" onClick={() => openMemberProfile(u.id)} className="flex items-center gap-3 min-w-0 text-left">
                               <div className="relative shrink-0">
                                 <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]} text-white text-xs font-black flex items-center justify-center shadow-md`}>
                                   {initialsOf(u.name)}
@@ -380,7 +481,7 @@ export default function MyTeam() {
                                 <p className="font-heading font-black text-slate-900 text-sm leading-snug break-words">{u.name}</p>
                                 <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mt-0.5">Direct Sponsor Payout</p>
                               </div>
-                            </div>
+                            </button>
                             <div className="shrink-0 self-start">
                               <StatusBadge status={u.status} />
                             </div>
@@ -460,7 +561,7 @@ export default function MyTeam() {
                         {filteredLevel2.map((u, idx) => (
                           <tr key={u.id} className="group bg-slate-50/60 hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/40 border border-slate-200/80 hover:border-indigo-300 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md">
                             <td className="py-4 px-4 font-bold text-slate-900 rounded-l-2xl">
-                              <div className="flex items-center gap-3.5">
+                              <button type="button" onClick={() => openMemberProfile(u.id)} className="flex items-center gap-3.5 text-left">
                                 <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]} text-white text-xs font-black flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 shrink-0`}>
                                   {initialsOf(u.name)}
                                 </div>
@@ -468,7 +569,7 @@ export default function MyTeam() {
                                   <p className="font-heading font-black text-slate-900 text-sm group-hover:text-indigo-600 transition-colors">{u.name}</p>
                                   <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider mt-0.5">Level 2 Payout</p>
                                 </div>
-                              </div>
+                              </button>
                             </td>
                             <td className="py-4 px-4">
                               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3.5 py-1.5 rounded-full shadow-sm">
@@ -490,7 +591,7 @@ export default function MyTeam() {
                     {filteredLevel2.map((u, idx) => (
                       <div key={u.id} className="bg-slate-50/90 border border-slate-200/90 p-4 sm:p-5 rounded-2xl space-y-3 shadow-sm">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-3 min-w-0">
+                          <button type="button" onClick={() => openMemberProfile(u.id)} className="flex items-center gap-3 min-w-0 text-left">
                             <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]} text-white text-xs font-black flex items-center justify-center shadow-md shrink-0`}>
                               {initialsOf(u.name)}
                             </div>
@@ -498,7 +599,7 @@ export default function MyTeam() {
                               <p className="font-heading font-black text-slate-900 text-sm leading-snug break-words">{u.name}</p>
                               <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mt-0.5">Level 2 Payout</p>
                             </div>
-                          </div>
+                          </button>
                           <div className="shrink-0 self-start">
                             <StatusBadge status={u.status} />
                           </div>
@@ -533,6 +634,11 @@ export default function MyTeam() {
       </Reveal>
     )}
 
+      <MemberProfileModal
+        member={profileModal}
+        loading={profileLoading}
+        onClose={() => setProfileModal(null)}
+      />
     </div>
   );
 }

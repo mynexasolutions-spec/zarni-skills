@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, CheckCircle2, Wallet, Clock, TrendingUp, Layers, Receipt, ShieldCheck } from 'lucide-react';
+import { Sparkles, CheckCircle2, Wallet, Clock, TrendingUp, Layers, Receipt, ShieldCheck, X, Mail, Phone, MapPin, Calendar, User as UserIcon } from 'lucide-react';
 import api from '../../utils/api';
 import AnimatedNumber from '../../components/AnimatedNumber';
 import Reveal from '../../components/Reveal';
@@ -9,8 +9,25 @@ export default function Commissions() {
   const [commissions, setCommissions] = useState([]);
   const [totals, setTotals] = useState({ total_earned: 0, available_balance: 0, pending_earnings: 0, active_total: 0, passive_total: 0 });
   const [loading, setLoading] = useState(true);
+  const [profileModal, setProfileModal] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const { ref: tiltHeroRef, onMouseMove: onHeroMove, onMouseLeave: onHeroLeave } = useTilt(3);
+
+  const openBuyerProfile = async (buyerId) => {
+    if (!buyerId) return;
+    setProfileLoading(true);
+    setProfileModal({});
+    try {
+      const response = await api.get(`/student/commissions/buyer/${buyerId}`);
+      setProfileModal(response.data.user);
+    } catch (err) {
+      console.error('Error fetching buyer profile', err);
+      setProfileModal(null);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchCommissions = async () => {
@@ -146,15 +163,19 @@ export default function Commissions() {
               return (
                 <div key={c.id} className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-3 shadow-sm">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${palette[idx % palette.length]} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-sm`}>
+                    <button
+                      type="button"
+                      onClick={() => openBuyerProfile(c.buyer_id)}
+                      className="flex items-center gap-3 min-w-0 text-left group/buyer"
+                    >
+                      <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${palette[idx % palette.length]} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover/buyer:scale-105`}>
                         {initials}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-heading font-black text-slate-900 text-sm truncate">{c.buyer_name}</p>
+                        <p className="font-heading font-black text-slate-900 text-sm truncate group-hover/buyer:text-blue-600 transition-colors">{c.buyer_name}</p>
                         <p className="text-[11px] font-semibold text-slate-500 truncate">{c.item_name}</p>
                       </div>
-                    </div>
+                    </button>
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider rounded-full border shrink-0 ${statusBadge}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${c.status === 'paid' ? 'bg-emerald-500' : c.status === 'approved' ? 'bg-blue-500' : 'bg-amber-500'}`}></span>
                       {c.status}
@@ -208,12 +229,16 @@ export default function Commissions() {
                   return (
                     <tr key={c.id} className="group hover:bg-slate-50/80 transition-colors">
                       <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => openBuyerProfile(c.buyer_id)}
+                          className="flex items-center gap-3 text-left group/buyer"
+                        >
                           <div className={`w-9 h-9 rounded-2xl bg-gradient-to-br ${palette[idx % palette.length]} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110`}>
                             {initials}
                           </div>
-                          <span className="font-heading font-black text-slate-900">{c.buyer_name}</span>
-                        </div>
+                          <span className="font-heading font-black text-slate-900 group-hover/buyer:text-blue-600 transition-colors">{c.buyer_name}</span>
+                        </button>
                       </td>
                       <td className="py-4 px-4 font-medium text-slate-700">{c.item_name}</td>
                       <td className="py-4 px-4 font-bold text-slate-400 text-xs">{c.created_at}</td>
@@ -248,6 +273,83 @@ export default function Commissions() {
           </div>
         </div>
       </div>
+
+      {/* ── BUYER PROFILE MODAL ─────────────────────────────────────────── */}
+      {profileModal !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
+          onClick={() => setProfileModal(null)}
+        >
+          <div
+            className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setProfileModal(null)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div
+              className="p-8 pb-16 text-white relative"
+              style={{ background: 'linear-gradient(135deg, #0b1428 0%, #1e3a8a 50%, #2563eb 100%)' }}
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none"></div>
+            </div>
+
+            {profileLoading || !profileModal.id ? (
+              <div className="p-12 -mt-14 relative flex flex-col items-center justify-center gap-3">
+                <div className="w-10 h-10 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Profile...</p>
+              </div>
+            ) : (
+                <div className="px-6 pb-6 -mt-14 relative">
+                  <img
+                    src={profileModal.profile_image_url}
+                    alt={profileModal.name}
+                    className="w-24 h-24 rounded-3xl object-cover border-4 border-white shadow-lg bg-slate-100"
+                  />
+                  <h3 className="mt-4 text-xl font-heading font-black text-slate-900">{profileModal.name}</h3>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mt-1">
+                    <Calendar className="w-3.5 h-3.5" /> Joined {profileModal.created_at}
+                  </p>
+
+                  <div className="mt-5 space-y-2.5">
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                      <Mail className="w-4 h-4 text-blue-500 shrink-0" />
+                      <span className="text-sm font-semibold text-slate-700 truncate">{profileModal.email || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                      <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span className="text-sm font-semibold text-slate-700">{profileModal.phone || 'N/A'}</span>
+                    </div>
+                    {profileModal.address && (
+                      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                        <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
+                        <span className="text-sm font-semibold text-slate-700">{profileModal.address}</span>
+                      </div>
+                    )}
+                    {(profileModal.age || profileModal.gender) && (
+                      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                        <UserIcon className="w-4 h-4 text-purple-500 shrink-0" />
+                        <span className="text-sm font-semibold text-slate-700">
+                          {[profileModal.age ? `${profileModal.age} yrs` : null, profileModal.gender].filter(Boolean).join(' · ')}
+                        </span>
+                      </div>
+                    )}
+                    {(profileModal.bio || profileModal.about) && (
+                      <div className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">About</p>
+                        <p className="text-sm font-medium text-slate-600 leading-relaxed">{profileModal.bio || profileModal.about}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+            )}
+          </div>
+        </div>
+      )}
 
     </div>
   );

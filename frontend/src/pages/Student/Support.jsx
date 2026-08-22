@@ -1,18 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { UserCog, Mail, Phone, ArrowUpRight, Users, Crown, Clock, XCircle, Send, UserCheck, MessageSquare, Sparkles, ShieldCheck, Headphones, Info, MapPin, UserCircle2 } from 'lucide-react';
+import { UserCog, Mail, Phone, ArrowUpRight, Users, Crown, Clock, XCircle, Send, UserCheck, MessageSquare, Sparkles, ShieldCheck, Headphones, Info, MapPin, UserCircle2, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import Reveal from '../../components/Reveal';
 import useTilt from '../../hooks/useTilt';
 
-function PersonAvatar({ person, size = 'w-16 h-16' }) {
+function PersonAvatar({ person, size = 'w-16 h-16', glow = false }) {
   if (!person) return null;
   const initials = person.name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-  return person.profile_image_url ? (
-    <img src={person.profile_image_url} alt={person.name} className={`${size} rounded-2xl object-cover shrink-0 border-2 border-white/20 shadow-md`} />
-  ) : (
-    <div className={`${size} rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black flex items-center justify-center shrink-0 shadow-md`}>
-      {initials}
+  return (
+    <div className="relative shrink-0">
+      {glow && (
+        <div className="absolute -inset-2 rounded-[1.75rem] bg-gradient-to-br from-blue-400/30 via-indigo-400/20 to-transparent blur-lg pointer-events-none"></div>
+      )}
+      {person.profile_image_url ? (
+        <img src={person.profile_image_url} alt={person.name} className={`relative ${size} rounded-2xl object-cover shrink-0 ring-4 ring-white shadow-lg`} />
+      ) : (
+        <div className={`relative ${size} rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black flex items-center justify-center shrink-0 ring-4 ring-white shadow-lg`}>
+          {initials}
+        </div>
+      )}
     </div>
   );
 }
@@ -37,6 +44,70 @@ function PersonExtras({ person }) {
   );
 }
 
+function ProfileModal({ person, onClose }) {
+  if (!person) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-fade-in-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div
+          className="p-8 pb-16 text-white relative"
+          style={{ background: 'linear-gradient(135deg, #0b1428 0%, #1e3a8a 50%, #2563eb 100%)' }}
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none"></div>
+        </div>
+
+        <div className="px-6 pb-6 -mt-14 relative">
+          <PersonAvatar person={person} size="w-24 h-24 text-2xl" />
+          <h3 className="mt-4 text-xl font-heading font-black text-slate-900">{person.name}</h3>
+          {person.roleLabel && (
+            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">{person.roleLabel}</p>
+          )}
+
+          <div className="mt-5 space-y-2.5">
+            {person.email && (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <Mail className="w-4 h-4 text-blue-500 shrink-0" />
+                <span className="text-sm font-semibold text-slate-700 truncate">{person.email}</span>
+              </div>
+            )}
+            {person.phone && (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="text-sm font-semibold text-slate-700">{person.phone}</span>
+              </div>
+            )}
+            {person.address && (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
+                <span className="text-sm font-semibold text-slate-700">{person.address}</span>
+              </div>
+            )}
+            {person.about && (
+              <div className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">About</p>
+                <p className="text-sm font-medium text-slate-600 leading-relaxed">{person.about}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Support() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
@@ -45,6 +116,7 @@ export default function Support() {
   const [requestMessage, setRequestMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [profileModal, setProfileModal] = useState(null);
 
   const { ref: tiltHeroRef, onMouseMove: onHeroMove, onMouseLeave: onHeroLeave } = useTilt(3);
 
@@ -166,28 +238,33 @@ export default function Support() {
               </div>
             </div>
 
-            <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between space-y-6">
+            <div className="p-6 sm:p-8 flex-1 flex flex-col items-center text-center space-y-5">
               {data?.me && (
                 <>
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                    <PersonAvatar person={data.me} size="w-20 h-20 text-2xl" />
-                    <div className="text-center sm:text-left min-w-0 flex-1">
-                      <h3 className="text-xl font-heading font-black text-slate-900 mb-2">{data.me.name}</h3>
-                      <div className="space-y-1.5">
-                        {data.me.phone && (
-                          <p className="flex items-center justify-center sm:justify-start gap-2 text-xs text-slate-500 font-bold">
-                            <Phone className="w-3.5 h-3.5 text-slate-400" /> {data.me.phone}
-                          </p>
-                        )}
-                        {data.me.email && (
-                          <p className="flex items-center justify-center sm:justify-start gap-2 text-xs text-slate-500 font-bold truncate">
-                            <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {data.me.email}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                  <PersonAvatar person={data.me} size="w-24 h-24 text-2xl" glow />
+                  <div>
+                    <h3 className="text-xl font-heading font-black text-slate-900">{data.me.name}</h3>
+                    <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-black text-blue-700 uppercase tracking-wider bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">
+                      <UserCircle2 className="w-3 h-3" /> Your Identity
+                    </span>
                   </div>
-                  <PersonExtras person={data.me} />
+
+                  <div className="w-full space-y-2">
+                    {data.me.phone && (
+                      <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-600">
+                        <Phone className="w-3.5 h-3.5 text-blue-500 shrink-0" /> {data.me.phone}
+                      </div>
+                    )}
+                    {data.me.email && (
+                      <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-600">
+                        <Mail className="w-3.5 h-3.5 text-blue-500 shrink-0" /> <span className="truncate">{data.me.email}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="w-full">
+                    <PersonExtras person={data.me} />
+                  </div>
                   {!data.me.about && !data.me.address && (
                     <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 text-center">
                       Add your About & Address in Profile Settings so your sponsor/manager can reach you better.
@@ -220,11 +297,15 @@ export default function Support() {
             <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between space-y-6">
               {data?.sponsor ? (
                 <>
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                  <button
+                    type="button"
+                    onClick={() => setProfileModal({ ...data.sponsor, roleLabel: 'Sponsor' })}
+                    className="flex flex-col sm:flex-row items-center sm:items-start gap-5 w-full text-left group/person"
+                  >
                     <PersonAvatar person={data.sponsor} size="w-20 h-20 text-2xl" />
                     <div className="text-center sm:text-left min-w-0 flex-1">
                       <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap mb-1.5">
-                        <h3 className="text-xl font-heading font-black text-slate-900">{data.sponsor.name}</h3>
+                        <h3 className="text-xl font-heading font-black text-slate-900 group-hover/person:text-emerald-600 transition-colors">{data.sponsor.name}</h3>
                         <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                           <UserCheck className="w-3 h-3" /> Sponsor
                         </span>
@@ -242,7 +323,7 @@ export default function Support() {
                       )}
                       <PersonExtras person={data.sponsor} />
                     </div>
-                  </div>
+                  </button>
 
                   {/* Contact Action Pills */}
                   <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
@@ -309,14 +390,20 @@ export default function Support() {
               {data?.has_manager ? (
                 <>
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                    <PersonAvatar person={data.manager} size="w-20 h-20 text-2xl" />
+                    <button type="button" onClick={() => setProfileModal({ ...data.manager, roleLabel: 'Team Manager' })} className="shrink-0">
+                      <PersonAvatar person={data.manager} size="w-20 h-20 text-2xl" />
+                    </button>
                     <div className="text-center sm:text-left min-w-0 flex-1">
-                      <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap mb-2">
-                        <h3 className="text-xl font-heading font-black text-slate-900">{data.manager.name}</h3>
+                      <button
+                        type="button"
+                        onClick={() => setProfileModal({ ...data.manager, roleLabel: 'Team Manager' })}
+                        className="flex items-center justify-center sm:justify-start gap-2 flex-wrap mb-2 text-left group/person"
+                      >
+                        <h3 className="text-xl font-heading font-black text-slate-900 group-hover/person:text-blue-600 transition-colors">{data.manager.name}</h3>
                         <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
                           Team Manager
                         </span>
-                      </div>
+                      </button>
 
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                         {data.manager.phone && (
@@ -342,13 +429,17 @@ export default function Support() {
                       <h4 className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5">
                         <ArrowUpRight className="w-3.5 h-3.5 text-blue-600" /> Senior Manager (Upline Lead)
                       </h4>
-                      <div className="flex items-center gap-3 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/60">
+                      <button
+                        type="button"
+                        onClick={() => setProfileModal({ ...data.referred_by, roleLabel: 'Senior Manager' })}
+                        className="flex items-center gap-3 bg-slate-50/80 hover:bg-slate-100 p-3.5 rounded-2xl border border-slate-200/60 w-full text-left transition-colors group/person"
+                      >
                         <PersonAvatar person={data.referred_by} size="w-10 h-10 text-xs" />
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-black text-slate-800 truncate">{data.referred_by.name}</p>
+                          <p className="text-xs font-black text-slate-800 truncate group-hover/person:text-blue-600 transition-colors">{data.referred_by.name}</p>
                           <p className="text-[11px] font-bold text-slate-400 truncate">{data.referred_by.email || data.referred_by.phone || 'Senior Support'}</p>
                         </div>
-                      </div>
+                      </button>
                     </div>
                   )}
                 </>
@@ -386,7 +477,7 @@ export default function Support() {
 
             <div className="p-6 sm:p-8">
               {managerRequest?.status === 'pending' ? (
-                <div className="flex items-center gap-3 bg-amber-50/80 border border-amber-200 text-amber-900 rounded-2xl p-4.5 text-xs sm:text-sm font-black">
+                <div className="flex items-center gap-3 bg-amber-50/80 border border-amber-200 text-amber-900 rounded-2xl p-4 sm:p-5 text-xs sm:text-sm font-black">
                   <Clock className="w-5 h-5 shrink-0 text-amber-600 animate-pulse" /> Your request is currently under review by our admin team.
                 </div>
               ) : managerRequest?.status === 'rejected' ? (
@@ -439,6 +530,8 @@ export default function Support() {
           </div>
         </Reveal>
       )}
+
+      <ProfileModal person={profileModal} onClose={() => setProfileModal(null)} />
     </div>
   );
 }

@@ -10,12 +10,14 @@ export default function Footer() {
   const [showTop, setShowTop] = useState(false);
   const [socialLinks, setSocialLinks] = useState({ facebook: '', instagram: '', whatsapp: '' });
   const [supportEmail, setSupportEmail] = useState('support@zarniskills.com');
+  const [supportAddress, setSupportAddress] = useState('123 Digital Heights, Skill Tower, New Delhi, India');
 
   useEffect(() => {
     api.get('/global-data').then(r => {
       setCourses(r.data.courses || []);
       setSocialLinks(r.data.social_links || { facebook: '', instagram: '', whatsapp: '' });
       if (r.data.support_email) setSupportEmail(r.data.support_email);
+      if (r.data.support_address) setSupportAddress(r.data.support_address);
     }).catch(() => {});
   }, []);
 
@@ -193,8 +195,7 @@ export default function Footer() {
                 <MapPin className="w-5 h-5" strokeWidth={2} />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-slate-300 leading-snug">123 Digital Heights, Skill Tower</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">New Delhi, India</p>
+                <p className="text-xs font-semibold text-slate-300 leading-snug">{supportAddress}</p>
               </div>
             </div>
           </div>
@@ -207,7 +208,7 @@ export default function Footer() {
             &copy; {currentYear} Zarni Skills. All rights reserved.
           </p>
           <div className="flex items-center gap-4 sm:gap-6 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-400">
-            <a href="#" className="hover:text-cyan-300 transition-colors">Privacy Policy</a>
+            <Link to="/privacy-policy" className="hover:text-cyan-300 transition-colors">Privacy Policy</Link>
             <span className="w-1 h-1 rounded-full bg-slate-700"></span>
             <Link to="/terms-and-conditions" className="hover:text-cyan-300 transition-colors">Terms of Service</Link>
             <span className="w-1 h-1 rounded-full bg-slate-700"></span>

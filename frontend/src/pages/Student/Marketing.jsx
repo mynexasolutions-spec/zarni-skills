@@ -1,14 +1,24 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Rocket, Link2, ShieldAlert, ShieldCheck, Users, Check, Copy, Phone, Mail, Zap, IndianRupee, TrendingUp, UserPlus, Flame } from 'lucide-react';
+import { Rocket, Link2, Users, Check, Copy, Phone, Mail, Zap, IndianRupee, UserPlus, Flame, X, Cake, Briefcase, MapPin, BarChart3, Target } from 'lucide-react';
 import api from '../../utils/api';
 import AnimatedNumber from '../../components/AnimatedNumber';
+
+const FORM_FIELD_META = [
+  { key: 'age', label: 'Age', Icon: Cake },
+  { key: 'occupation', label: 'Occupation', Icon: Briefcase },
+  { key: 'city_state', label: 'City / State', Icon: MapPin },
+  { key: 'experience_level', label: 'Experience Level', Icon: BarChart3 },
+  { key: 'goal', label: 'Goal', Icon: Target },
+];
 
 export default function Marketing() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
   const [referrals, setReferrals] = useState([]);
+  const [selectedReferral, setSelectedReferral] = useState(null);
   const [referralStats, setReferralStats] = useState({ total_count: 0, purchased_count: 0, not_purchased_count: 0, total_registration_income: 0 });
   const [price, setPrice] = useState(99);
 
@@ -55,12 +65,11 @@ export default function Marketing() {
 
   const statTiles = [
     { label: 'Total Registered', value: referralStats.total_count, sub: 'People who filled the form', Icon: UserPlus, from: '#60a5fa', to: '#2563eb', shadow: 'rgba(37,99,235,0.35)' },
-    { label: 'Upgraded to Package', value: referralStats.purchased_count, sub: 'Went on to buy a course', Icon: TrendingUp, from: '#34d399', to: '#059669', shadow: 'rgba(16,185,129,0.35)' },
-    { label: 'Masterclass Only', value: referralStats.not_purchased_count, sub: 'Registered, not upgraded yet', Icon: Users, from: '#fbbf24', to: '#f59e0b', shadow: 'rgba(245,158,11,0.35)' },
     { label: 'Registration Income', value: referralStats.total_registration_income, sub: '100% of every registration', Icon: IndianRupee, from: '#a78bfa', to: '#7c3aed', shadow: 'rgba(124,58,237,0.35)', prefix: '₹' },
   ];
 
   return (
+    <>
     <div className="w-full space-y-6 sm:space-y-8 animate-fade-in-up">
 
       {/* ══════════════════════════════════════════════
@@ -133,7 +142,7 @@ export default function Marketing() {
           Your Masterclass Referrals
           <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl">
           {statTiles.map((kpi, i) => (
             <div
               key={i}
@@ -183,30 +192,23 @@ export default function Marketing() {
           {referrals.length === 0 ? (
             <p className="text-sm text-slate-400 text-center py-8">No one has registered through your masterclass link yet — share it to start building your network.</p>
           ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-96 overflow-y-auto pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {referrals.map((r) => (
-                <div key={r.id} className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80 hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900 truncate">{r.name}</p>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-xs text-slate-500">
-                      <span className="inline-flex items-center gap-1 truncate"><Mail className="w-3 h-3 shrink-0" />{r.email}</span>
-                      {r.phone && <span className="inline-flex items-center gap-1"><Phone className="w-3 h-3 shrink-0" />{r.phone}</span>}
-                      <span>Joined {r.created_at}</span>
-                    </div>
-                    {r.masterclass_amount != null && (
-                      <div className="mt-1 text-xs text-emerald-700 font-bold flex items-center gap-1">
-                        <Zap className="w-3 h-3" /> ₹{r.masterclass_amount} paid{r.masterclass_paid_at ? ` on ${r.masterclass_paid_at}` : ''}
-                      </div>
-                    )}
+                <div
+                  key={r.id}
+                  onClick={() => setSelectedReferral(r)}
+                  className="px-3 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80 hover:border-blue-200 hover:bg-blue-50/30 transition-colors cursor-pointer"
+                >
+                  <p className="text-sm font-bold text-slate-900 truncate">{r.name}</p>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-xs text-slate-500">
+                    <span className="inline-flex items-center gap-1 min-w-0 max-w-full"><Mail className="w-3 h-3 shrink-0" /><span className="truncate">{r.email}</span></span>
+                    {r.phone && <span className="inline-flex items-center gap-1 shrink-0"><Phone className="w-3 h-3 shrink-0" />{r.phone}</span>}
+                    <span className="shrink-0">Joined {r.created_at}</span>
                   </div>
-                  {r.has_purchased ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-black uppercase tracking-wider shrink-0">
-                      <ShieldCheck className="w-3 h-3" /> Purchased
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-black uppercase tracking-wider shrink-0">
-                      <ShieldAlert className="w-3 h-3" /> Not Purchased Yet
-                    </span>
+                  {r.masterclass_amount != null && (
+                    <div className="mt-1 text-xs text-emerald-700 font-bold flex items-center gap-1">
+                      <Zap className="w-3 h-3 shrink-0" /> ₹{r.masterclass_amount} paid{r.masterclass_paid_at ? ` on ${r.masterclass_paid_at}` : ''}
+                    </div>
                   )}
                 </div>
               ))}
@@ -215,5 +217,66 @@ export default function Marketing() {
         </div>
       </section>
     </div>
+
+    {/* ══════════════════════════════════════════════
+         REGISTRATION FORM DETAILS MODAL
+       ══════════════════════════════════════════════ */}
+    {selectedReferral && createPortal(
+      <div
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in"
+        onClick={() => setSelectedReferral(null)}
+      >
+        <div
+          className="bg-white rounded-[2rem] max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scale-in"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="shrink-0 flex items-center justify-between gap-4 px-6 py-5 text-white"
+            style={{ background: 'linear-gradient(135deg, #052e2b 0%, #065f46 60%, #10b981 100%)' }}>
+            <div className="min-w-0">
+              <h3 className="text-lg font-black tracking-tight truncate">{selectedReferral.name}</h3>
+              <p className="text-xs text-emerald-50/70 font-medium truncate">Masterclass registration details</p>
+            </div>
+            <button onClick={() => setSelectedReferral(null)} className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors shrink-0">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-5 text-sm [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 space-y-2.5">
+              <div className="flex items-center gap-2 text-slate-600"><Mail className="w-3.5 h-3.5 shrink-0" /><span className="truncate">{selectedReferral.email}</span></div>
+              {selectedReferral.phone && (
+                <div className="flex items-center gap-2 text-slate-600"><Phone className="w-3.5 h-3.5 shrink-0" />{selectedReferral.phone}</div>
+              )}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 text-xs">
+                <span className="text-slate-400 font-semibold">Joined {selectedReferral.created_at}</span>
+                {selectedReferral.masterclass_amount != null && (
+                  <span className="text-emerald-700 font-bold flex items-center gap-1">
+                    <Zap className="w-3 h-3" /> ₹{selectedReferral.masterclass_amount} paid
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2.5">Form Answers</p>
+              {selectedReferral.form_details ? (
+                <div className="space-y-2">
+                  {FORM_FIELD_META.map(({ key, label, Icon }) => (
+                    <div key={key} className="flex items-center justify-between gap-3 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
+                      <span className="flex items-center gap-2 text-xs font-bold text-slate-500 shrink-0"><Icon className="w-3.5 h-3.5 text-emerald-500" />{label}</span>
+                      <span className="text-sm font-bold text-slate-900 text-right truncate">{selectedReferral.form_details[key] || '—'}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 text-center py-4">No form answers were recorded for this registration.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 }

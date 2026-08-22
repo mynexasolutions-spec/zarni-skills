@@ -1,4 +1,22 @@
+from app import db
 from app.models import Coupon
+
+
+def redeem_coupon(coupon):
+    """Atomically increment a coupon's used_count, honoring max_uses even
+    under concurrent requests.
+
+    A plain `coupon.used_count += 1` in Python is a read-modify-write: two
+    concurrent checkouts can both read the same used_count, both pass the
+    max_uses check earlier in the request, and both write back count+1 —
+    over-redeeming a max_uses=1 coupon. The UPDATE ... WHERE below pushes the
+    check into the single SQL statement, which the DB serializes, so only as
+    many concurrent requests as max_uses allows can ever succeed.
+    """
+    query = db.session.query(Coupon).filter(Coupon.id == coupon.id)
+    if coupon.max_uses is not None:
+        query = query.filter(Coupon.used_count < coupon.max_uses)
+    return query.update({Coupon.used_count: Coupon.used_count + 1}, synchronize_session=False) > 0
 
 
 def highest_owned_package_price(user):

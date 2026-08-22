@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, CreditCard, Percent, Landmark, Mail, CheckCircle2, Plane, ClipboardList, Shield, Save, Sparkles, Lock, Share2 } from 'lucide-react';
+import { Settings, Percent, Landmark, Mail, CheckCircle2, Save, Sparkles, Share2, UserPlus } from 'lucide-react';
 import { FaFacebook, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import api from '../../utils/api';
 
@@ -33,26 +33,16 @@ function Field({ label, ...props }) {
 }
 
 const DEFAULT_SETTINGS = {
-  mail_server: '', mail_port: '', mail_use_tls: '', mail_username: '',
-  mail_password: '', mail_from: '', min_withdrawal_amount: '',
+  min_withdrawal_amount: '',
   global_level1_commission_percent: '', global_level2_commission_percent: '',
   global_manager_override_percent: '', global_manager_override_level2_percent: '',
-  trip_goal_title: '', trip_goal_amount: '', trip_goal_date: '',
-  registration_field_config: {},
+  masterclass_referrer_percent: '',
   footer_facebook_url: '', footer_instagram_url: '', footer_whatsapp_url: '',
-  support_email: '', support_phone: '',
+  support_email: '', support_phone: '', support_address: '',
 };
-
-const REGISTRATION_FIELDS = [
-  { key: 'phone', label: 'Phone Number' },
-  { key: 'state', label: 'State Location' },
-  { key: 'dob', label: 'Date of Birth' },
-];
-const FIELD_MODES = ['required', 'optional', 'hidden'];
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [razorpayStatus, setRazorpayStatus] = useState({ enabled: false, key_id: null });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -62,7 +52,6 @@ export default function AdminSettings() {
       try {
         const response = await api.get('/admin/settings');
         setSettings({ ...DEFAULT_SETTINGS, ...response.data.settings });
-        setRazorpayStatus(response.data.razorpay_status || { enabled: false, key_id: null });
       } catch (err) {
         console.error(err);
       } finally {
@@ -77,22 +66,12 @@ export default function AdminSettings() {
     setSettings(prev => ({ ...prev, [key]: val }));
   };
 
-  const setFieldMode = (fieldKey, mode) => {
-    setSettings(prev => ({
-      ...prev,
-      registration_field_config: { ...prev.registration_field_config, [fieldKey]: mode },
-    }));
-  };
-
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
     setSuccess(false);
     try {
-      const response = await api.post('/admin/settings', {
-        ...settings,
-        mail_use_tls: settings.mail_use_tls === true || settings.mail_use_tls === 'true',
-      });
+      const response = await api.post('/admin/settings', settings);
       if (response.data.success) {
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
@@ -141,24 +120,6 @@ export default function AdminSettings() {
 
       <form onSubmit={handleSave} className="space-y-6">
 
-        {/* Razorpay Gateway — read-only, keys live in .env */}
-        <Section icon={CreditCard} title="Razorpay Payment Gateway" desc="Configured directly via the server's .env file — not editable here">
-          <div className={`flex items-center justify-between gap-3 rounded-2xl p-4 border ${
-            razorpayStatus.enabled ? 'bg-emerald-50/80 border-emerald-200/60' : 'bg-amber-50/80 border-amber-200/60'
-          }`}>
-            <div>
-              <span className={`text-xs font-black uppercase flex items-center gap-1.5 ${razorpayStatus.enabled ? 'text-emerald-700' : 'text-amber-700'}`}>
-                {razorpayStatus.enabled ? <><CheckCircle2 className="w-3.5 h-3.5" /> Razorpay Enabled</> : <><Lock className="w-3.5 h-3.5" /> Razorpay Not Configured</>}
-              </span>
-              <span className="text-[10px] text-slate-500 font-semibold mt-1 block">
-                {razorpayStatus.enabled
-                  ? `Key ID: ${razorpayStatus.key_id}`
-                  : 'Add razorpay_key and razorpay_secret to the server .env file, then restart.'}
-              </span>
-            </div>
-          </div>
-        </Section>
-
         {/* Commission Settings */}
         <Section icon={Percent} title="Global Commission & Override Rates" desc="Default referral rates applied when individual courses do not set custom overrides">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -167,6 +128,41 @@ export default function AdminSettings() {
             <Field label="Manager Override Rate (Hop 1 %)" type="number" step="0.1" value={settings.global_manager_override_percent || ''} onChange={set('global_manager_override_percent')} placeholder="10" />
             <Field label="Manager Override Rate (Hop 2 %)" type="number" step="0.1" value={settings.global_manager_override_level2_percent || ''} onChange={set('global_manager_override_level2_percent')} placeholder="5" />
           </div>
+        </Section>
+
+        {/* Masterclass Registration Split */}
+        <Section icon={UserPlus} title="Masterclass Registration Split" desc="How the ₹ fee a guest pays through someone's masterclass referral link is split between that referrer and the platform">
+          <Field
+            label="Referrer Share (%)"
+            type="number" min="0" max="100" step="0.1"
+            value={settings.masterclass_referrer_percent || ''}
+            onChange={set('masterclass_referrer_percent')}
+            placeholder="100"
+          />
+          {(() => {
+            const pct = Math.min(100, Math.max(0, parseFloat(settings.masterclass_referrer_percent) || 0));
+            const hasValue = settings.masterclass_referrer_percent !== '' && !isNaN(parseFloat(settings.masterclass_referrer_percent));
+            const displayPct = hasValue ? pct : 100;
+            return (
+              <div className="pt-1">
+                <div className="flex h-3 w-full rounded-full overflow-hidden bg-slate-100 border border-slate-200">
+                  <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${displayPct}%` }} />
+                  <div className="h-full bg-slate-400 transition-all duration-300" style={{ width: `${100 - displayPct}%` }} />
+                </div>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-center">
+                    <p className="text-[9px] font-black text-emerald-700 uppercase tracking-wide">Referrer Gets</p>
+                    <p className="text-lg font-black text-emerald-700">{displayPct}%</p>
+                  </div>
+                  <div className="bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2.5 text-center">
+                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-wide">Platform Keeps</p>
+                    <p className="text-lg font-black text-slate-600">{(100 - displayPct).toFixed(1)}%</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+          <p className="text-[10px] text-slate-400 font-medium">Leave blank (or 100) to keep paying the referrer the whole fee — the platform's current default. Only applies to registrations made after this is saved; past payouts aren't recalculated.</p>
         </Section>
 
         {/* Withdrawal Settings */}
@@ -184,78 +180,12 @@ export default function AdminSettings() {
         </Section>
 
         {/* Support Contact Info */}
-        <Section icon={Mail} title="Support Contact Info" desc="Shown on the Contact page, footer, and legal pages (Terms, Refund Policy) wherever a support email/phone appears">
+        <Section icon={Mail} title="Support Contact Info" desc="Shown on the Contact page, footer, and legal pages (Terms, Refund Policy) wherever a support email/phone/address appears">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Support Email" type="email" value={settings.support_email || ''} onChange={set('support_email')} placeholder="support@zarniskills.com" />
             <Field label="Support Phone" value={settings.support_phone || ''} onChange={set('support_phone')} placeholder="+91 98765 43210" />
           </div>
-        </Section>
-
-        {/* Trip Goal Settings */}
-        <Section icon={Plane} title="Trip Achievement Goal" desc="Powers the Trip Goal progress bar on student dashboards (leave title blank to disable)">
-          <Field label="Trip Title" value={settings.trip_goal_title || ''} onChange={set('trip_goal_title')} placeholder="Bali International Trip 2026" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Target Income Goal (₹)" type="number" value={settings.trip_goal_amount || ''} onChange={set('trip_goal_amount')} placeholder="50000" />
-            <Field label="Target Deadline Date" type="date" value={settings.trip_goal_date || ''} onChange={set('trip_goal_date')} />
-          </div>
-        </Section>
-
-        {/* Registration Form Config */}
-        <Section icon={ClipboardList} title="Registration Form Fields" desc="Control visibility and requirement rules for optional registration fields">
-          <div className="space-y-3">
-            {REGISTRATION_FIELDS.map(f => {
-              const mode = settings.registration_field_config?.[f.key] || 'required';
-              return (
-                <div key={f.key} className="flex items-center justify-between gap-3 bg-slate-50/80 border border-slate-200/60 rounded-2xl p-4 flex-wrap">
-                  <span className="text-sm font-extrabold text-slate-800">{f.label}</span>
-                  <div className="flex gap-1.5">
-                    {FIELD_MODES.map(m => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => setFieldMode(f.key, m)}
-                        className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-150 ${
-                          mode === m 
-                            ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-sm shadow-red-600/20' 
-                            : 'bg-white border border-slate-200 text-slate-500 hover:border-red-300'
-                        }`}
-                      >
-                        {m}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Section>
-
-        {/* SMTP Mail Settings */}
-        <Section icon={Mail} title="Email Server (SMTP Credentials)" desc="Outbound email configurations for automated system notifications">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="SMTP Host / Server" value={settings.mail_server || ''} onChange={set('mail_server')} placeholder="smtp.gmail.com" />
-            <Field label="SMTP Port" value={settings.mail_port || ''} onChange={set('mail_port')} placeholder="587" />
-            <Field label="Mail Username" value={settings.mail_username || ''} onChange={set('mail_username')} placeholder="you@zarniskills.com" />
-            <Field label="Mail Password" type="password" value={settings.mail_password || ''} onChange={set('mail_password')} placeholder="••••••••" />
-            <Field label="From Address Email" value={settings.mail_from || ''} onChange={set('mail_from')} placeholder="no-reply@zarniskills.com" />
-          </div>
-
-          <label className="flex items-center justify-between gap-3 cursor-pointer bg-slate-50/80 border border-slate-200/60 rounded-2xl p-4 mt-3">
-            <div>
-              <span className="text-xs font-black uppercase text-slate-800 block">Use TLS Security Encryption</span>
-              <span className="text-[10px] text-slate-400 font-semibold">Encrypt outbound emails with TLS protocol</span>
-            </div>
-            <span className="relative inline-flex items-center">
-              <input
-                type="checkbox"
-                checked={settings.mail_use_tls === true || settings.mail_use_tls === 'true'}
-                onChange={set('mail_use_tls')}
-                className="sr-only peer"
-              />
-              <span className="w-10 h-6 bg-slate-300 peer-checked:bg-emerald-500 rounded-full transition-colors"></span>
-              <span className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></span>
-            </span>
-          </label>
+          <Field label="Office Address" value={settings.support_address || ''} onChange={set('support_address')} placeholder="123 Skills Tower, New Delhi, India - 110001" />
         </Section>
 
         {/* Save Settings Submit Button */}

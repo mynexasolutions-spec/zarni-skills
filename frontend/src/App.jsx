@@ -16,6 +16,7 @@ import About from './pages/Public/About';
 import Contact from './pages/Public/Contact';
 import RefundPolicy from './pages/Public/RefundPolicy';
 import TermsConditions from './pages/Public/TermsConditions';
+import PrivacyPolicy from './pages/Public/PrivacyPolicy';
 import Packages from './pages/Public/Packages';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
@@ -63,6 +64,7 @@ import AdminOrders from './pages/Admin/AdminOrders';
 import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
 import AdminSettings from './pages/Admin/AdminSettings';
 import AdminMasterclassFunnel from './pages/Admin/AdminMasterclassFunnel';
+import AdminMasterclassRegistrations from './pages/Admin/AdminMasterclassRegistrations';
 import AdminChapters from './pages/Admin/AdminChapters';
 import AdminCommissions from './pages/Admin/AdminCommissions';
 import AdminReferrals from './pages/Admin/AdminReferrals';
@@ -135,6 +137,7 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/terms-and-conditions" element={<TermsConditions />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Route>
 
         {/* Auth Routes */}
@@ -213,6 +216,7 @@ export default function App() {
           <Route path="withdrawals" element={<AdminWithdrawals />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="masterclass-funnel" element={<AdminMasterclassFunnel />} />
+          <Route path="masterclass-registrations" element={<AdminMasterclassRegistrations />} />
           <Route path="commissions" element={<AdminCommissions />} />
           <Route path="referrals" element={<AdminReferrals />} />
           <Route path="managers" element={<AdminManagers />} />

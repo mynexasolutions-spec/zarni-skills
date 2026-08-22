@@ -35,7 +35,13 @@ def _save_thumbnail(file_field, old_filename=None):
 
 
 def _save_video(file_field):
-    """Upload video to Cloudinary. Returns secure_url or None/False."""
+    """Upload video to Cloudinary. Returns secure_url or None/False.
+
+    Uses upload_large (chunked) instead of upload — the plain upload endpoint
+    buffers the whole file in one request and hits Cloudinary's per-file size
+    cap on non-chunked uploads, so anything beyond a short clip fails. Chunked
+    upload streams it in pieces and has no such cap.
+    """
     f = file_field
     if not f or not f.filename:
         return None
@@ -43,7 +49,7 @@ def _save_video(file_field):
     if ext not in ALLOWED_VIDEO_EXTS:
         return False  # signal invalid
     try:
-        response = cloudinary.uploader.upload(f, resource_type='video')
+        response = cloudinary.uploader.upload_large(f, resource_type='video', chunk_size=6_000_000)
         return response.get('secure_url')
     except Exception as e:
         print(f"Cloudinary video upload error: {e}")
@@ -448,9 +454,13 @@ def set_user_role(user_id):
         flash('Invalid role.', 'danger')
         return redirect(url_for('admin.users'))
     old_role = user.role
+    was_manager = user.role == 'manager'
     user.role = new_role
     if new_role != 'manager':
         user.manager_commission_percent = None
+        if was_manager:
+            from app.utils.commissions import demote_manager
+            demote_manager(user, commit=False)
     db.session.commit()
     flash(f'{user.name} role changed from {old_role} to {new_role}.', 'success')
     return redirect(request.referrer or url_for('admin.users'))
@@ -726,7 +736,7 @@ def new_chapter(course_id):
                 flash(f'Invalid video format. Allowed: {", ".join(ALLOWED_VIDEO_EXTS)}', 'danger')
                 return render_template('admin/chapter_form.html', course=course, chapter=None)
             try:
-                response = cloudinary.uploader.upload(video_file, resource_type='video')
+                response = cloudinary.uploader.upload_large(video_file, resource_type='video', chunk_size=6_000_000)
                 chapter.video_filename = response.get('secure_url')
             except Exception as e:
                 flash(f"Cloudinary upload error: {e}", 'danger')
@@ -763,7 +773,7 @@ def edit_chapter(course_id, chapter_id):
                 flash(f'Invalid video format. Allowed: {", ".join(ALLOWED_VIDEO_EXTS)}', 'danger')
                 return render_template('admin/chapter_form.html', course=course, chapter=chapter)
             try:
-                response = cloudinary.uploader.upload(video_file, resource_type='video')
+                response = cloudinary.uploader.upload_large(video_file, resource_type='video', chunk_size=6_000_000)
                 chapter.video_filename = response.get('secure_url')
             except Exception as e:
                 flash(f"Cloudinary upload error: {e}", 'danger')

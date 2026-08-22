@@ -260,10 +260,12 @@ export default function AdminPackages() {
           <div className="bg-white rounded-[2.2rem] max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scale-in border border-slate-100" onClick={(e) => e.stopPropagation()}>
 
             {/* Modal Header */}
-            <div className="shrink-0 flex items-center justify-between gap-4 px-6 sm:px-8 py-5 text-white"
+            <div className="shrink-0 relative overflow-hidden flex items-center justify-between gap-4 px-6 sm:px-8 py-5 text-white"
               style={{ background: 'linear-gradient(135deg, #09090b 0%, #1e0e18 50%, #3b0717 100%)' }}>
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0">
+              <div className="pointer-events-none absolute -top-10 -left-10 w-40 h-40 rounded-full bg-rose-500/25 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-16 right-24 w-48 h-48 rounded-full bg-fuchsia-500/10 blur-3xl" />
+              <div className="relative flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0 shadow-inner">
                   <Layers className="w-6 h-6" />
                 </div>
                 <div className="min-w-0">
@@ -271,7 +273,7 @@ export default function AdminPackages() {
                   <p className="text-[10px] text-slate-400 font-semibold truncate">{editingId ? `Updating "${form.name}"` : 'Configure a learning package target setup'}</p>
                 </div>
               </div>
-              <button onClick={() => setShowForm(false)} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all shrink-0 hover:scale-105">
+              <button onClick={() => setShowForm(false)} className="relative p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all shrink-0 hover:scale-105">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -286,41 +288,67 @@ export default function AdminPackages() {
               )}
 
               {/* Thumbnail Upload component */}
-              <div className="bg-white border border-slate-200/80 rounded-2xl p-4">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Cover Art / Thumbnail</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-32 aspect-video rounded-xl overflow-hidden bg-slate-50 border border-slate-200/60 flex items-center justify-center shrink-0 shadow-sm">
-                    {thumbPreview ? <img src={thumbPreview} className="w-full h-full object-contain p-1" alt="" /> : <ImagePlus className="w-7 h-7 text-slate-300" />}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-slate-800 text-white text-[9px] font-black flex items-center justify-center shrink-0">1</span>
+                  Cover Art / Thumbnail
+                </p>
+                <label className="group relative flex items-center gap-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-rose-300 bg-slate-50/50 hover:bg-rose-50/30 transition-all cursor-pointer p-3">
+                  <div className="w-32 aspect-video rounded-xl overflow-hidden bg-white border border-slate-200/60 flex items-center justify-center shrink-0 shadow-sm">
+                    {thumbPreview ? (
+                      <img src={thumbPreview} className="w-full h-full object-contain p-1" alt="" />
+                    ) : (
+                      <ImagePlus className="w-7 h-7 text-slate-300 group-hover:text-rose-300 transition-colors" />
+                    )}
                   </div>
-                  <label className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200/60 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 cursor-pointer transition-colors shadow-sm">
-                    {thumbPreview ? 'Replace file' : 'Select file'}
-                    <input type="file" accept="image/*" className="hidden" onChange={handleThumbChange} />
-                  </label>
-                </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-600 group-hover:text-rose-600 transition-colors">{thumbPreview ? 'Replace file' : 'Click to upload cover art'}</p>
+                    <p className="text-[10px] text-slate-400 font-medium mt-0.5">PNG or JPG, 16:9 recommended</p>
+                  </div>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleThumbChange} />
+                  {thumbPreview && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setThumbFile(null); setThumbPreview(null); }}
+                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 shadow-sm transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </label>
               </div>
 
               {/* Basic Info input blocks */}
               <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-4">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Standard details</p>
-                
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-slate-800 text-white text-[9px] font-black flex items-center justify-center shrink-0">2</span>
+                  Standard details
+                </p>
+
                 <div>
                   <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Bundle Title *</label>
-                  <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
+                  <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Premium Package" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
                 </div>
-                
+
                 <div>
                   <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Public Description</label>
-                  <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
+                  <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What makes this bundle worth buying?" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
                 </div>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Retail Price (₹) — final, GST-inclusive *</label>
-                    <input required type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
+                    <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Retail Price — final, GST-inclusive *</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₹</span>
+                      <input required type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Min Earnings For L2 Overrides (₹)</label>
-                    <input type="number" min="0" step="0.01" value={form.min_income} onChange={(e) => setForm({ ...form, min_income: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
+                    <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide">Min Earnings For L2 Overrides</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₹</span>
+                      <input type="number" min="0" step="0.01" value={form.min_income} onChange={(e) => setForm({ ...form, min_income: e.target.value })} className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all bg-slate-50/50 hover:bg-slate-50 focus:bg-white" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -328,16 +356,23 @@ export default function AdminPackages() {
               {/* Market price / discount / GST */}
               <div className="bg-emerald-500/5 border border-emerald-500/25 rounded-2xl p-4 sm:p-5 space-y-4">
                 <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[9px] font-black flex items-center justify-center shrink-0">3</span>
                   <Percent className="w-4 h-4" /> Discount &amp; GST Display
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-extrabold text-emerald-700 mb-1.5 uppercase tracking-wide">Market Price / MRP (₹)</label>
-                    <input type="number" min="0" step="0.01" value={form.market_price} onChange={(e) => setForm({ ...form, market_price: e.target.value })} placeholder="e.g. 3500 (leave blank to hide discount badge)" className="w-full px-4 py-2.5 rounded-xl border border-emerald-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500" />
+                    <label className="block text-[10px] font-extrabold text-emerald-700 mb-1.5 uppercase tracking-wide">Market Price / MRP</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-emerald-300">₹</span>
+                      <input type="number" min="0" step="0.01" value={form.market_price} onChange={(e) => setForm({ ...form, market_price: e.target.value })} placeholder="3500 (blank hides badge)" className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-emerald-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500" />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-extrabold text-emerald-700 mb-1.5 uppercase tracking-wide">GST (%)</label>
-                    <input type="number" min="0" max="100" step="0.01" value={form.gst_percent} onChange={(e) => setForm({ ...form, gst_percent: e.target.value })} placeholder="18" className="w-full px-4 py-2.5 rounded-xl border border-emerald-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500" />
+                    <label className="block text-[10px] font-extrabold text-emerald-700 mb-1.5 uppercase tracking-wide">GST</label>
+                    <div className="relative">
+                      <input type="number" min="0" max="100" step="0.01" value={form.gst_percent} onChange={(e) => setForm({ ...form, gst_percent: e.target.value })} placeholder="18" className="w-full pl-4 pr-8 py-2.5 rounded-xl border border-emerald-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500" />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-emerald-300">%</span>
+                    </div>
                   </div>
                 </div>
                 {(() => {
@@ -363,62 +398,75 @@ export default function AdminPackages() {
               {/* Commission settings */}
               <div className="bg-amber-500/5 border border-amber-500/25 rounded-2xl p-4 sm:p-5 space-y-4">
                 <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center shrink-0">4</span>
                   <Sparkles className="w-4 h-4" /> Commission Structures
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-extrabold text-amber-700 mb-1.5 uppercase tracking-wide">L1 Direct Referrer Percent (%) *</label>
-                    <input required type="number" min="0" max="100" step="0.01" value={form.level1_pct} onChange={(e) => setForm({ ...form, level1_pct: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-amber-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500" />
+                    <label className="block text-[10px] font-extrabold text-amber-700 mb-1.5 uppercase tracking-wide">L1 Direct Referrer *</label>
+                    <div className="relative">
+                      <input required type="number" min="0" max="100" step="0.01" value={form.level1_pct} onChange={(e) => setForm({ ...form, level1_pct: e.target.value })} className="w-full pl-4 pr-8 py-2.5 rounded-xl border border-amber-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500" />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-amber-300">%</span>
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-extrabold text-amber-700 mb-1.5 uppercase tracking-wide">L2 Passive Referrer Percent (%) *</label>
-                    <input required type="number" min="0" max="100" step="0.01" value={form.level2_pct} onChange={(e) => setForm({ ...form, level2_pct: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-amber-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500" />
+                    <label className="block text-[10px] font-extrabold text-amber-700 mb-1.5 uppercase tracking-wide">L2 Passive Referrer *</label>
+                    <div className="relative">
+                      <input required type="number" min="0" max="100" step="0.01" value={form.level2_pct} onChange={(e) => setForm({ ...form, level2_pct: e.target.value })} className="w-full pl-4 pr-8 py-2.5 rounded-xl border border-amber-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500" />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-amber-300">%</span>
+                    </div>
                   </div>
                   <p className="sm:col-span-2 text-[10px] text-amber-800 font-semibold leading-relaxed">Commission guidelines: L2 commissions are paid out to tier-2 referrers once their direct network earnings exceed the minimum milestone threshold set above.</p>
                 </div>
 
-                {/* Live commission breakdown across every package at this rate */}
-                {packages.length > 0 && (parseFloat(form.level1_pct) > 0 || parseFloat(form.level2_pct) > 0) && (
-                  <div className="pt-1">
-                    <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2">
-                      Live Preview — {form.level1_pct || 0}% Active / {form.level2_pct || 0}% Passive, applied to every package
-                    </p>
-                    <div className="bg-white border border-amber-200 rounded-xl overflow-hidden">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="bg-amber-50 text-amber-700 font-black uppercase text-[9px] tracking-wider">
-                            <th className="text-left px-3 py-2">Package</th>
-                            <th className="text-right px-3 py-2">Price</th>
-                            <th className="text-right px-3 py-2">Active ({form.level1_pct || 0}%)</th>
-                            <th className="text-right px-3 py-2">Passive ({form.level2_pct || 0}%)</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-amber-100">
-                          {packages.map((pkg) => {
-                            const price = Number(pkg.price) || 0;
-                            const active = price * (parseFloat(form.level1_pct) || 0) / 100;
-                            const passive = price * (parseFloat(form.level2_pct) || 0) / 100;
-                            const isCurrent = pkg.id === editingId;
-                            return (
-                              <tr key={pkg.id} className={isCurrent ? 'bg-amber-50/60 font-bold' : ''}>
-                                <td className="px-3 py-2 text-slate-700 truncate max-w-[120px]">{pkg.name}{isCurrent && <span className="ml-1 text-amber-600">•</span>}</td>
-                                <td className="px-3 py-2 text-right text-slate-600">₹{price.toLocaleString('en-IN')}</td>
-                                <td className="px-3 py-2 text-right text-emerald-700 font-bold">₹{active.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
-                                <td className="px-3 py-2 text-right text-indigo-700 font-bold">₹{passive.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                {/* Live commission breakdown for THIS package only */}
+                {parseFloat(form.price) > 0 && (parseFloat(form.level1_pct) > 0 || parseFloat(form.level2_pct) > 0) && (() => {
+                  const price = parseFloat(form.price) || 0;
+                  const l1Pct = parseFloat(form.level1_pct) || 0;
+                  const l2Pct = parseFloat(form.level2_pct) || 0;
+                  const active = price * l1Pct / 100;
+                  const passive = price * l2Pct / 100;
+                  const platformPct = Math.max(0, 100 - l1Pct - l2Pct);
+                  const platform = price - active - passive;
+                  return (
+                    <div className="pt-1">
+                      <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2">
+                        Live Preview — {form.name || 'this package'} @ ₹{price.toLocaleString('en-IN')}
+                      </p>
+
+                      {/* Proportional split bar */}
+                      <div className="flex h-3 w-full rounded-full overflow-hidden bg-slate-100 border border-amber-200">
+                        <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${Math.min(100, l1Pct)}%` }} title={`Active ${l1Pct}%`} />
+                        <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${Math.min(100, l2Pct)}%` }} title={`Passive ${l2Pct}%`} />
+                        <div className="h-full bg-amber-300 transition-all duration-300" style={{ width: `${Math.max(0, platformPct)}%` }} title={`Platform ${platformPct}%`} />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg py-2">
+                          <p className="text-[9px] font-black text-emerald-700 uppercase tracking-wide">Active ({l1Pct}%)</p>
+                          <p className="text-sm font-black text-emerald-700">₹{active.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+                        </div>
+                        <div className="bg-indigo-50 border border-indigo-200 rounded-lg py-2">
+                          <p className="text-[9px] font-black text-indigo-700 uppercase tracking-wide">Passive ({l2Pct}%)</p>
+                          <p className="text-sm font-black text-indigo-700">₹{passive.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+                        </div>
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg py-2">
+                          <p className="text-[9px] font-black text-amber-700 uppercase tracking-wide">Platform ({platformPct.toFixed(0)}%)</p>
+                          <p className="text-sm font-black text-amber-700">₹{platform.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
               {/* Course Features */}
               <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-4">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 font-extrabold">Student Page Specifications</p>
-                
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 font-extrabold flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-slate-800 text-white text-[9px] font-black flex items-center justify-center shrink-0">5</span>
+                  Student Page Specifications
+                </p>
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wide flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Duration</label>
@@ -453,7 +501,10 @@ export default function AdminPackages() {
               {/* Course checklists */}
               {allCourses.length > 0 && (
                 <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-3">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><BookOpenCheck className="w-4 h-4 text-rose-500" /> Assign active courses</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center shrink-0">6</span>
+                    <BookOpenCheck className="w-4 h-4 text-rose-500" /> Assign active courses
+                  </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-slate-200/60 rounded-xl p-3 bg-slate-50/30">
                     {allCourses.map(c => (
                       <label key={c.id} className="flex items-center gap-2.5 text-xs font-bold text-slate-600 cursor-pointer hover:bg-white p-2 rounded-lg transition-all border border-transparent hover:border-slate-100 shadow-sm">
@@ -466,14 +517,19 @@ export default function AdminPackages() {
               )}
 
               {/* Toggle switch for Visibility */}
-              <label className="flex items-center justify-between gap-3 cursor-pointer bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm">
-                <div>
-                  <span className="text-xs font-extrabold text-slate-700 block">Catalog Visibility</span>
-                  <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Toggle whether student accounts can view and purchase this bundle</span>
+              <label className={`flex items-center justify-between gap-3 cursor-pointer rounded-2xl p-4 shadow-sm border transition-colors ${form.is_active ? 'bg-emerald-500/5 border-emerald-500/25' : 'bg-white border-slate-200/80'}`}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${form.is_active ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-xs font-extrabold text-slate-700 block">Catalog Visibility</span>
+                    <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Toggle whether student accounts can view and purchase this bundle</span>
+                  </div>
                 </div>
                 <span className="relative inline-flex items-center shrink-0">
                   <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="sr-only peer" />
-                  <span className="w-11 h-6.5 bg-slate-200 peer-checked:bg-rose-600 rounded-full transition-colors duration-300"></span>
+                  <span className="w-11 h-6.5 bg-slate-200 peer-checked:bg-emerald-600 rounded-full transition-colors duration-300"></span>
                   <span className="absolute left-1 top-1 w-4.5 h-4.5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow"></span>
                 </span>
               </label>
@@ -489,11 +545,12 @@ export default function AdminPackages() {
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
-                form="package-form" 
-                disabled={saving} 
-                className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-60 flex items-center justify-center gap-1.5 transition-all shadow-md shadow-rose-600/10 hover:shadow-lg"
+              <button
+                type="submit"
+                form="package-form"
+                disabled={saving}
+                className="flex-1 py-3 text-white rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-60 flex items-center justify-center gap-1.5 transition-all shadow-md shadow-rose-600/20 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                style={{ background: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)' }}
               >
                 {saving ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

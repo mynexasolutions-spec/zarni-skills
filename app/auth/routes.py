@@ -77,6 +77,16 @@ def register():
             flash('Email is already registered.', 'danger')
             return render_template('auth/register.html', ref_code=ref_code, packages=packages)
 
+        # This legacy form has no OTP step of its own — require the address to
+        # have been verified via the same send-otp/verify-otp flow the React
+        # app uses (app/api_routes.py) before creating the account. Without
+        # this, anyone could register with an email they don't own by POSTing
+        # straight to this route, skipping the OTP check entirely.
+        from app.api_routes import email_is_verified
+        if not email_is_verified(email):
+            flash('Please verify your email address first.', 'danger')
+            return render_template('auth/register.html', ref_code=ref_code, packages=packages)
+
         referred_by_id = None
         if referral_code:
             ref_user = User.query.filter_by(referral_code=referral_code).first()
@@ -181,6 +191,17 @@ def forgot_password():
         flash('If that email is registered, a reset link has been sent.', 'info')
         if user:
             token = _make_reset_token(user)
+            # Record the token so it can be retired after one use — the signed
+            # token by itself stays valid for its whole lifetime, so without
+            # this row the same reset link could be replayed repeatedly within
+            # that window (see reset_password() below).
+            db.session.add(PasswordResetToken(
+                user_id=user.id,
+                token_hash=hashlib.sha256(token.encode()).hexdigest(),
+                used=False,
+                expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+            ))
+            db.session.commit()
             reset_link = url_for('auth.reset_password', token=token, _external=True)
             try:
                 send_password_reset_email(user, reset_link)
@@ -201,6 +222,17 @@ def reset_password(token):
         flash('This password reset link is invalid or has expired.', 'danger')
         return redirect(url_for('auth.forgot_password'))
 
+    token_row = PasswordResetToken.query.filter_by(
+        token_hash=hashlib.sha256(token.encode()).hexdigest()).first()
+    # A token issued before this single-use tracking existed has no row —
+    # treat that the same as "invalid" rather than letting it slip through.
+    if token_row is None or token_row.used:
+        flash('This password reset link has already been used.', 'danger')
+        return redirect(url_for('auth.forgot_password'))
+    if token_row.expires_at and datetime.now(timezone.utc) > token_row.expires_at.replace(tzinfo=timezone.utc):
+        flash('This password reset link has expired.', 'danger')
+        return redirect(url_for('auth.forgot_password'))
+
     if request.method == 'POST':
         password = request.form.get('password', '')
         confirm = request.form.get('confirm_password', '')
@@ -212,6 +244,7 @@ def reset_password(token):
             return render_template('auth/reset_password.html', token=token)
 
         user.password_hash = hash_password(password)
+        token_row.used = True
         db.session.commit()
         flash('Password updated successfully! Please log in.', 'success')
         return redirect(url_for('auth.login'))

@@ -191,7 +191,7 @@ function MilestonesTab() {
           const metricLabel = METRIC_OPTIONS.find(m => m.value === item.metric)?.label || item.metric;
           return (
             <div key={item.id} className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-              <div className={`relative h-36 overflow-hidden ${item.image_display_url ? '' : `bg-gradient-to-br ${item.gradient}`}`}>
+              <div className={`relative aspect-square overflow-hidden ${item.image_display_url ? '' : `bg-gradient-to-br ${item.gradient}`}`}>
                 {item.image_display_url ? (
                   <>
                     <img src={item.image_display_url} alt={item.title} className="absolute inset-0 w-full h-full object-cover" />

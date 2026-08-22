@@ -8,7 +8,11 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 cloudinary.config(
     cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
     api_key=os.environ.get('CLOUDINARY_API_KEY'),
-    api_secret=os.environ.get('CLOUDINARY_API_SECRET')
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+    # SDK default socket timeout (60s) is too short for large course-video
+    # uploads — the request itself succeeds but the client gives up waiting
+    # on Cloudinary's response and reports a false failure.
+    timeout=600,
 )
 
 class Config:
@@ -35,7 +39,7 @@ class Config:
     THUMBNAIL_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'img', 'uploads')
     KYC_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'kyc_uploads')
     FREELANCE_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'freelance_uploads')
-    MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # 500 MB max upload
+    MAX_CONTENT_LENGTH = 1024 * 1024 * 1024  # 1 GB max upload (course lecture videos)
 
     # ── Flask-Mail extension defaults. Not actually used for sending anymore —
     # app/utils/email.py sends via the Brevo HTTP API (BREVO_API_KEY etc. in

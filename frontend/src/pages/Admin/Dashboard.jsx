@@ -5,10 +5,111 @@ import {
   Users, UserCog, Briefcase, ShoppingCart, IndianRupee, Clock, Landmark,
   FileText, Layers, BookOpen, Share2, Wallet, ArrowRight, Sparkles, ShieldCheck,
   TrendingUp, ArrowUpRight, Activity, Search, Filter, RefreshCw,
-  Receipt, Percent, PiggyBank, Gift, Crown, CheckCircle2, Hourglass
+  Receipt, Percent, PiggyBank, Gift, Crown, CheckCircle2, Hourglass,
+  X, Mail, Phone, MapPin, Calendar, User as UserIcon, UserPlus
 } from 'lucide-react';
 import api from '../../utils/api';
 import AnimatedNumber from '../../components/AnimatedNumber';
+
+function UserProfileModal({ member, loading, onClose }) {
+  if (member === null) return null;
+  const initials = member.name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'ZS';
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-fade-in-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div
+          className="p-8 pb-16 text-white relative"
+          style={{ background: 'linear-gradient(135deg, #09090b 0%, #1c0e18 40%, #3b0717 80%, #4c0519 100%)' }}
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+        </div>
+
+        {loading || !member.id ? (
+          <div className="p-12 -mt-14 relative flex flex-col items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-full border-4 border-rose-200 border-t-rose-600 animate-spin"></div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Profile...</p>
+          </div>
+        ) : (
+          <div className="px-6 pb-6 -mt-14 relative">
+            {member.profile_image_url ? (
+              <img
+                src={member.profile_image_url}
+                alt={member.name}
+                className="w-24 h-24 rounded-3xl object-cover border-4 border-white shadow-lg bg-slate-100"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-rose-600 to-red-700 text-white text-2xl font-black flex items-center justify-center border-4 border-white shadow-lg">
+                {initials}
+              </div>
+            )}
+            <h3 className="mt-4 text-xl font-heading font-black text-slate-900">{member.name}</h3>
+            <div className="flex flex-wrap items-center gap-2 mt-1.5">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-black uppercase rounded-full bg-slate-100 text-slate-600 capitalize">
+                {member.role}
+              </span>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-black uppercase rounded-full ${
+                member.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+              }`}>{member.is_active ? 'Active' : 'Inactive'}</span>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" /> Joined {member.created_at}
+              </p>
+            </div>
+
+            <div className="mt-5 space-y-2.5">
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <Mail className="w-4 h-4 text-rose-500 shrink-0" />
+                <span className="text-sm font-semibold text-slate-700 truncate">{member.email || 'N/A'}</span>
+              </div>
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="text-sm font-semibold text-slate-700">{member.phone || 'N/A'}</span>
+              </div>
+              {member.address && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span className="text-sm font-semibold text-slate-700">{member.address}</span>
+                </div>
+              )}
+              {(member.age || member.gender) && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <UserIcon className="w-4 h-4 text-purple-500 shrink-0" />
+                  <span className="text-sm font-semibold text-slate-700">
+                    {[member.age ? `${member.age} yrs` : null, member.gender].filter(Boolean).join(' · ')}
+                  </span>
+                </div>
+              )}
+              {member.referral_code && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <Share2 className="w-4 h-4 text-blue-500 shrink-0" />
+                  <span className="text-sm font-semibold text-slate-700 font-mono">{member.referral_code}</span>
+                </div>
+              )}
+              {(member.bio || member.about) && (
+                <div className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">About</p>
+                  <p className="text-sm font-medium text-slate-600 leading-relaxed">{member.bio || member.about}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -16,6 +117,23 @@ export default function AdminDashboard() {
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [profileModal, setProfileModal] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  const openMemberProfile = async (memberId) => {
+    if (!memberId) return;
+    setProfileLoading(true);
+    setProfileModal({});
+    try {
+      const response = await api.get(`/admin/users/${memberId}`);
+      setProfileModal(response.data.user);
+    } catch (err) {
+      console.error('Error fetching member profile', err);
+      setProfileModal(null);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   const fetchDashboard = async () => {
     try {
@@ -74,46 +192,10 @@ export default function AdminDashboard() {
   };
 
   const kpis = [
-    { 
-      label: 'Total Students', 
-      value: stats.total_users ?? 0, 
-      icon: Users, 
-      color: 'from-blue-600 to-indigo-600', 
-      ring: 'group-hover:ring-blue-500/20',
-      sparkColor: '#3b82f6',
-      sparkline: 'M0,15 Q15,5 30,12 T60,3 T90,14 T120,5 T150,10',
-      growth: '+12.4% this month'
-    },
-    { 
-      label: 'Regional Managers', 
-      value: stats.total_managers ?? 0, 
-      icon: UserCog, 
-      color: 'from-violet-600 to-purple-600', 
-      ring: 'group-hover:ring-purple-500/20',
-      sparkColor: '#8b5cf6',
-      sparkline: 'M0,10 Q15,15 30,5 T60,15 T90,2 T120,8 T150,4',
-      growth: '+4 new active'
-    },
-    { 
-      label: 'Team Members', 
-      value: stats.total_team_members ?? 0, 
-      icon: Briefcase, 
-      color: 'from-cyan-600 to-teal-600', 
-      ring: 'group-hover:ring-teal-500/20',
-      sparkColor: '#14b8a6',
-      sparkline: 'M0,5 Q15,8 30,3 T60,12 T90,4 T120,15 T150,1',
-      growth: 'Stable operations'
-    },
-    { 
-      label: 'Paid Orders', 
-      value: stats.total_orders ?? 0, 
-      icon: ShoppingCart, 
-      color: 'from-emerald-600 to-green-600', 
-      ring: 'group-hover:ring-emerald-500/20',
-      sparkColor: '#10b981',
-      sparkline: 'M0,15 Q15,3 30,10 T60,1 T90,12 T120,2 T150,8',
-      growth: '+8.2% sales velocity'
-    },
+    { label: 'Total Students', value: stats.total_users ?? 0, icon: Users, color: 'from-blue-600 to-indigo-600' },
+    { label: 'Regional Managers', value: stats.total_managers ?? 0, icon: UserCog, color: 'from-violet-600 to-purple-600' },
+    { label: 'Team Members', value: stats.total_team_members ?? 0, icon: Briefcase, color: 'from-cyan-600 to-teal-600' },
+    { label: 'Paid Orders', value: stats.total_orders ?? 0, icon: ShoppingCart, color: 'from-emerald-600 to-green-600' },
   ];
 
   const alerts = [
@@ -134,6 +216,9 @@ export default function AdminDashboard() {
     { label: 'Total Commission', value: money(stats.total_commission_alltime), icon: Share2, color: 'from-purple-500 to-fuchsia-600' },
     { label: 'Total Reward', value: money(stats.total_reward), icon: Gift, color: 'from-pink-500 to-rose-600' },
     { label: 'Total Profit', value: money(stats.total_profit), icon: TrendingUp, color: 'from-green-600 to-emerald-700' },
+    { label: 'Registration Form Income', value: money(stats.registration_form_income), sub: `${stats.registration_form_count ?? 0} registrations`, icon: UserPlus, color: 'from-pink-500 to-rose-600' },
+    { label: `Paid To Referrers (${stats.registration_form_referrer_percent ?? 100}%)`, value: money(stats.registration_form_referrer_paid), icon: Users, color: 'from-emerald-500 to-teal-600' },
+    { label: 'Kept By Platform', value: money(stats.registration_form_company_income), icon: Landmark, color: 'from-slate-500 to-slate-700' },
   ];
 
   const managerCards = [
@@ -319,32 +404,12 @@ export default function AdminDashboard() {
               <kpi.icon className="w-32 h-32" strokeWidth={1} />
             </div>
 
-            <div className="relative z-10 flex flex-col justify-between h-full">
-              <div className="flex items-center justify-between gap-2 mb-4">
-                <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center backdrop-blur-md">
-                  <kpi.icon className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] font-black bg-white/15 px-2 py-0.5 rounded-full backdrop-blur-sm text-white/90">
-                  {kpi.growth}
-                </span>
+            <div className="relative z-10">
+              <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center backdrop-blur-md mb-5">
+                <kpi.icon className="w-5 h-5" />
               </div>
-              <div>
-                <AnimatedNumber value={kpi.value} duration={1000} className="block text-3xl font-black leading-none tabular-nums tracking-tight" />
-                <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/70 mt-2">{kpi.label}</p>
-              </div>
-
-              {/* Miniature Sparkline to replace standard empty layouts */}
-              <div className="w-full h-6 mt-4 opacity-50 group-hover:opacity-85 transition-opacity">
-                <svg className="w-full h-full" viewBox="0 0 150 20">
-                  <path 
-                    d={kpi.sparkline} 
-                    fill="none" 
-                    stroke="white" 
-                    strokeWidth="1.8" 
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
+              <AnimatedNumber value={kpi.value} duration={1000} className="block text-3xl font-black leading-none tabular-nums tracking-tight" />
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/70 mt-2">{kpi.label}</p>
             </div>
           </div>
         ))}
@@ -442,13 +507,15 @@ export default function AdminDashboard() {
           {recentOrders.map((o, idx) => (
             <div key={o.id} className="border border-slate-100 bg-slate-50/50 rounded-2xl p-4 animate-fade-in-up" style={{ animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
               <div className="flex items-center gap-3 mb-2.5">
-                <div className={`w-8 h-8 rounded-full border flex items-center justify-center font-bold text-xs ${getAvatarBg(o.buyer_name)}`}>
-                  {getInitials(o.buyer_name)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-slate-800 text-sm truncate">{o.buyer_name}</p>
-                  <p className="text-[10px] text-slate-400 truncate">{o.item_name}</p>
-                </div>
+                <button type="button" onClick={() => openMemberProfile(o.buyer_id)} className="flex items-center gap-3 min-w-0 flex-1 text-left">
+                  <div className={`w-8 h-8 rounded-full border flex items-center justify-center font-bold text-xs shrink-0 ${getAvatarBg(o.buyer_name)}`}>
+                    {getInitials(o.buyer_name)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-slate-800 text-sm truncate">{o.buyer_name}</p>
+                    <p className="text-[10px] text-slate-400 truncate">{o.item_name}</p>
+                  </div>
+                </button>
                 <span className={`shrink-0 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full ${
                   o.payment_status === 'paid' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' : o.payment_status === 'failed' ? 'bg-rose-500/10 text-rose-600 border border-rose-500/20' : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
                 }`}>{o.payment_status}</span>
@@ -480,12 +547,12 @@ export default function AdminDashboard() {
               {recentOrders.map(o => (
                 <tr key={o.id} className="hover:bg-slate-50/60 transition-colors duration-150">
                   <td className="py-3.5 pl-2">
-                    <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => openMemberProfile(o.buyer_id)} className="flex items-center gap-3 text-left">
                       <div className={`w-9 h-9 rounded-full border flex items-center justify-center font-bold text-xs shrink-0 ${getAvatarBg(o.buyer_name)}`}>
                         {getInitials(o.buyer_name)}
                       </div>
-                      <span className="font-bold text-slate-800 leading-tight">{o.buyer_name}</span>
-                    </div>
+                      <span className="font-bold text-slate-800 leading-tight hover:text-rose-600 transition-colors">{o.buyer_name}</span>
+                    </button>
                   </td>
                   <td className="py-3.5 font-medium text-slate-500 truncate max-w-[240px]" title={o.item_name}>
                     {o.item_name}
@@ -511,6 +578,11 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      <UserProfileModal
+        member={profileModal}
+        loading={profileLoading}
+        onClose={() => setProfileModal(null)}
+      />
     </div>
   );
 }

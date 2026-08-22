@@ -121,6 +121,11 @@ export default function Hero() {
               <h1 className="font-heading font-black text-[1.35rem] sm:text-2xl md:text-3xl lg:text-4xl xl:text-[2.75rem] text-slate-900 leading-[1.2] tracking-tight">
                 {slide.heading}
               </h1>
+              {slide.paragraph && (
+                <p className="hidden sm:block text-sm md:text-base text-slate-600 leading-relaxed mt-3 lg:mt-4">
+                  {slide.paragraph}
+                </p>
+              )}
               <span className="block w-24 sm:w-36 lg:w-44 h-1 rounded-full bg-gradient-to-r from-emerald-500 via-orange-500 to-blue-500 mt-2.5 sm:mt-4"></span>
             </div>
           </div>

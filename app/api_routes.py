@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, request, current_app, session
 from flask_login import login_user, logout_user, current_user
 from werkzeug.utils import secure_filename
 from app.models import User, Package, Course, Instructor, Chapter, ChapterProgress, Banner, HomeTeamMember, HeroSlide, FAQItem, SuccessStory, Testimonial, TrainingSession, Achievement, WalletTransaction, Order, Withdrawal, Commission, Notification, FreelanceApplication, Coupon, ManagerRequest, AchievementRequest, ContactSubmission, Product, RewardItem, PlatformFeature
-from app.utils import process_commissions, approve_commission, approve_withdrawal, compute_checkout_price, validate_coupon
+from app.utils import process_commissions, approve_commission, approve_withdrawal, compute_checkout_price, validate_coupon, redeem_coupon
 from app.utils.payments import is_razorpay_enabled, create_razorpay_order, verify_razorpay_signature, get_razorpay_key_id, fetch_razorpay_order, verify_razorpay_webhook_signature
 from app import db
 import string
@@ -166,11 +166,6 @@ def _get_certificate_template(course=None):
 def get_global_data():
     try:
         from app.models import SiteSettings
-        raw_field_config = SiteSettings.get('registration_field_config', '')
-        try:
-            registration_field_config = json.loads(raw_field_config) if raw_field_config else {}
-        except (TypeError, ValueError):
-            registration_field_config = {}
 
         packages = Package.query.filter_by(is_active=True).order_by(Package.price).all()
         # Limit to 10 courses for navbar/footer dropdown display. Ordered explicitly
@@ -220,7 +215,6 @@ def get_global_data():
                     'instructor_slug': c.instructor_slug,
                 } for c in courses
             ],
-            'registration_field_config': registration_field_config,
             'certificate_template': _get_certificate_template(),
             'social_links': {
                 'facebook': SiteSettings.get('footer_facebook_url', '') or '',
@@ -229,6 +223,7 @@ def get_global_data():
             },
             'support_email': SiteSettings.get('support_email', '') or '',
             'support_phone': SiteSettings.get('support_phone', '') or '',
+            'support_address': SiteSettings.get('support_address', '') or '',
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -772,7 +767,8 @@ def login():
                 'email': user.email,
                 'role': user.role,
                 'referral_code': user.referral_code,
-                'profile_image_url': user.profile_image_url
+                'profile_image_url': user.profile_image_url,
+                'created_at': user.created_at.strftime('%b %Y') if user.created_at else None
             }
         })
     return jsonify({'success': False, 'message': 'Invalid email or password.'}), 401
@@ -860,7 +856,8 @@ def register():
             'email': new_user.email,
             'role': new_user.role,
             'referral_code': new_user.referral_code,
-            'profile_image_url': new_user.profile_image_url
+            'profile_image_url': new_user.profile_image_url,
+            'created_at': new_user.created_at.strftime('%b %Y') if new_user.created_at else None
         }
     })
 
@@ -885,6 +882,15 @@ def student_dashboard_stats():
     ).scalar() or 0
     last_30_earnings = sum_commission_earnings(current_user.id, since=windows['30days'])
     last_7_earnings = sum_commission_earnings(current_user.id, since=windows['7days'])
+
+    # Masterclass registration-form income — paid at 100% straight to the
+    # referrer (see _create_masterclass_registration), not tied to an Order,
+    # so order_id IS NULL is what marks these apart from L1/L2/manager
+    # commissions (which always carry the order that earned them).
+    registration_income = float(db.session.query(func.coalesce(func.sum(Commission.commission_amount), 0)).filter(
+        Commission.user_id == current_user.id,
+        Commission.order_id.is_(None),
+    ).scalar() or 0)
 
     active_income = {
         'today': sum_commission_earnings(current_user.id, level=1, since=windows['today']),
@@ -936,9 +942,12 @@ def student_dashboard_stats():
     recent_referrals = User.query.filter_by(referred_by=current_user.id).order_by(
         User.created_at.desc()).limit(5).all()
 
-    # Get chart data for last 7 days
+    # Get chart data for last 7 days (IST calendar days — created_at is
+    # stored in UTC, so bucket by IST date, not the raw UTC date).
+    from app.utils.commissions import IST_OFFSET
+
     start_date = now - timedelta(days=6)
-    start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    start_date = (start_date + IST_OFFSET).replace(hour=0, minute=0, second=0, microsecond=0) - IST_OFFSET
 
     query = db.session.query(WalletTransaction).filter(
         WalletTransaction.user_id == current_user.id,
@@ -952,11 +961,11 @@ def student_dashboard_stats():
     labels = []
     values = []
     for i in range(7):
-        d = (start_date + timedelta(days=i)).date()
+        d = (start_date + IST_OFFSET + timedelta(days=i)).date()
         by_date[d] = 0.0
 
     for tx in txs:
-        tx_date = tx.created_at.date()
+        tx_date = (tx.created_at + IST_OFFSET).date()
         if tx_date in by_date:
             by_date[tx_date] += float(tx.amount)
 
@@ -970,6 +979,7 @@ def student_dashboard_stats():
         'all_time_paid': float(all_time_paid or 0),
         'last_30_earnings': float(last_30_earnings or 0),
         'last_7_earnings': float(last_7_earnings or 0),
+        'registration_income': registration_income,
         'active_income': active_income,
         'passive_income': passive_income,
         'available_balance': current_user.available_balance,
@@ -1094,6 +1104,7 @@ def student_commissions():
         'commissions': [
             {
                 'id': c.id,
+                'buyer_id': c.from_user_id,
                 'buyer_name': c.buyer.name if c.buyer else 'N/A',
                 'item_name': _order_item_name(c.order) if c.order else 'N/A',
                 'sale_amount': float(c.order.amount_paid) if c.order else 0,
@@ -1109,6 +1120,35 @@ def student_commissions():
         'passive_total': float(sum(c.commission_amount for c in all_commissions if c.level == 2)),
         'available_balance': current_user.available_balance,
         'pending_earnings': current_user.pending_earnings,
+    })
+
+
+@api_bp.route('/student/commissions/buyer/<int:buyer_id>', methods=['GET'])
+def student_commission_buyer_profile(buyer_id):
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    commission = Commission.query.filter_by(
+        user_id=current_user.id, from_user_id=buyer_id).first()
+    if not commission:
+        return jsonify({'error': 'Not found'}), 404
+
+    buyer = User.query.get_or_404(buyer_id)
+
+    return jsonify({
+        'user': {
+            'id': buyer.id,
+            'name': buyer.name,
+            'email': buyer.email,
+            'phone': buyer.phone,
+            'bio': buyer.bio,
+            'about': buyer.about,
+            'age': buyer.age,
+            'gender': buyer.gender,
+            'address': buyer.address,
+            'profile_image_url': buyer.profile_image_url,
+            'created_at': buyer.created_at.strftime('%d %b %Y'),
+        }
     })
 
 
@@ -1143,9 +1183,16 @@ def student_earnings_summary():
     }
 
     if current_user.role == 'manager':
-        team = User.query.filter_by(referred_by=uid).all()
+        team = User.query.filter_by(manager_id=uid).all()
         team_ids = [u.id for u in team]
         sub_manager_ids = [u.id for u in team if u.role == 'manager']
+
+        manager_override = {
+            'today': sum_commission_earnings(uid, level=3, since=w['today']),
+            '7days': sum_commission_earnings(uid, level=3, since=w['7days']),
+            '30days': sum_commission_earnings(uid, level=3, since=w['30days']),
+            'alltime': sum_commission_earnings(uid, level=3),
+        }
 
         response['team_income'] = {
             'today': sum_team_earnings(team_ids, since=w['today']),
@@ -1154,10 +1201,8 @@ def student_earnings_summary():
             'alltime': sum_team_earnings(team_ids),
         }
         response['manager_income'] = {
-            'today': sum_team_earnings(sub_manager_ids, since=w['today']),
-            '7days': sum_team_earnings(sub_manager_ids, since=w['7days']),
-            '30days': sum_team_earnings(sub_manager_ids, since=w['30days']),
-            'alltime': sum_team_earnings(sub_manager_ids),
+            k: sum_team_earnings(sub_manager_ids, since=w[k] if k != 'alltime' else None) + manager_override[k]
+            for k in ('today', '7days', '30days', 'alltime')
         }
 
     return jsonify(response)
@@ -1255,6 +1300,7 @@ def admin_package_upgrades():
         package = package_map.get(o.package_id)
         rows.append({
             'id': o.id,
+            'user_id': o.user_id,
             'user_name': buyer.name if buyer else None,
             'user_email': buyer.email if buyer else None,
             'package_name': package.name if package else None,
@@ -1293,6 +1339,7 @@ def admin_registration_details():
             'phone': u.phone,
             'role': u.role,
             'referral_code': u.referral_code,
+            'referred_by_id': u.referred_by,
             'referred_by_name': referrer_names.get(u.referred_by),
             'created_at': u.created_at.strftime('%d %b %Y, %I:%M %p') if u.created_at else None,
         })
@@ -1383,6 +1430,8 @@ def student_withdraw():
         return jsonify({'success': False, 'message': f'Minimum withdrawal amount is ₹{min_amount:,.0f}.'}), 400
     if amount > current_user.available_balance:
         return jsonify({'success': False, 'message': 'Insufficient balance.'}), 400
+    if not current_user.kyc or current_user.kyc.status != 'approved':
+        return jsonify({'success': False, 'message': 'Please complete and get your KYC approved before requesting a withdrawal.'}), 400
 
     wd = Withdrawal(user_id=current_user.id, amount=amount, upi_id=upi_id, status='requested')
     db.session.add(wd)
@@ -1487,35 +1536,6 @@ def student_certificates():
             }
             for c in completed
         ],
-    })
-
-
-@api_bp.route('/student/trip-goal', methods=['GET'])
-def student_trip_goal():
-    if not current_user.is_authenticated:
-        return jsonify({'error': 'Unauthorized'}), 401
-
-    from app.models import SiteSettings
-    from app.utils.commissions import sum_commission_earnings
-
-    title = SiteSettings.get('trip_goal_title', '') or ''
-    amount_raw = SiteSettings.get('trip_goal_amount', '') or ''
-    date_raw = SiteSettings.get('trip_goal_date', '') or ''
-    image_url = SiteSettings.get('trip_goal_image_url', '') or ''
-    try:
-        amount = float(amount_raw) if amount_raw else None
-    except ValueError:
-        amount = None
-
-    return jsonify({
-        'configured': bool(title and amount and date_raw),
-        'title': title,
-        'goal_amount': amount,
-        'goal_date': date_raw,
-        'image_url': image_url,
-        # Trip qualification counts active (level 1, direct-referral) income
-        # only — passive/manager-override earnings don't count toward it.
-        'current_earnings': sum_commission_earnings(current_user.id, level=1),
     })
 
 
@@ -2071,7 +2091,7 @@ def student_purchase():
     db.session.add(order)
     db.session.flush()
     if pricing['coupon']:
-        pricing['coupon'].used_count += 1
+        redeem_coupon(pricing['coupon'])
     process_commissions(order)
     db.session.commit()
 
@@ -2126,7 +2146,16 @@ def student_checkout_create_order():
     if not is_razorpay_enabled() or amount <= 0:
         return jsonify({'razorpay_enabled': False})
 
-    rz_order = create_razorpay_order(amount_inr=amount, receipt=receipt)
+    # Coupon code is stashed in the Razorpay order's notes so that if the
+    # client never calls back (closed tab, network drop) and the webhook
+    # alone fulfils the order via _fulfil_payment_from_receipt, that path can
+    # still find out which coupon was used and increment its used_count —
+    # otherwise a max_uses=1 coupon could be replayed indefinitely through
+    # the webhook-only path (used_count would never advance).
+    rz_order = create_razorpay_order(
+        amount_inr=amount, receipt=receipt,
+        notes={'coupon_code': pricing['coupon_code']} if pricing['coupon_code'] else None,
+    )
     if rz_order is None:
         return jsonify({'success': False, 'message': 'Payment gateway error. Please try again or contact support.'}), 502
 
@@ -2231,7 +2260,7 @@ def student_payment_verify():
     db.session.add(order)
     db.session.flush()
     if pricing['coupon']:
-        pricing['coupon'].used_count += 1
+        redeem_coupon(pricing['coupon'])
     process_commissions(order)
     db.session.commit()
 
@@ -2269,20 +2298,26 @@ def _fulfil_payment_from_receipt(receipt: str, payment_id: str, amount_inr: floa
         user = User.query.get(user_id)
         if not user:
             return False
+        coupon_code = (notes or {}).get('coupon_code')
+        coupon = Coupon.query.filter_by(code=coupon_code).first() if coupon_code else None
         if item_type == 'pkg':
             package = Package.query.get(item_id)
             if not package or user.has_purchased(package.id):
                 return True
             order = Order(user_id=user.id, package_id=package.id, amount_paid=amount_inr,
-                           payment_status='paid', payment_method='razorpay', transaction_id=payment_id)
+                           payment_status='paid', payment_method='razorpay', transaction_id=payment_id,
+                           coupon_code=coupon.code if coupon else None)
         else:
             course = Course.query.get(item_id)
             if not course or user.has_access_to_course(course.id):
                 return True
             order = Order(user_id=user.id, course_id=course.id, amount_paid=amount_inr,
-                           payment_status='paid', payment_method='razorpay', transaction_id=payment_id)
+                           payment_status='paid', payment_method='razorpay', transaction_id=payment_id,
+                           coupon_code=coupon.code if coupon else None)
         db.session.add(order)
         db.session.flush()
+        if coupon:
+            redeem_coupon(coupon)
         process_commissions(order)
         db.session.commit()
         try:
@@ -2323,11 +2358,12 @@ def _fulfil_payment_from_receipt(receipt: str, payment_id: str, amount_inr: floa
         # notes captured at create-order time instead of a live request body.
         notes = notes or {}
         content = _get_masterclass_content()
-        amount = float(content.get('price') or 0)
+        amount = _masterclass_total_price(content)
         order = _create_masterclass_registration(
             referrer, notes.get('name'), notes.get('phone'), notes.get('email'),
             {k: notes.get(k, '') for k in ('age', 'occupation', 'city_state', 'experience_level', 'goal')},
             amount, payment_id,
+            session_info={k: content.get(k) for k in ('date', 'time', 'mode', 'language', 'whatsapp_group_link')},
         )
         return order is not None
 
@@ -2340,10 +2376,15 @@ def _fulfil_payment_from_receipt(receipt: str, payment_id: str, amount_inr: floa
             return False
         if user.has_purchased_product(product.id):
             return True
+        coupon_code = (notes or {}).get('coupon_code')
+        coupon = Coupon.query.filter_by(code=coupon_code).first() if coupon_code else None
         order = Order(user_id=user.id, product_id=product.id, amount_paid=amount_inr,
-                       payment_status='paid', payment_method='razorpay', transaction_id=payment_id)
+                       payment_status='paid', payment_method='razorpay', transaction_id=payment_id,
+                       coupon_code=coupon.code if coupon else None)
         db.session.add(order)
         db.session.flush()
+        if coupon:
+            redeem_coupon(coupon)
         process_commissions(order)
         db.session.commit()
         return True
@@ -2410,8 +2451,12 @@ _DEFAULT_MASTERCLASS_CONTENT = {
     'seats_filled': 87,
     'language': 'Hindi',
     'hero_image': '/static/img/manwithlaptop.png',
+    # Empty by default — the mobile hero falls back to hero_image (cropped
+    # 4:5 with a text scrim) if the admin never uploads a mobile-specific one.
+    'hero_image_mobile': '',
     'summary_image': '/static/img/manwithlaptop.png',
     'achievement_image': '/static/img/achievement-man.png',
+    'bonuses_image': '/static/img/reward-laptop.png',
     'feature_chips': [
         'Live Interactive Session',
         'Practical Learning',
@@ -2543,6 +2588,7 @@ _DEFAULT_MASTERCLASS_CONTENT = {
         {'title': '24/7 Support', 'desc': "We're here to help"},
     ],
     'why_join_heading': 'Why Thousands Are Joining',
+    'why_join_quote': {'text': '', 'name': '', 'role': ''},
     'privacy_heading': 'Your Information is Safe With Us',
     'privacy_text': 'We respect your privacy and never share your information with anyone. Your registration is safe, secure and confidential.',
     'privacy_badges': ['SSL Secure', 'Privacy Protected', 'Trusted by Thousands'],
@@ -2577,6 +2623,7 @@ _DEFAULT_MASTERCLASS_CONTENT = {
     'support_card_title': 'Chat on WhatsApp',
     'support_card_subtitle': "We're here to help you!",
     'support_card_cta': 'Chat Now',
+    'support_avatar_image': '',
     'success_banner_title': "You've Taken The First Step Towards Your Success!",
     'success_banner_subtitle': "We're excited to help you achieve your goals.",
     'success_trust_items': [
@@ -2659,6 +2706,33 @@ def _get_masterclass_content():
     return content
 
 
+def _masterclass_total_price(content):
+    """The actual amount to charge for a masterclass registration.
+
+    The checkout summary on the public page always displays price + the
+    admin-set gst_amount as the "Total" (see MasterclassRegister.jsx), so
+    what gets charged via Razorpay — and what /verify cross-checks against —
+    has to match that combined figure, not just the bare price. Using only
+    `price` here would silently undercharge (or fail signature verification)
+    the moment an admin sets a nonzero GST amount on the funnel page."""
+    price = float(content.get('price') or 0)
+    gst = float(content.get('gst_amount') or 0)
+    return price + gst
+
+
+def _masterclass_content_with_live_seats():
+    """_get_masterclass_content(), but with seats_filled replaced by the real,
+    live count of MasterclassRegistration rows instead of whatever static
+    number is stored in the content blob. total_seats stays admin-set (the
+    fixed capacity); seats_filled/seats-left now moves on its own as real
+    people actually register and pay, instead of needing the admin to keep
+    typing in a new number by hand."""
+    from app.models import MasterclassRegistration
+    content = _get_masterclass_content()
+    content['seats_filled'] = MasterclassRegistration.query.count()
+    return content
+
+
 @api_bp.route('/student/masterclass-funnel', methods=['GET'])
 def student_masterclass_funnel():
     if not current_user.is_authenticated:
@@ -2666,7 +2740,7 @@ def student_masterclass_funnel():
 
     return jsonify({
         'activated': _affiliate_activation_order() is not None,
-        'content': _get_masterclass_content(),
+        'content': _masterclass_content_with_live_seats(),
     })
 
 
@@ -2685,7 +2759,16 @@ def admin_masterclass_funnel():
         SiteSettings.set('masterclass_funnel_content', json.dumps(content))
         return jsonify({'success': True})
 
-    return jsonify({'content': _get_masterclass_content()})
+    return jsonify({'content': _masterclass_content_with_live_seats()})
+
+
+# Video keys the admin funnel editor is allowed to upload into — same
+# allowlist-guard reasoning as _MASTERCLASS_IMAGE_FIELDS below. video_filename
+# is the main Hero video; preparation_video_filename is the "Watch
+# Preparation Video" Next Steps card on the success page (its Link field,
+# preparation_video_link, stays as a plain-URL fallback for an external
+# YouTube/Vimeo link — the uploaded file takes priority when both are set).
+_MASTERCLASS_VIDEO_FIELDS = {'video_filename', 'preparation_video_filename'}
 
 
 @api_bp.route('/admin/masterclass-funnel/video', methods=['POST'])
@@ -2696,6 +2779,10 @@ def admin_masterclass_funnel_video():
     from app.models import SiteSettings
     from app.admin.routes import _save_video, ALLOWED_VIDEO_EXTS
 
+    field = (request.form.get('field') or 'video_filename').strip()
+    if field not in _MASTERCLASS_VIDEO_FIELDS:
+        return jsonify({'success': False, 'message': 'Unknown video field.'}), 400
+
     video = _save_video(request.files.get('video_file'))
     if video is False:
         return jsonify({'success': False, 'message': f'Invalid video format. Allowed: {", ".join(ALLOWED_VIDEO_EXTS)}'}), 400
@@ -2703,14 +2790,36 @@ def admin_masterclass_funnel_video():
         return jsonify({'success': False, 'message': 'No video file provided.'}), 400
 
     content = _get_masterclass_content()
-    content['video_filename'] = video
+    content[field] = video
     SiteSettings.set('masterclass_funnel_content', json.dumps(content))
-    return jsonify({'success': True, 'video_filename': video})
+    return jsonify({'success': True, 'field': field, 'video_filename': video})
+
+
+@api_bp.route('/admin/masterclass-funnel/document', methods=['POST'])
+def admin_masterclass_funnel_document():
+    """Upload the Welcome PDF (or any doc) so admin never has to host it
+    somewhere else and paste a link — mirrors the video upload above."""
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from app.models import SiteSettings
+    from app.admin.routes import _save_document, ALLOWED_DOCUMENT_EXTS
+
+    doc = _save_document(request.files.get('document_file'))
+    if doc is False:
+        return jsonify({'success': False, 'message': f'Invalid document format. Allowed: {", ".join(ALLOWED_DOCUMENT_EXTS)}'}), 400
+    if not doc:
+        return jsonify({'success': False, 'message': 'No document file provided.'}), 400
+
+    content = _get_masterclass_content()
+    content['welcome_pdf_link'] = doc
+    SiteSettings.set('masterclass_funnel_content', json.dumps(content))
+    return jsonify({'success': True, 'url': doc})
 
 
 # Image keys the admin funnel editor is allowed to upload into — an allowlist
 # so a crafted 'field' can't write an arbitrary key into the content blob.
-_MASTERCLASS_IMAGE_FIELDS = {'hero_image', 'summary_image', 'achievement_image', 'logo_image'}
+_MASTERCLASS_IMAGE_FIELDS = {'hero_image', 'hero_image_mobile', 'summary_image', 'achievement_image', 'logo_image', 'support_avatar_image', 'bonuses_image'}
 
 
 @api_bp.route('/admin/masterclass-funnel/image', methods=['POST'])
@@ -2740,14 +2849,52 @@ def admin_masterclass_funnel_image():
     return jsonify({'success': True, 'field': field, 'url': image})
 
 
+@api_bp.route('/admin/masterclass-funnel/upload-image', methods=['POST'])
+def admin_masterclass_funnel_upload_image():
+    """Upload a photo that lives inside a list item (a testimonial's avatar,
+    a live-registration avatar) rather than a top-level content field. Just
+    returns the saved URL — the admin UI drops it into the right list item
+    and saves the whole content blob via POST /admin/masterclass-funnel."""
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from app.admin.routes import _save_thumbnail, ALLOWED_IMAGE_EXTS
+
+    image = _save_thumbnail(request.files.get('image_file'))
+    if image is False:
+        return jsonify({'success': False, 'message': f'Invalid image format. Allowed: {", ".join(ALLOWED_IMAGE_EXTS)}'}), 400
+    if not image:
+        return jsonify({'success': False, 'message': 'No image file provided.'}), 400
+
+    return jsonify({'success': True, 'url': image})
+
+
 def _create_masterclass_registration(referrer, name, phone, email, extra_fields,
-                                      amount, payment_id, payment_method='razorpay'):
-    """Shared by the public masterclass /verify route and the webhook fallback
-    below: creates the guest's account (referred_by the link owner, so the
-    existing L1/L2 commission cascade in process_commissions() credits the
-    referrer), the paid Order, and runs commission processing. Returns the
-    new Order, or None if a user with this email/phone is already registered
-    (never repoint an existing account's referral chain)."""
+                                      amount, payment_id, payment_method='razorpay', session_info=None):
+    """Shared by the public masterclass /verify and /activate routes and the
+    webhook fallback below: records the guest's lead-capture form as a
+    MasterclassRegistration and pays the referrer the full fee immediately.
+
+    session_info (optional) is the funnel's Date/Time/Mode/Language *as of
+    this exact registration* — stored as a snapshot on the row (see the
+    session_date/time/mode/language columns) because the funnel only ever
+    holds one current value for those; once admin edits them for the next
+    batch, this is the only remaining record of what this specific person
+    was actually told.
+
+    Deliberately does NOT create a User account — a masterclass registration
+    is just a lead. If this person later wants to actually become a student,
+    they go through the normal signup flow for real; at that point
+    `has_purchased` (computed by matching email against `users` — see
+    /student/masterclass-referrals and /admin/masterclass-registrations)
+    picks them up automatically with no stored link needed between the two.
+
+    Returns the new MasterclassRegistration row, or None if this email
+    already belongs to a registered user or an existing masterclass lead
+    (never double-pay a referrer for the same lead, never re-register an
+    existing student as a fresh 'lead')."""
+    from app.models import MasterclassRegistration
+
     email = (email or '').strip().lower()
     phone = (phone or '').strip()
     if not email:
@@ -2756,43 +2903,50 @@ def _create_masterclass_registration(referrer, name, phone, email, extra_fields,
         return None
     if phone and User.query.filter_by(phone=phone).first():
         return None
+    if MasterclassRegistration.query.filter(db.func.lower(MasterclassRegistration.email) == email).first():
+        return None
 
-    from werkzeug.security import generate_password_hash
-    generated_password = secrets.token_urlsafe(9)
-    new_user = User(
-        name=(name or 'Student').strip() or 'Student',
+    lead_name = (name or 'Guest').strip() or 'Guest'
+    session_info = session_info or {}
+    registration = MasterclassRegistration(
+        referrer_id=referrer.id,
+        name=lead_name,
         email=email,
-        password_hash=generate_password_hash(generated_password),
         phone=phone,
-        referred_by=referrer.id,
-        manager_id=referrer.id if referrer.role == 'manager' else referrer.manager_id,
-        role='student',
-    )
-    db.session.add(new_user)
-    db.session.flush()
-
-    order = Order(
-        user_id=new_user.id,
-        package_id=None, course_id=None, product_id=None,
+        age=extra_fields.get('age') or None,
+        occupation=extra_fields.get('occupation') or None,
+        city_state=extra_fields.get('city_state') or None,
+        experience_level=extra_fields.get('experience_level') or None,
+        goal=extra_fields.get('goal') or None,
         amount_paid=amount,
-        payment_status='paid',
         payment_method=payment_method,
         transaction_id=payment_id,
-        extra_info=json.dumps(extra_fields),
+        session_date=session_info.get('date') or None,
+        session_time=session_info.get('time') or None,
+        session_mode=session_info.get('mode') or None,
+        session_language=session_info.get('language') or None,
     )
-    db.session.add(order)
+    db.session.add(registration)
     db.session.flush()
 
-    # Masterclass registrations pay the referrer the whole fee, credited
-    # straight away — deliberately NOT process_commissions(), which splits a
-    # percentage across L1/L2/manager and leaves it pending admin approval.
+    # Masterclass registrations pay the referrer a configurable share of the
+    # fee (default 100%, admin-adjustable via Settings > Masterclass
+    # Registration Split), credited straight away — deliberately NOT
+    # process_commissions(), which splits a percentage across L1/L2/manager
+    # and leaves it pending admin approval. `amount` (the full fee the guest
+    # paid) is always what's stored on the MasterclassRegistration row itself
+    # — only the referrer's commission is scaled down by this rate.
+    from app.models import SiteSettings
+    referrer_percent = float(SiteSettings.get('masterclass_referrer_percent', 100.0) or 100.0)
+    referrer_amount = round(float(amount) * referrer_percent / 100, 2)
+
     commission = Commission(
         user_id=referrer.id,
-        from_user_id=new_user.id,
-        order_id=order.id,
+        from_user_id=None,
+        order_id=None,
         level=1,
-        commission_percent=100,
-        commission_amount=amount,
+        commission_percent=referrer_percent,
+        commission_amount=referrer_amount,
         status='approved',
     )
     db.session.add(commission)
@@ -2800,10 +2954,10 @@ def _create_masterclass_registration(referrer, name, phone, email, extra_fields,
     db.session.add(WalletTransaction(
         user_id=referrer.id,
         type='commission',
-        amount=amount,
+        amount=referrer_amount,
         reference_id=commission.id,
         status='completed',
-        note=f'Masterclass registration income from {new_user.name}',
+        note=f'Masterclass registration income from {lead_name}',
     ))
     db.session.commit()
 
@@ -2812,20 +2966,23 @@ def _create_masterclass_registration(referrer, name, phone, email, extra_fields,
         add_notification(
             user_id=referrer.id,
             title='Registration Income Received! 💰',
-            message=f'You earned ₹{amount:,.2f} from {new_user.name}\'s masterclass registration.',
+            message=f'You earned ₹{referrer_amount:,.2f} from {lead_name}\'s masterclass registration.',
             type='commission',
         )
     except Exception:
         current_app.logger.exception('Failed to add registration income notification')
 
     try:
-        from app.utils.email import send_welcome_email
-        send_welcome_email(new_user, password=generated_password,
-                            profile_link=f'{_frontend_base()}/student/profile')
+        from app.utils.email import send_masterclass_confirmation
+        send_masterclass_confirmation(
+            lead_name, email, f'ZS-{registration.id:06d}', amount,
+            session_info={k: session_info.get(k) for k in ('date', 'time', 'mode', 'language')},
+            whatsapp_link=session_info.get('whatsapp_group_link'),
+        )
     except Exception:
-        current_app.logger.exception(f'Failed to send welcome email to {new_user.email}')
+        current_app.logger.exception(f'Failed to send masterclass confirmation email to {email}')
 
-    return order
+    return registration
 
 
 def _masterclass_guest_fields(data):
@@ -2839,6 +2996,80 @@ def _masterclass_guest_fields(data):
     }
 
 
+def _masterclass_purchased_emails(emails):
+    """Given lead emails, return the subset that have since become real,
+    paying students — a User exists with that email (registered separately,
+    the normal way, since a masterclass lead never gets an account of its
+    own) who has at least one paid package/course order."""
+    emails = [e.strip().lower() for e in emails if e]
+    if not emails:
+        return set()
+    matching_users = User.query.filter(db.func.lower(User.email).in_(emails)).all()
+    email_by_user_id = {u.id: u.email.strip().lower() for u in matching_users}
+    if not email_by_user_id:
+        return set()
+    purchased_user_ids = {
+        uid for (uid,) in db.session.query(Order.user_id).filter(
+            Order.user_id.in_(email_by_user_id.keys()),
+            Order.payment_status == 'paid',
+            db.or_(Order.package_id.isnot(None), Order.course_id.isnot(None)),
+        ).distinct().all()
+    }
+    return {email_by_user_id[uid] for uid in purchased_user_ids}
+
+
+def _masterclass_form_details(lead):
+    return {
+        'age': lead.age, 'occupation': lead.occupation, 'city_state': lead.city_state,
+        'experience_level': lead.experience_level, 'goal': lead.goal,
+    }
+
+
+@api_bp.route('/admin/masterclass-registrations', methods=['GET'])
+def admin_masterclass_registrations():
+    """Every masterclass-registration lead across ALL referral links, in one
+    place — the per-referrer breakdown at /student/masterclass-referrals only
+    shows a single referrer's own leads; this is the site-wide admin view."""
+    if not _admin_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from app.models import MasterclassRegistration
+    leads = MasterclassRegistration.query.order_by(MasterclassRegistration.created_at.desc()).all()
+
+    purchased_emails = _masterclass_purchased_emails([l.email for l in leads])
+
+    referrer_ids = {l.referrer_id for l in leads}
+    referrers = {u.id: u for u in User.query.filter(User.id.in_(referrer_ids)).all()} if referrer_ids else {}
+
+    rows = []
+    for l in leads:
+        referrer = referrers.get(l.referrer_id)
+        rows.append({
+            'order_id': l.id,
+            'name': l.name,
+            'email': l.email,
+            'phone': l.phone,
+            'referrer_id': referrer.id if referrer else None,
+            'referrer_name': referrer.name if referrer else None,
+            'referrer_email': referrer.email if referrer else None,
+            'amount_paid': float(l.amount_paid),
+            'paid_at': l.created_at.strftime('%d %b %Y, %I:%M %p') if l.created_at else None,
+            'has_purchased': l.email.strip().lower() in purchased_emails,
+            'form_details': _masterclass_form_details(l),
+            'session': {
+                'date': l.session_date, 'time': l.session_time,
+                'mode': l.session_mode, 'language': l.session_language,
+            },
+        })
+
+    return jsonify({
+        'registrations': rows,
+        'total_count': len(rows),
+        'purchased_count': sum(1 for r in rows if r['has_purchased']),
+        'total_income': sum(r['amount_paid'] for r in rows),
+    })
+
+
 @api_bp.route('/public/masterclass/<code>', methods=['GET'])
 def public_masterclass_funnel(code):
     """Unauthenticated: the landing page a referral link (/masterclass/<code>)
@@ -2849,7 +3080,7 @@ def public_masterclass_funnel(code):
 
     return jsonify({
         'referrer_name': referrer.name,
-        'content': _get_masterclass_content(),
+        'content': _masterclass_content_with_live_seats(),
     })
 
 
@@ -2866,11 +3097,13 @@ def public_masterclass_create_order(code):
     if not name or not phone or not email:
         return jsonify({'success': False, 'message': 'Name, phone, and email are required.'}), 400
 
+    from app.models import MasterclassRegistration
     if User.query.filter(db.func.lower(User.email) == email).first() or \
-       (phone and User.query.filter_by(phone=phone).first()):
+       (phone and User.query.filter_by(phone=phone).first()) or \
+       MasterclassRegistration.query.filter(db.func.lower(MasterclassRegistration.email) == email).first():
         return jsonify({'success': False, 'message': 'This email or phone is already registered. Please log in instead.'}), 409
 
-    amount = float(_get_masterclass_content().get('price') or 0)
+    amount = _masterclass_total_price(_get_masterclass_content())
     receipt = f'mcref_{code}_{uuid.uuid4().hex[:8]}'
 
     if not is_razorpay_enabled() or amount <= 0:
@@ -2918,7 +3151,7 @@ def public_masterclass_verify(code):
         return jsonify({'success': False, 'message': 'Payment verification failed. This payment does not belong to this link.'}), 400
 
     content = _get_masterclass_content()
-    amount = float(content.get('price') or 0)
+    amount = _masterclass_total_price(content)
     expected_paise = int(round(amount * 100))
     if rz_order.get('amount') != expected_paise:
         return jsonify({'success': False, 'message': 'Paid amount does not match the registration price. Contact support with your payment ID.'}), 400
@@ -2929,16 +3162,17 @@ def public_masterclass_verify(code):
     name = (data.get('name') or '').strip()
     phone = (data.get('phone') or '').strip()
     email = (data.get('email') or '').strip().lower()
-    order = _create_masterclass_registration(
+    registration = _create_masterclass_registration(
         referrer, name, phone, email, _masterclass_guest_fields(data),
         amount, razorpay_payment_id,
+        session_info={k: content.get(k) for k in ('date', 'time', 'mode', 'language', 'whatsapp_group_link')},
     )
-    if order is None:
+    if registration is None:
         return jsonify({'success': False, 'message': 'This email or phone is already registered. Please log in instead.'}), 409
 
     return jsonify({
         'success': True,
-        'registration_id': f'ZS-{order.id:06d}',
+        'registration_id': f'ZS-{registration.id:06d}',
         'date': content.get('date'),
         'time': content.get('time'),
         'mode': content.get('mode'),
@@ -2960,7 +3194,7 @@ def public_masterclass_activate(code):
         return jsonify({'success': False, 'message': 'Invalid or expired link.'}), 404
 
     content = _get_masterclass_content()
-    amount = float(content.get('price') or 0)
+    amount = _masterclass_total_price(content)
     if is_razorpay_enabled() and amount > 0:
         return jsonify({'success': False, 'message': 'Online payments are enabled. Please complete checkout via the payment gateway.'}), 403
 
@@ -2971,16 +3205,17 @@ def public_masterclass_activate(code):
     if not name or not phone or not email:
         return jsonify({'success': False, 'message': 'Name, phone, and email are required.'}), 400
 
-    order = _create_masterclass_registration(
+    registration = _create_masterclass_registration(
         referrer, name, phone, email, _masterclass_guest_fields(data),
         amount, str(uuid.uuid4()), payment_method='simulated',
+        session_info={k: content.get(k) for k in ('date', 'time', 'mode', 'language', 'whatsapp_group_link')},
     )
-    if order is None:
+    if registration is None:
         return jsonify({'success': False, 'message': 'This email or phone is already registered. Please log in instead.'}), 409
 
     return jsonify({
         'success': True,
-        'registration_id': f'ZS-{order.id:06d}',
+        'registration_id': f'ZS-{registration.id:06d}',
         'date': content.get('date'),
         'time': content.get('time'),
         'mode': content.get('mode'),
@@ -3258,53 +3493,40 @@ def student_referrals_list():
 
 @api_bp.route('/student/masterclass-referrals', methods=['GET'])
 def student_masterclass_referrals():
-    """Referrals who specifically registered through the ₹99 masterclass link
-    (an Order with no package_id/course_id — same signature as
-    _affiliate_activation_order()), not the general referral list. A masterclass
-    referral can still go on to buy a real package/course afterward, tracked
-    here as has_purchased."""
+    """Leads who registered through this student's own ₹99 masterclass link.
+    Not tied to User.referred_by — a masterclass lead never gets a User
+    account at registration time (see _create_masterclass_registration); if
+    they later register for real with the same email, has_purchased picks
+    that up automatically via an email match, not a stored link."""
     if not current_user.is_authenticated:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    my_referrals = User.query.filter_by(referred_by=current_user.id).order_by(User.created_at.desc()).all()
-    referral_ids = [r.id for r in my_referrals]
+    from app.models import MasterclassRegistration
+    leads = MasterclassRegistration.query.filter_by(
+        referrer_id=current_user.id).order_by(MasterclassRegistration.created_at.desc()).all()
 
-    masterclass_orders = {}
-    purchased_ids = set()
-    if referral_ids:
-        orders = Order.query.filter(
-            Order.user_id.in_(referral_ids),
-            Order.payment_status == 'paid',
-        ).order_by(Order.created_at.asc()).all()
-        for order in orders:
-            if order.package_id is None and order.course_id is None:
-                masterclass_orders.setdefault(order.user_id, order)
-            else:
-                purchased_ids.add(order.user_id)
-
-    masterclass_referrals = [r for r in my_referrals if r.id in masterclass_orders]
-    purchased_count = sum(1 for r in masterclass_referrals if r.id in purchased_ids)
-    total_registration_income = sum(
-        float(order.amount_paid or 0) for order in masterclass_orders.values()
-    )
+    purchased_emails = _masterclass_purchased_emails([l.email for l in leads])
+    purchased_count = sum(1 for l in leads if l.email.strip().lower() in purchased_emails)
+    total_registration_income = sum(float(l.amount_paid or 0) for l in leads)
 
     return jsonify({
         'total_registration_income': total_registration_income,
         'referrals': [
             {
-                'id': r.id,
-                'name': r.name,
-                'email': r.email,
-                'phone': r.phone,
-                'created_at': r.created_at.strftime('%d %b %Y') if r.created_at else None,
-                'has_purchased': r.id in purchased_ids,
-                'masterclass_amount': float(masterclass_orders[r.id].amount_paid) if masterclass_orders[r.id].amount_paid is not None else None,
-                'masterclass_paid_at': masterclass_orders[r.id].created_at.strftime('%d %b %Y') if masterclass_orders[r.id].created_at else None,
-            } for r in masterclass_referrals
+                'id': l.id,
+                'name': l.name,
+                'email': l.email,
+                'phone': l.phone,
+                'created_at': l.created_at.strftime('%d %b %Y') if l.created_at else None,
+                'has_purchased': l.email.strip().lower() in purchased_emails,
+                'masterclass_amount': float(l.amount_paid) if l.amount_paid is not None else None,
+                'masterclass_paid_at': l.created_at.strftime('%d %b %Y') if l.created_at else None,
+                'form_details': _masterclass_form_details(l),
+            } for l in leads
         ],
-        'total_count': len(masterclass_referrals),
+        'total_count': len(leads),
         'purchased_count': purchased_count,
-        'not_purchased_count': len(masterclass_referrals) - purchased_count,
+        'not_purchased_count': len(leads) - purchased_count,
     })
 
 
@@ -3572,6 +3794,35 @@ def student_my_team():
     })
 
 
+@api_bp.route('/student/my-team/profile/<int:member_id>', methods=['GET'])
+def student_my_team_profile(member_id):
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    l1_ids = [u.id for u in User.query.filter_by(referred_by=current_user.id).all()]
+    member = User.query.filter_by(id=member_id).first()
+
+    if not member or (member.referred_by != current_user.id and member.referred_by not in l1_ids):
+        return jsonify({'error': 'Not found'}), 404
+
+    return jsonify({
+        'user': {
+            'id': member.id,
+            'name': member.name,
+            'email': member.email,
+            'phone': member.phone,
+            'bio': member.bio,
+            'about': member.about,
+            'age': member.age,
+            'gender': member.gender,
+            'address': member.address,
+            'profile_image_url': member.profile_image_url,
+            'referral_code': member.referral_code,
+            'created_at': member.created_at.strftime('%d %b %Y'),
+        }
+    })
+
+
 def _kyc_documents_list(kyc):
     """Documents attached to a KYC submission. New-style submissions store an
     arbitrary number of labeled KYCDocument rows; older submissions (before
@@ -3688,12 +3939,35 @@ def _kyc_file_url(kyc, field):
         return filename
     return f'/legacy/student/kyc-file/{kyc.id}/{field}'
 
+def _is_masterclass_order(order):
+    """True for a masterclass-registration Order specifically, as opposed to
+    an affiliate-activation self-purchase — both share the same all-null
+    package/course/product columns (see _order_item_name), so the only way to
+    tell them apart is the shape of the stored extra_info: masterclass
+    registrations save the lead-capture fields from _masterclass_guest_fields()
+    (age/occupation/city_state/experience_level/goal); affiliate activation
+    saves only city/profession."""
+    if not (order.package_id is None and order.course_id is None and order.product_id is None):
+        return False
+    if not order.extra_info:
+        return False
+    try:
+        info = json.loads(order.extra_info)
+    except (ValueError, TypeError):
+        return False
+    return 'goal' in info or 'experience_level' in info
+
+
 def _order_item_name(order):
     if order.package:
         return order.package.name
     if order.course:
         return order.course.title
-    if order.package_id is None and order.course_id is None:
+    if order.product:
+        return order.product.title
+    if order.package_id is None and order.course_id is None and order.product_id is None:
+        if _is_masterclass_order(order):
+            return 'Masterclass Registration'
         return 'Affiliate Activation'
     return 'N/A'
 
@@ -3759,6 +4033,18 @@ def get_admin_dashboard_data():
     ).scalar() or 0)
     manager_income_pending = commission_sum(Commission.level == 3, Commission.status == 'pending')
 
+    from app.models import MasterclassRegistration
+    registration_form_income = float(db.session.query(
+        func.coalesce(func.sum(MasterclassRegistration.amount_paid), 0)
+    ).scalar() or 0)
+    registration_form_count = MasterclassRegistration.query.count()
+    # order_id IS NULL is what marks a masterclass-registration commission
+    # apart from L1/L2/manager commissions, which always carry the order
+    # that earned them — see _create_masterclass_registration.
+    registration_form_referrer_paid = commission_sum(Commission.order_id.is_(None))
+    registration_form_company_income = registration_form_income - registration_form_referrer_paid
+    registration_form_referrer_percent = float(SiteSettings.get('masterclass_referrer_percent', 100.0) or 100.0)
+
     stats = {
         'total_users': User.query.filter_by(role='student').count(),
         'total_managers': User.query.filter_by(role='manager').count(),
@@ -3788,6 +4074,13 @@ def get_admin_dashboard_data():
         'manager_income_l2': manager_income_l2,
         'manager_income_paid': manager_income_paid,
         'manager_income_pending': manager_income_pending,
+
+        # Masterclass registration-form income (platform-wide)
+        'registration_form_income': registration_form_income,
+        'registration_form_count': registration_form_count,
+        'registration_form_referrer_paid': registration_form_referrer_paid,
+        'registration_form_company_income': registration_form_company_income,
+        'registration_form_referrer_percent': registration_form_referrer_percent,
     }
     # Eager-load buyer/package/course so _order_item_name() below doesn't
     # fire a separate lazy-load query per order (N+1 across 10 rows).
@@ -3800,6 +4093,7 @@ def get_admin_dashboard_data():
         'recent_orders': [
             {
                 'id': o.id,
+                'buyer_id': o.user_id,
                 'buyer_name': o.buyer.name if o.buyer else 'N/A',
                 'item_name': _order_item_name(o),
                 'amount': float(o.amount_paid),
@@ -3970,9 +4264,13 @@ def admin_set_user_role(user_id):
         from app.utils.commissions import promote_to_manager
         promote_to_manager(user, commit=False)
     else:
+        was_manager = user.role == 'manager'
         user.role = new_role
         if new_role != 'manager':
             user.manager_commission_percent = None
+            if was_manager:
+                from app.utils.commissions import demote_manager
+                demote_manager(user, commit=False)
     db.session.commit()
     return jsonify({'success': True})
 
@@ -4054,6 +4352,7 @@ def admin_list_referrals():
                 'name': u.name,
                 'email': u.email,
                 'profile_image_url': u.profile_image_url,
+                'referrer_id': u.referred_by,
                 'referrer_name': u.referrer.name if u.referrer else None,
                 'created_at': u.created_at.strftime('%d %b %Y'),
                 'is_paid': u.orders.filter_by(payment_status='paid').first() is not None,
@@ -4206,11 +4505,13 @@ def admin_list_withdrawals():
         'withdrawals': [
             {
                 'id': w.id,
+                'user_id': w.user_id,
                 'user_name': w.requester.name if w.requester else 'N/A',
                 'amount': float(w.amount),
                 'upi_id': w.upi_id,
                 'status': w.status,
                 'note': w.note,
+                'transaction_id': w.transaction_id,
                 'created_at': w.created_at.strftime('%d %b %Y'),
             } for w in withdrawals
         ],
@@ -4230,7 +4531,10 @@ def admin_process_withdrawal(wd_id):
     data = request.get_json() or {}
     action = data.get('action')
     note = (data.get('note') or '').strip()
-    approve_withdrawal(wd, current_user.id, approved=(action == 'approve'), note=note)
+    transaction_id = (data.get('transaction_id') or '').strip()
+    if action == 'approve' and not transaction_id:
+        return jsonify({'success': False, 'message': 'Transaction ID / UTR is required to approve a payout.'}), 400
+    approve_withdrawal(wd, current_user.id, approved=(action == 'approve'), note=note, transaction_id=transaction_id)
     return jsonify({'success': True})
 
 
@@ -4330,16 +4634,14 @@ def admin_list_wallet_transactions():
 
 
 _SETTING_KEYS = [
-    'mail_server', 'mail_port', 'mail_use_tls', 'mail_username',
-    'mail_password', 'mail_from', 'min_withdrawal_amount',
+    'min_withdrawal_amount',
     'global_level1_commission_percent', 'global_level2_commission_percent',
     'global_manager_override_percent', 'global_manager_override_level2_percent',
-    'trip_goal_title', 'trip_goal_amount', 'trip_goal_date',
+    'masterclass_referrer_percent',
     'community_whatsapp_url', 'community_youtube_url', 'community_instagram_url',
     'community_telegram_url', 'community_discord_url', 'community_facebook_url',
-    'registration_field_config',
     'footer_facebook_url', 'footer_instagram_url', 'footer_whatsapp_url',
-    'support_email', 'support_phone',
+    'support_email', 'support_phone', 'support_address',
 ]
 
 
@@ -4356,82 +4658,13 @@ def admin_settings():
         for key in _SETTING_KEYS:
             if key not in data:
                 continue
-            if key == 'mail_use_tls':
-                mapping[key] = 'true' if data.get(key) else 'false'
-            elif key == 'registration_field_config':
-                field_config = data.get(key)
-                mapping[key] = json.dumps(field_config) if field_config else None
-            else:
-                val = str(data.get(key, '') or '').strip()
-                mapping[key] = val if val else None
+            val = str(data.get(key, '') or '').strip()
+            mapping[key] = val if val else None
         SiteSettings.set_many(mapping)
         return jsonify({'success': True})
 
     current = {k: SiteSettings.get(k, '') for k in _SETTING_KEYS}
-    raw_field_config = current.get('registration_field_config')
-    try:
-        current['registration_field_config'] = json.loads(raw_field_config) if raw_field_config else {}
-    except (TypeError, ValueError):
-        current['registration_field_config'] = {}
-    return jsonify({
-        'settings': current,
-        # Read-only — Razorpay keys live in .env, not the DB, so this is
-        # informational only (no field here is saved by the POST handler).
-        'razorpay_status': {
-            'enabled': is_razorpay_enabled(),
-            'key_id': get_razorpay_key_id() or None,
-        },
-    })
-
-
-@api_bp.route('/admin/trip-goal', methods=['GET', 'POST'])
-def admin_trip_goal():
-    if not _admin_only():
-        return jsonify({'error': 'Unauthorized'}), 401
-
-    from app.models import SiteSettings
-
-    if request.method == 'POST':
-        data = request.get_json() or {}
-        title = (data.get('title') or '').strip()
-        goal_date = (data.get('goal_date') or '').strip()
-        amount_raw = data.get('goal_amount')
-        try:
-            amount = float(amount_raw) if amount_raw not in (None, '') else None
-        except (TypeError, ValueError):
-            return jsonify({'success': False, 'message': 'Goal amount must be a number.'}), 400
-
-        SiteSettings.set_many({
-            'trip_goal_title': title or None,
-            'trip_goal_amount': str(amount) if amount is not None else None,
-            'trip_goal_date': goal_date or None,
-        })
-        return jsonify({'success': True})
-
-    return jsonify({
-        'title': SiteSettings.get('trip_goal_title', '') or '',
-        'goal_amount': SiteSettings.get('trip_goal_amount', '') or '',
-        'goal_date': SiteSettings.get('trip_goal_date', '') or '',
-        'image_url': SiteSettings.get('trip_goal_image_url', '') or '',
-    })
-
-
-@api_bp.route('/admin/trip-goal/image', methods=['POST'])
-def admin_trip_goal_image():
-    if not _admin_only():
-        return jsonify({'error': 'Unauthorized'}), 401
-
-    from app.models import SiteSettings
-    from app.admin.routes import _save_thumbnail, ALLOWED_IMAGE_EXTS
-
-    image = _save_thumbnail(request.files.get('image_file'))
-    if image is False:
-        return jsonify({'success': False, 'message': f'Invalid image format. Allowed: {", ".join(ALLOWED_IMAGE_EXTS)}'}), 400
-    if not image:
-        return jsonify({'success': False, 'message': 'No image file provided.'}), 400
-
-    SiteSettings.set('trip_goal_image_url', image)
-    return jsonify({'success': True, 'image_url': image})
+    return jsonify({'settings': current})
 
 
 @api_bp.route('/admin/certificate-template', methods=['GET', 'POST'])
@@ -4826,7 +5059,7 @@ def admin_course_chapters(course_id):
         if ext not in ALLOWED_VIDEO_EXTS:
             return jsonify({'success': False, 'message': f'Invalid video format. Allowed: {", ".join(ALLOWED_VIDEO_EXTS)}'}), 400
         try:
-            response = cloudinary.uploader.upload(video_file, resource_type='video')
+            response = cloudinary.uploader.upload_large(video_file, resource_type='video', chunk_size=6_000_000)
             chapter.video_filename = response.get('secure_url')
         except Exception as e:
             return jsonify({'success': False, 'message': f'Video upload error: {e}'}), 500
@@ -4865,7 +5098,7 @@ def admin_chapter_detail(course_id, chapter_id):
         if ext not in ALLOWED_VIDEO_EXTS:
             return jsonify({'success': False, 'message': f'Invalid video format. Allowed: {", ".join(ALLOWED_VIDEO_EXTS)}'}), 400
         try:
-            response = cloudinary.uploader.upload(video_file, resource_type='video')
+            response = cloudinary.uploader.upload_large(video_file, resource_type='video', chunk_size=6_000_000)
             chapter.video_filename = response.get('secure_url')
         except Exception as e:
             return jsonify({'success': False, 'message': f'Video upload error: {e}'}), 500
@@ -6487,6 +6720,31 @@ def get_manager_dashboard_data():
 
     from app.models import SiteSettings
     manager_override_percent = float(SiteSettings.get('global_manager_override_percent', 10.0))
+    # Rate applied to hop-1's override commission, not the raw sale amount —
+    # see _award_manager_override. This is what a *senior* manager (someone who
+    # manages other managers) earns as a cascading cut of their sub-managers'
+    # own override commissions.
+    manager_override_level2_percent = float(SiteSettings.get('global_manager_override_level2_percent', 15.0))
+
+    sub_manager_ids = [u.id for u in User.query.filter_by(manager_id=current_user.id, role='manager').all()]
+
+    # Actual override commission this manager has been credited (from the
+    # Commission ledger _award_manager_override() writes), not a recompute
+    # off team_revenue — that formula overstated earnings because team_revenue
+    # includes course-only orders (never commissioned) and orders whose buyer
+    # was referred directly by a sub-manager (override skipped for those), and
+    # it used today's global rate instead of the rate actually applied at the
+    # time of each order. Both hops land at level=3, split by which override
+    # rate they were paid at.
+    def _override_sum(percent):
+        return float(db.session.query(func.coalesce(func.sum(Commission.commission_amount), 0)).filter(
+            Commission.user_id == current_user.id,
+            Commission.level == 3,
+            Commission.commission_percent == percent,
+        ).scalar() or 0)
+
+    manager_override_amount = _override_sum(manager_override_percent)
+    senior_override_amount = _override_sum(manager_override_level2_percent)
 
     start_30 = datetime.now(timezone.utc) - timedelta(days=30)
     last_30_earnings = db.session.query(func.sum(WalletTransaction.amount)).filter(
@@ -6510,7 +6768,10 @@ def get_manager_dashboard_data():
         'active_team': active_team,
         'team_revenue': float(team_revenue),
         'manager_override_percent': manager_override_percent,
-        'manager_override_amount': float(team_revenue) * manager_override_percent / 100,
+        'manager_override_amount': manager_override_amount,
+        'sub_manager_count': len(sub_manager_ids),
+        'senior_override_percent': manager_override_level2_percent,
+        'senior_override_amount': senior_override_amount,
         'all_time_earnings': current_user.total_earnings,
         'available_balance': current_user.available_balance,
         'pending_earnings': current_user.pending_earnings,
@@ -6520,6 +6781,7 @@ def get_manager_dashboard_data():
         'recent_commissions': [
             {
                 'id': c.id,
+                'buyer_id': c.from_user_id,
                 'buyer_name': c.buyer.name if c.buyer else 'N/A',
                 'commission_amount': float(c.commission_amount),
                 'status': c.status,
@@ -6644,6 +6906,41 @@ def get_manager_all_users():
             } for m in members
         ],
         'total': len(members),
+    })
+
+
+@api_bp.route('/manager/all-users/profile/<int:member_id>', methods=['GET'])
+def get_manager_all_users_profile(member_id):
+    if not _manager_only():
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    member = User.query.filter_by(id=member_id, manager_id=current_user.id).first()
+    if not member:
+        # Not on the manager's own team roster — allow it anyway if this
+        # member is a buyer behind one of the manager's own commissions
+        # (e.g. clicked from the "Recent Commissions" list).
+        has_commission = Commission.query.filter_by(
+            user_id=current_user.id, from_user_id=member_id).first()
+        if has_commission:
+            member = User.query.get(member_id)
+    if not member:
+        return jsonify({'error': 'Not found'}), 404
+
+    return jsonify({
+        'user': {
+            'id': member.id,
+            'name': member.name,
+            'email': member.email,
+            'phone': member.phone,
+            'bio': member.bio,
+            'about': member.about,
+            'age': member.age,
+            'gender': member.gender,
+            'address': member.address,
+            'role': member.role,
+            'profile_image_url': member.profile_image_url,
+            'created_at': member.created_at.strftime('%d %b %Y'),
+        }
     })
 
 
@@ -6853,7 +7150,13 @@ def student_product_create_order(product_id):
     if not is_razorpay_enabled() or amount <= 0:
         return jsonify({'razorpay_enabled': False})
 
-    rz_order = create_razorpay_order(amount_inr=amount, receipt=receipt)
+    # See the package/course create-order route for why coupon_code is
+    # stashed in notes: it's how the webhook-only fulfilment path finds out
+    # which coupon to credit if the client never calls /verify itself.
+    rz_order = create_razorpay_order(
+        amount_inr=amount, receipt=receipt,
+        notes={'coupon_code': coupon_code} if coupon_code else None,
+    )
     if rz_order is None:
         return jsonify({'success': False, 'message': 'Payment gateway error. Please try again or contact support.'}), 502
 
@@ -6907,7 +7210,7 @@ def student_product_free_purchase(product_id):
     db.session.add(order)
     db.session.flush()
     if coupon:
-        coupon.used_count += 1
+        redeem_coupon(coupon)
     process_commissions(order)
     db.session.commit()
     return jsonify({'success': True})
@@ -6971,7 +7274,7 @@ def student_product_verify_payment(product_id):
     db.session.add(order)
     db.session.flush()
     if coupon:
-        coupon.used_count += 1
+        redeem_coupon(coupon)
     process_commissions(order)
     db.session.commit()
 

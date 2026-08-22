@@ -1,70 +1,50 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Wallet as WalletIcon, CheckCircle2, Clock, Landmark, ArrowUpRight, ArrowDownRight, Zap, TrendingUp, IndianRupee, Layers, Users, Crown, ShieldCheck } from 'lucide-react';
+import { Wallet as WalletIcon, CheckCircle2, Clock, Landmark, ArrowUpRight, ArrowDownRight, Zap, TrendingUp, IndianRupee, Layers, Users, Crown, UserCircle, Sun, Sunset, Moon } from 'lucide-react';
 import api from '../../utils/api';
 import AnimatedNumber from '../../components/AnimatedNumber';
 import Reveal from '../../components/Reveal';
-import useTilt from '../../hooks/useTilt';
 
-// Amounts on these tiles have no upper bound, so the type scale steps down as
-// the formatted figure gets longer — a crore-plus number stays on one line
-// inside the tile instead of overflowing or wrapping mid-digit.
-function amountClass(value) {
-  const len = `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`.length;
-  if (len <= 7) return 'text-3xl sm:text-4xl';
-  if (len <= 9) return 'text-2xl sm:text-3xl';
-  if (len <= 12) return 'text-xl sm:text-2xl';
-  return 'text-lg sm:text-xl';
+function useGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return { text: 'Good morning', Icon: Sun };
+  if (hour < 17) return { text: 'Good afternoon', Icon: Sun };
+  if (hour < 21) return { text: 'Good evening', Icon: Sunset };
+  return { text: 'Good night', Icon: Moon };
 }
 
-// Every income figure on this page renders through the same dark-glass tile —
-// an accent hue is the only thing that changes between them, so the three
-// income sections read as one system instead of three separate designs.
-function KpiTile({ label, value, Icon, accent, deep }) {
+// Same KPI tile as the main Dashboard's stat cards — a colored gradient card
+// per tile, not the wallet page's old dark-glass tile, so both pages read as
+// one consistent design system instead of two different ones.
+function KpiTile({ label, value, sub, Icon, from, to, shadow }) {
   return (
     <div
-      className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 border border-white/[0.08] hover:border-white/[0.16]"
+      className="relative rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/30 overflow-hidden transition-all duration-300 hover:-translate-y-2 group cursor-default animate-fade-in-up"
       style={{
-        background: `linear-gradient(155deg, ${deep} 0%, #070d1f 65%)`,
-        boxShadow: '0 10px 30px rgba(8,15,38,0.3)',
+        background: `linear-gradient(135deg, ${from} 0%, ${to} 100%)`,
+        boxShadow: `0 10px 28px ${shadow}, inset 0 1px 0 rgba(255,255,255,0.3)`,
       }}
     >
-      {/* A single restrained corner glow — brighter on hover only, so a row of
-          four tiles stays calm instead of four competing washes of colour. */}
-      <span
-        className="absolute -top-14 -right-10 w-36 h-36 rounded-full blur-[52px] pointer-events-none opacity-45 transition-opacity duration-500 group-hover:opacity-80"
-        style={{ background: accent }}
-      ></span>
-      <span
-        className="absolute inset-x-0 top-0 h-px pointer-events-none opacity-60"
-        style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }}
-      ></span>
       <Icon
-        className="absolute -right-4 -bottom-4 w-24 h-24 pointer-events-none transition-transform duration-500 group-hover:scale-105"
-        style={{ color: accent, opacity: 0.08 }}
-        strokeWidth={1}
+        className="absolute -right-3 -bottom-3 w-16 h-16 sm:w-24 sm:h-24 text-white/10 pointer-events-none transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6"
+        strokeWidth={1.5}
       />
-
-      {/* Icon sits beside the figure on narrow screens (one tile per row) and
-          above it once the tiles sit four-across. */}
-      <div className="relative z-10 p-4 sm:p-5 flex items-center gap-4 lg:block">
-        <span
-          className="w-11 h-11 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shrink-0 lg:mb-4 border"
-          style={{ color: accent, borderColor: `${accent}40`, backgroundColor: `${accent}14` }}
-        >
-          <Icon className="w-5 h-5 lg:w-4 lg:h-4" strokeWidth={2.2} />
-        </span>
-
-        <div className="min-w-0 flex-1">
-          <p className="text-[9px] font-black uppercase tracking-[0.22em] text-white/45 mb-1.5 truncate">
-            {label}
-          </p>
-          <AnimatedNumber
-            value={Math.round(value)}
-            prefix="₹"
-            className={`block ${amountClass(value)} font-heading font-black text-white leading-none tabular-nums whitespace-nowrap`}
-          />
-        </div>
+      <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"></span>
+      <div className="relative z-10">
+        <p className="flex items-center gap-1.5 sm:gap-2 text-[0.62rem] sm:text-[0.7rem] font-bold text-white/85 uppercase tracking-wide sm:tracking-widest mb-2 sm:mb-3.5">
+          <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+            <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" strokeWidth={2.5} />
+          </span>
+          <span className="truncate">{label}</span>
+        </p>
+        <AnimatedNumber
+          value={Math.round(value)}
+          prefix="₹"
+          className="block text-[1.35rem] sm:text-[2.15rem] font-black text-white leading-none mb-1.5 sm:mb-2.5 tabular-nums"
+          style={{ textShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
+          duration={1400}
+        />
+        {sub && <p className="text-[0.62rem] sm:text-[0.7rem] text-white/75 font-medium truncate">{sub}</p>}
       </div>
     </div>
   );
@@ -93,8 +73,7 @@ export default function Wallet() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
-
-  const { ref: tiltHeroRef, onMouseMove: onHeroMove, onMouseLeave: onHeroLeave } = useTilt(3);
+  const greeting = useGreeting();
 
   const fetchWalletDetails = async () => {
     try {
@@ -164,107 +143,84 @@ export default function Wallet() {
   return (
     <div className="w-full space-y-8 text-slate-800 pb-12">
 
-      {/* ── 3D TILT HERO HERO BANNER ───────────────────────────────────────── */}
+      {/* ── WELCOME BANNER — identical to /student Dashboard's, so the two
+             pages read as one consistent design instead of two different
+             ones. Right-side highlight swapped from "Your Rank" to
+             "Available Balance", the wallet-relevant equivalent. ── */}
       <Reveal variant="scale-in">
-        {/* Aurora glow field sits OUTSIDE the card so the card's backdrop-blur
-            has something colourful to frost — that's what makes it read as
-            real glass rather than a flat translucent panel. */}
-        <div className="relative">
-          {/* Analogous hues only (violet → indigo → blue). Warm tones were
-              muddying to olive where they crossed the cool ones, so gold now
-              appears only in the card's own trim, never in the glow field. */}
-          <div className="absolute -inset-3 sm:-inset-5 rounded-[3rem] overflow-hidden pointer-events-none">
-            <div className="absolute inset-0 bg-[#070d20]"></div>
-            <div className="absolute -top-20 -left-12 w-80 h-80 rounded-full bg-violet-600/70 blur-[75px] animate-blob"></div>
-            <div className="absolute -bottom-24 -right-12 w-80 h-80 rounded-full bg-blue-600/70 blur-[75px] animate-blob" style={{ animationDelay: '3s' }}></div>
-            <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-56 h-56 rounded-full bg-indigo-500/55 blur-[80px] animate-blob" style={{ animationDelay: '6s' }}></div>
-            {/* Vignette keeps the centre readable and the edges rich */}
-            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(7,13,32,0.6) 0%, rgba(7,13,32,0.2) 45%, rgba(7,13,32,0.8) 100%)' }}></div>
-          </div>
-
+        <section
+          className="relative flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 rounded-[18px] sm:rounded-[22px] px-5 sm:px-8 py-5 sm:py-7 overflow-hidden group animate-gradient-x"
+          style={{
+            background: 'linear-gradient(115deg, #0f1f4d 0%, #1e3a8a 25%, #2563eb 50%, #1e3a8a 75%, #0f1f4d 100%)',
+            boxShadow: '0 20px 45px -12px rgba(30, 64, 175, 0.45)'
+          }}
+        >
           <div
-            ref={tiltHeroRef}
-            onMouseMove={onHeroMove}
-            onMouseLeave={onHeroLeave}
-            className="relative w-full rounded-[2.5rem] p-6 sm:p-8 lg:px-12 lg:py-10 text-white bg-white/[0.07] backdrop-blur-2xl border border-white/25 shadow-[0_20px_60px_rgba(8,15,40,0.45)] overflow-hidden group [transform:perspective(900px)_rotateX(var(--tilt-x,0deg))_rotateY(var(--tilt-y,0deg))] will-change-transform transition-transform duration-300"
-          >
-            {/* Glass sheen: bright top edge, soft top-down highlight, sweep */}
-            <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent pointer-events-none"></span>
-            <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent pointer-events-none"></div>
-            <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none"></span>
+            className="absolute pointer-events-none rounded-full animate-blob transition-transform duration-700 group-hover:scale-110"
+            style={{
+              top: '-70%', right: '-6%', width: 360, height: 360,
+              background: 'radial-gradient(circle, rgba(96,165,250,0.35) 0%, transparent 70%)'
+            }}
+          ></div>
+          <div
+            className="absolute pointer-events-none rounded-full animate-blob"
+            style={{
+              bottom: '-80%', left: '10%', width: 280, height: 280,
+              background: 'radial-gradient(circle, rgba(129,140,248,0.2) 0%, transparent 70%)',
+              animationDelay: '2.5s'
+            }}
+          ></div>
+          <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{
+            backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+            backgroundSize: '28px 28px'
+          }}></div>
+          <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"></span>
 
-            {/* Fine dot-grid texture */}
-            <div className="absolute inset-0 opacity-[0.06] pointer-events-none" style={{
-              backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
-              backgroundSize: '18px 18px',
-            }}></div>
-
-            {/* Gold hairline just below the top edge */}
-            <span className="absolute top-[3px] left-10 right-10 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent pointer-events-none"></span>
-
-            {/* Corner brackets */}
-            {[
-              'top-4 left-4 border-t border-l rounded-tl-xl',
-              'top-4 right-4 border-t border-r rounded-tr-xl',
-              'bottom-4 left-4 border-b border-l rounded-bl-xl',
-              'bottom-4 right-4 border-b border-r rounded-br-xl',
-            ].map((pos) => (
-              <span key={pos} className={`absolute w-7 h-7 border-amber-300/30 pointer-events-none ${pos}`}></span>
-            ))}
-
-          {/* Partner card — stacked and centred on mobile, laid out across the
-              full width on desktop so the band never sits half-empty. */}
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-8">
-
-            {/* Avatar — slowly rotating gold ring, static portrait inside */}
-            <div className="relative shrink-0 mx-auto sm:mx-0">
-              <span className="absolute -inset-6 rounded-full bg-amber-300/20 blur-2xl"></span>
-              <span
-                className="absolute -inset-[7px] rounded-full animate-spin-slow"
-                style={{ background: 'conic-gradient(from 0deg, #fcd34d, #ffffff, #7dd3fc, #fcd34d)' }}
-              ></span>
-              <span className="absolute -inset-[3px] rounded-full bg-[#16295c]"></span>
-              <span className="absolute -inset-4 rounded-full border border-dashed border-amber-200/25 animate-spin-slow" style={{ animationDirection: 'reverse' }}></span>
-
-              <div className="relative w-24 h-24 lg:w-28 lg:h-28 rounded-full overflow-hidden ring-2 ring-white/60 shadow-2xl bg-white/20">
+          <div className="relative z-10 flex flex-col items-center text-center sm:flex-row sm:items-center sm:text-left gap-3 sm:gap-4 min-w-0">
+            <div className="relative flex-shrink-0 animate-float">
+              <span className="absolute -inset-2 rounded-full bg-blue-300/40 animate-pulse-ring"></span>
+              <div className="absolute -inset-0.5 rounded-full bg-gradient-to-tr from-amber-300 via-blue-300 to-indigo-300 opacity-70 blur-[3px] animate-gradient-x"></div>
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full border-2 border-white/50 overflow-hidden bg-white/10 flex items-center justify-center">
                 {user?.profile_image_url ? (
                   <img src={user.profile_image_url} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-2xl font-black text-white">
-                    {(user?.name || 'Z').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
-                  </div>
+                  <UserCircle className="w-16 h-16 sm:w-[4.5rem] sm:h-[4.5rem] text-white/80" />
                 )}
               </div>
-              <span className="absolute bottom-0.5 right-0.5 w-6 h-6 rounded-full bg-emerald-400 border-[3px] border-[#12224a] flex items-center justify-center shadow-lg z-10">
-                <ShieldCheck className="w-3 h-3 text-white" strokeWidth={3} />
+              <span className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 w-4 h-4 rounded-full bg-emerald-400 border-2 border-[#1e3a8a] shadow-[0_0_10px_rgba(52,211,153,0.9)]">
+                <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping"></span>
               </span>
             </div>
-
-            {/* Identity */}
-            <div className="min-w-0 flex-1 text-center sm:text-left">
-              <h3 className="text-2xl lg:text-3xl font-heading font-black leading-tight truncate bg-gradient-to-b from-white via-white to-amber-100 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
-                {user?.name || 'Zarni Partner'}
-              </h3>
-              <p className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[9px] lg:text-[10px] font-black uppercase tracking-[0.2em] text-blue-100/80">
-                <Clock className="w-3 h-3 text-amber-200/80" strokeWidth={2.5} />
-                Member Since {user?.created_at || '—'}
-              </p>
-            </div>
-
-            {/* Badge + brand line */}
-            <div className="flex flex-col items-center sm:items-end gap-3 shrink-0 pt-5 sm:pt-0 border-t sm:border-t-0 sm:border-l border-white/15 sm:pl-8">
-              <span className="relative inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-400/25 via-amber-300/15 to-amber-400/25 border border-amber-300/50 text-[9px] lg:text-[10px] font-black uppercase tracking-[0.15em] text-amber-100 whitespace-nowrap shadow-[0_0_20px_rgba(252,211,77,0.25)] overflow-hidden">
-                <span className="absolute inset-0 -translate-x-full animate-shimmer-sweep bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none"></span>
-                <ShieldCheck className="relative w-3 h-3" strokeWidth={2.5} />
-                <span className="relative">Verified Partner</span>
-              </span>
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30">
-                zarniskills.com
-              </p>
-            </div>
+            <div className="min-w-0">
+              <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[0.65rem] sm:text-[0.7rem] font-bold text-blue-200/90 uppercase tracking-wider mb-1">
+                <greeting.Icon className="w-3.5 h-3.5 text-amber-300 shrink-0 animate-pulse" />
+                {greeting.text}
+              </div>
+              <h1 className="text-[1.1rem] sm:text-[1.55rem] font-extrabold text-white tracking-tight leading-normal py-0.5 truncate">
+                Welcome back,{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-white to-blue-200 animate-gradient-x">
+                  {user?.name?.split(' ')[0]}
+                </span>{' '}
+                <span className="inline-block animate-[wave_2s_ease-in-out_infinite]">👋</span>
+              </h1>
+              <p className="text-[0.78rem] sm:text-[0.85rem] text-white/70 font-medium mt-0.5">Here's a snapshot of your wallet today</p>
             </div>
           </div>
-        </div>
+
+          <div className="relative z-10 flex items-center justify-center sm:justify-start gap-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-4 sm:px-5 py-2.5 sm:py-3 w-full sm:w-auto shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] overflow-hidden">
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer-sweep pointer-events-none"></span>
+            <div className="relative w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0">
+              <div className="absolute -inset-1.5 rounded-xl bg-amber-400/50 blur-md animate-pulse"></div>
+              <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <WalletIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" strokeWidth={2.2} />
+              </div>
+            </div>
+            <div className="relative text-left">
+              <span className="block text-[0.6rem] sm:text-[0.65rem] text-white/70 uppercase tracking-wider font-bold">Available Balance</span>
+              <AnimatedNumber value={Math.round(balanceData.availableBalance)} prefix="₹" duration={900} className="block text-[1.05rem] sm:text-[1.2rem] text-white font-extrabold leading-tight tabular-nums" />
+            </div>
+          </div>
+        </section>
       </Reveal>
 
       {/* Total Income breakdown */}
@@ -280,12 +236,12 @@ export default function Wallet() {
             </div>
             <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {[
-              { label: "Today's Income", value: earningsSummary.total.today, Icon: Zap, accent: '#34d399', deep: '#043d2f' },
-              { label: '7 Day Income', value: earningsSummary.total['7days'], Icon: TrendingUp, accent: '#22d3ee', deep: '#053745' },
-              { label: '30 Day Income', value: earningsSummary.total['30days'], Icon: IndianRupee, accent: '#60a5fa', deep: '#0a2a5e' },
-              { label: 'All Time Income', value: earningsSummary.total.alltime, Icon: CheckCircle2, accent: '#c084fc', deep: '#2e1065' },
+              { label: "Today's Income", value: earningsSummary.total.today, sub: 'Earned today', Icon: Zap, from: '#a78bfa', to: '#7c3aed', shadow: 'rgba(139,92,246,0.35)' },
+              { label: '7 Day Income', value: earningsSummary.total['7days'], sub: 'This week', Icon: TrendingUp, from: '#60a5fa', to: '#2563eb', shadow: 'rgba(59,130,246,0.35)' },
+              { label: '30 Day Income', value: earningsSummary.total['30days'], sub: 'This month', Icon: IndianRupee, from: '#34d399', to: '#059669', shadow: 'rgba(16,185,129,0.35)' },
+              { label: 'All Time Income', value: earningsSummary.total.alltime, sub: 'Lifetime earnings', Icon: CheckCircle2, from: '#fbbf24', to: '#f59e0b', shadow: 'rgba(245,158,11,0.35)' },
             ].map((kpi) => <KpiTile key={kpi.label} {...kpi} />)}
           </div>
         </section>
@@ -394,12 +350,12 @@ export default function Wallet() {
                 </div>
                 <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                 {[
-                  { label: "Today's Team Income", value: earningsSummary.team.today, Icon: Zap, accent: '#38bdf8', deep: '#082f49' },
-                  { label: '7 Day Team Income', value: earningsSummary.team['7days'], Icon: TrendingUp, accent: '#22d3ee', deep: '#053745' },
-                  { label: '30 Day Team Income', value: earningsSummary.team['30days'], Icon: IndianRupee, accent: '#60a5fa', deep: '#0a2a5e' },
-                  { label: 'All Time Team Income', value: earningsSummary.team.alltime, Icon: CheckCircle2, accent: '#818cf8', deep: '#1e1b4b' },
+                  { label: "Today's Team Income", value: earningsSummary.team.today, sub: 'Direct referrals, today', Icon: Zap, from: '#34d399', to: '#059669', shadow: 'rgba(16,185,129,0.35)' },
+                  { label: '7 Day Team Income', value: earningsSummary.team['7days'], sub: 'Direct referrals, last 7 days', Icon: TrendingUp, from: '#22d3ee', to: '#0891b2', shadow: 'rgba(8,145,178,0.35)' },
+                  { label: '30 Day Team Income', value: earningsSummary.team['30days'], sub: 'Direct referrals, last 30 days', Icon: IndianRupee, from: '#60a5fa', to: '#2563eb', shadow: 'rgba(37,99,235,0.35)' },
+                  { label: 'All Time Team Income', value: earningsSummary.team.alltime, sub: 'Direct referrals, lifetime', Icon: CheckCircle2, from: '#a78bfa', to: '#7c3aed', shadow: 'rgba(124,58,237,0.35)' },
                 ].map((kpi) => <KpiTile key={kpi.label} {...kpi} />)}
               </div>
             </section>
@@ -417,12 +373,12 @@ export default function Wallet() {
                 </div>
                 <span className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent min-w-[20px]"></span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                 {[
-                  { label: "Today's Manager Income", value: earningsSummary.manager.today, Icon: Zap, accent: '#fbbf24', deep: '#451a03' },
-                  { label: '7 Day Manager Income', value: earningsSummary.manager['7days'], Icon: TrendingUp, accent: '#fb923c', deep: '#431407' },
-                  { label: '30 Day Manager Income', value: earningsSummary.manager['30days'], Icon: IndianRupee, accent: '#f472b6', deep: '#500724' },
-                  { label: 'All Time Manager Income', value: earningsSummary.manager.alltime, Icon: CheckCircle2, accent: '#c084fc', deep: '#2e1065' },
+                  { label: "Today's Manager Income", value: earningsSummary.manager.today, sub: 'Team referrals, today', Icon: Zap, from: '#c084fc', to: '#9333ea', shadow: 'rgba(147,51,234,0.35)' },
+                  { label: '7 Day Manager Income', value: earningsSummary.manager['7days'], sub: 'Team referrals, last 7 days', Icon: TrendingUp, from: '#e879f9', to: '#c026d3', shadow: 'rgba(192,38,211,0.35)' },
+                  { label: '30 Day Manager Income', value: earningsSummary.manager['30days'], sub: 'Team referrals, last 30 days', Icon: IndianRupee, from: '#f472b6', to: '#db2777', shadow: 'rgba(219,39,119,0.35)' },
+                  { label: 'All Time Manager Income', value: earningsSummary.manager.alltime, sub: 'Team referrals, lifetime', Icon: CheckCircle2, from: '#818cf8', to: '#4f46e5', shadow: 'rgba(79,70,229,0.35)' },
                 ].map((kpi) => <KpiTile key={kpi.label} {...kpi} />)}
               </div>
             </section>
@@ -531,6 +487,13 @@ export default function Wallet() {
         </section>
       </Reveal>
 
+      <style>{`
+        @keyframes wave {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(15deg); }
+          75% { transform: rotate(-10deg); }
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,17 +1,119 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Users, Link as LinkIcon, Check, Copy, MessageCircle, Send, Mail, Sparkles, Zap, Award, ArrowRight, ShieldCheck, Share2 } from 'lucide-react';
+import { Users, Link as LinkIcon, Check, Copy, MessageCircle, Send, Mail, Sparkles, Zap, Award, ArrowRight, ShieldCheck, Share2, X, Phone, MapPin, Calendar, User as UserIcon } from 'lucide-react';
 import api from '../../utils/api';
 import AnimatedNumber from '../../components/AnimatedNumber';
 import Reveal from '../../components/Reveal';
 import useTilt from '../../hooks/useTilt';
+
+function ReferralProfileModal({ member, loading, onClose }) {
+  if (member === null) return null;
+  const initials = member.name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'ST';
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-fade-in-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div
+          className="p-8 pb-16 text-white relative"
+          style={{ background: 'linear-gradient(135deg, #0b1428 0%, #1e3a8a 50%, #2563eb 100%)' }}
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/20 rounded-full blur-[100px] pointer-events-none"></div>
+        </div>
+
+        {loading || !member.id ? (
+          <div className="p-12 -mt-14 relative flex flex-col items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Profile...</p>
+          </div>
+        ) : (
+          <div className="px-6 pb-6 -mt-14 relative">
+            {member.profile_image_url ? (
+              <img
+                src={member.profile_image_url}
+                alt={member.name}
+                className="w-24 h-24 rounded-3xl object-cover border-4 border-white shadow-lg bg-slate-100"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-2xl font-black flex items-center justify-center border-4 border-white shadow-lg">
+                {initials}
+              </div>
+            )}
+            <h3 className="mt-4 text-xl font-heading font-black text-slate-900">{member.name}</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mt-1">
+              <Calendar className="w-3.5 h-3.5" /> Joined {member.created_at}
+            </p>
+
+            <div className="mt-5 space-y-2.5">
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <Mail className="w-4 h-4 text-blue-500 shrink-0" />
+                <span className="text-sm font-semibold text-slate-700 truncate">{member.email || 'N/A'}</span>
+              </div>
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="text-sm font-semibold text-slate-700">{member.phone || 'N/A'}</span>
+              </div>
+              {member.address && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span className="text-sm font-semibold text-slate-700">{member.address}</span>
+                </div>
+              )}
+              {(member.age || member.gender) && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <UserIcon className="w-4 h-4 text-purple-500 shrink-0" />
+                  <span className="text-sm font-semibold text-slate-700">
+                    {[member.age ? `${member.age} yrs` : null, member.gender].filter(Boolean).join(' · ')}
+                  </span>
+                </div>
+              )}
+              {(member.bio || member.about) && (
+                <div className="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">About</p>
+                  <p className="text-sm font-medium text-slate-600 leading-relaxed">{member.bio || member.about}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Referrals() {
   const { user } = useAuth();
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [profileModal, setProfileModal] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   const { ref: tiltRef, onMouseMove, onMouseLeave } = useTilt(4);
+
+  const openMemberProfile = async (memberId) => {
+    setProfileLoading(true);
+    setProfileModal({});
+    try {
+      const response = await api.get(`/student/my-team/profile/${memberId}`);
+      setProfileModal(response.data.user);
+    } catch (err) {
+      console.error('Error fetching member profile', err);
+      setProfileModal(null);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchReferrals = async () => {
@@ -190,14 +292,14 @@ export default function Referrals() {
                         'from-amber-500 to-orange-600'
                       ];
                       return (
-                        <tr key={idx} className="group bg-slate-50/60 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/40 border border-slate-200/80 hover:border-blue-300 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md">
+                        <tr key={r.id ?? idx} className="group bg-slate-50/60 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/40 border border-slate-200/80 hover:border-blue-300 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-md">
                           <td className="py-4 px-4 font-black text-slate-900 rounded-l-2xl">
-                            <div className="flex items-center gap-3">
+                            <button type="button" onClick={() => openMemberProfile(r.id)} className="flex items-center gap-3 text-left">
                               <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${palette[idx % palette.length]} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
                                 {initials}
                               </div>
                               <span className="group-hover:text-blue-600 transition-colors font-black text-sm">{r.name}</span>
-                            </div>
+                            </button>
                           </td>
                           <td className="py-4 px-4 text-slate-600 font-medium">{r.email || 'N/A'}</td>
                           <td className="py-4 px-4 text-slate-400 font-medium text-xs">{r.created_at}</td>
@@ -225,14 +327,14 @@ export default function Referrals() {
                     'from-amber-500 to-orange-600'
                   ];
                   return (
-                    <div key={idx} className="p-4 rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:border-blue-200 hover:shadow-md transition-all duration-300 flex flex-col gap-3">
+                    <div key={r.id ?? idx} className="p-4 rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:border-blue-200 hover:shadow-md transition-all duration-300 flex flex-col gap-3">
                       <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
+                        <button type="button" onClick={() => openMemberProfile(r.id)} className="flex items-center gap-3 min-w-0 text-left">
                           <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${palette[idx % palette.length]} text-white text-xs font-black flex items-center justify-center shrink-0 shadow-md`}>
                             {initials}
                           </div>
                           <p className="font-black text-slate-900 text-sm leading-snug break-words">{r.name}</p>
-                        </div>
+                        </button>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-black uppercase tracking-wider shrink-0 shadow-sm">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
                           Active Referral
@@ -277,6 +379,11 @@ export default function Referrals() {
         </div>
       </Reveal>
 
+      <ReferralProfileModal
+        member={profileModal}
+        loading={profileLoading}
+        onClose={() => setProfileModal(null)}
+      />
     </div>
   );
 }

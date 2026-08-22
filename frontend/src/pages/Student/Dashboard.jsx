@@ -5,7 +5,7 @@ import {
   TrendingUp, Users, Trophy, IndianRupee, CheckCircle, Zap,
   BookOpen, Briefcase, Compass, Award, ChevronRight,
   UserCircle, Crown, Medal, Sparkles, Sun, Sunset, Moon,
-  ArrowUpRight, Wallet
+  ArrowUpRight, Wallet, UserPlus
 } from 'lucide-react';
 import api from '../../utils/api';
 import AnimatedNumber from '../../components/AnimatedNumber';
@@ -49,6 +49,7 @@ export default function StudentDashboard() {
     last7Earnings: 0,
     activeIncome: { today: 0, '7days': 0, '30days': 0, alltime: 0 },
     passiveIncome: { today: 0, '7days': 0, '30days': 0, alltime: 0 },
+    registrationIncome: 0,
     totalReferrals: 0,
     recentReferrals: [],
     leaderboard: [],
@@ -78,6 +79,7 @@ export default function StudentDashboard() {
           last7Earnings: Math.round(response.data.last_7_earnings || 0),
           activeIncome: response.data.active_income || { today: 0, '7days': 0, '30days': 0, alltime: 0 },
           passiveIncome: response.data.passive_income || { today: 0, '7days': 0, '30days': 0, alltime: 0 },
+          registrationIncome: Math.round(response.data.registration_income || 0),
           totalReferrals: response.data.referrals_count || 0,
           recentReferrals: response.data.recent_referrals || [],
           leaderboard: response.data.leaderboard || [],
@@ -254,12 +256,13 @@ export default function StudentDashboard() {
            SECTION 1: KPI BANNER
          ══════════════════════════════════════════════ */}
       <section>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6">
           {[
             { label: "Today's Earning", value: Math.round((data.activeIncome.today || 0) + (data.passiveIncome.today || 0)), sub: 'Earned today', Icon: Zap, from: '#a78bfa', to: '#7c3aed', shadow: 'rgba(139,92,246,0.35)' },
             { label: 'Last 7 Days Earnings', value: data.last7Earnings, sub: 'This week', Icon: TrendingUp, from: '#60a5fa', to: '#2563eb', shadow: 'rgba(59,130,246,0.35)' },
             { label: 'Last 30 Days Earnings', value: data.last30Earnings, sub: 'This month', Icon: CheckCircle, from: '#34d399', to: '#059669', shadow: 'rgba(16,185,129,0.35)' },
             { label: 'All Time Earning', value: data.allTimeEarnings, sub: 'Lifetime earnings', Icon: IndianRupee, from: '#fbbf24', to: '#f59e0b', shadow: 'rgba(245,158,11,0.35)' },
+            { label: 'Registration Income', value: data.registrationIncome, sub: 'From your masterclass form leads', Icon: UserPlus, from: '#f472b6', to: '#db2777', shadow: 'rgba(219,39,119,0.35)' },
           ].map((kpi, i) => (
             <div
               key={i}
